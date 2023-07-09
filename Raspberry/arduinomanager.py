@@ -32,7 +32,9 @@ def MQDetectionProcess(sensorsObj):
                 time.sleep(0.1)
 
             if(sensorsObj.activeArduino == True): # line provining from the serial port 
-                sensorsRawLine = line.decode() 
+                if(sensorsObj.currSys == "WIN"):
+                    sensorsRawLine = line.decode() 
+                else: sensorsRawLine = line.readline().decode('utf-8').rstrip() # raspberry default system
             else:
                 sensorsRawLine = line             # line provining from the simulation
              # STEP1: SYNC with Arduino sensors actual line 

@@ -13,6 +13,9 @@ import os
 # configuration object shared by the pallel tasks of the procedure 
 class SensorsDataConfig:
     def __init__(self):
+        # system launch
+        self.currSys = "WIN"
+
         # parallel queues of reading from the different sensors 
         self.queueDataSensorsMQ = Queue()                             
         self.queueSCD = Queue()
@@ -38,6 +41,9 @@ class SensorsDataConfig:
         self.scdPort = '/dev/i2c-1'
         self.activeSCD = False                                     
         self.scdMeasureTime = 5
+
+    def setCurrSys(self, currSys):
+        self.currSys = currSys
 
     def sensorDataQueue(self):
         return self.queueDataSensorsMQ
@@ -138,6 +144,8 @@ def readConfiguration(configFile):
             SensorsDataObj.setSCDPort(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "scd_duty_time"):
             SensorsDataObj.setSCDDutyTime(int(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "sys_analysis"):
+            SensorsDataObj.setCurrSys(str(configuration.firstChild.data))
 
     return SensorsDataObj
 

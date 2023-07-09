@@ -41,6 +41,10 @@ def addSCDHeaderPart(csvHeader, scdHeaderPart):
 ########### CONTENT CREATION ############
 # Reading the content to put in a line of the CSV analysis file
 def processMQSensorsLineContent(sensorsRawLine):
+    if(sensorsRawLine == ''):
+        return ["", datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], "","","","","","",]
+    if(sensorsRawLine == None):
+        return ["", datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], "","","","","","",]
     sensorsLineParts = utilitiesmanager.splitSensorDataLine(sensorsRawLine)
     sensorsContentLine = []
     for indCol, content in enumerate(sensorsLineParts):
@@ -60,7 +64,6 @@ def processMQSensorsLineContent(sensorsRawLine):
         if(indCol == 19):
             sensorsContentLine.append(content)
     return sensorsContentLine
-
 
 def appendExtraContentToSensorLine(csvContent, csvExtraContent):
     for contentLine in csvExtraContent:
