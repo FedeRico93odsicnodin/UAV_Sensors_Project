@@ -1,18 +1,23 @@
-from asyncio.windows_events import NULL
 from multiprocessing import Process, Queue
 import multiprocessing
+import threading 
 import serial
 import time 
 from datetime import datetime, timedelta
 import os
 from csv import writer
 import random
+from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection
+from sensirion_i2c_scd import Scd4xI2cDevice
+
+
 
 #variables
 nowTime = datetime.now()        # execution time start 
 class SensorsData:
     def __init__(self):
-        self.queueDataSensors = Queue()                             # the queue for the sensor data lines 
+        self.queueDataSensorsMQ = Queue()                             # the queue for the sensor data lines 
+        self.queueSCD = Queue()
         manager = multiprocessing.Manager()     
         self.csvDataHeader = manager.list()                         # the header of the CSV file
         self.maxLineNum = 100                                       # the max line increment for the CSV file 
@@ -21,10 +26,13 @@ class SensorsData:
         self.outputDownloadFolder = "DownloadFolderData"            # folder for the download data 
         self.csvBasicName = "sensorsAnalysis"                       # basic name part for the sensor data sheet 
         # debug Arduino - Raspberry
-        self.activeArduino = False                                  # if False a simulation string is replaced to the Arduino sensors
-        self.activeRaspberry = False                                # if False a simulation string is replaced to the Raspberry sensors
+        self.activeArduino = True                                  # if False a simulation string is replaced to the Arduino sensors
+        self.activeSCD = False                                      # if False a simulation string is replaced to the SCD sensor
+        self.scdMeasureTime = 5
     def sensorDataQueue(self):
-        return self.queueDataSensors
+        return self.queueDataSensorsMQ
+    def sensorSCDQueue(self):
+        return self.queueSCD
     def setHeader(self, header):
         for headerCol in header:
             self.csvDataHeader.append(headerCol)
@@ -116,6 +124,11 @@ def createMQSensorsHeaders(sensorsRawLine):
     # TODO: completare con tutte le informazioni di header da recuperare
     return csvHeader # header initialized
 
+def addSCDHeaderPart(csvHeader, scdHeaderPart):
+    for scdHCol in scdHeaderPart:
+        csvHeader.append(scdHCol)
+    return csvHeader
+
 # Reading the content to put in a line of the CSV analysis file
 def readMQSensorsLine(sensorsRawLine):
     sensorsLineParts = splitSensorDataLine(sensorsRawLine)
@@ -136,10 +149,12 @@ def readMQSensorsLine(sensorsRawLine):
             sensorsContentLine.append(content)
         if(indCol == 19):
             sensorsContentLine.append(content)
-
-    # TODO: completare con tutte le informazioni
-
     return sensorsContentLine
+
+def appendExtraContentToSensorLine(csvContent, csvExtraContent):
+    for contentLine in csvExtraContent:
+        csvContent.append(contentLine)
+    return csvContent
   
 def getNewFileCSVName(csvBasicName):
     return datetime.now().strftime('%Y%m%d%H%M%S') + "_" + csvBasicName + ".csv"
@@ -158,45 +173,54 @@ def moveCSVToDownloadFolder(csvPathOrigin, csvPathDestination):
 
 ###################### SIMULATIONS #####################
 
-def getSimulatedSensorValue(range1, range2):
+def getSimulatedSensorValue(range1, range2, baseNum):
     rndSensInt = random.randint(range1, range2)
-    rndSensFloat = rndSensInt / 100
+    rndSensFloat = rndSensInt / baseNum
     return rndSensFloat
 
 def getSimulatedArduinoStringSensors(startTime):
     endTime = time.time()
     elapsedTime = int(round((endTime - startTime)*1000))
-    "Ms|3394|0|CH4|179.33|1|CO|105|2|Gen|190|3|Alcohol|495|4|NH3|198|5|Comb|214|"
     rndStringSensors = "Ms|"
     rndStringSensors += str(elapsedTime)
     rndStringSensors += "|0|CH4|"
-    rndStringSensors += str(getSimulatedSensorValue(10000, 20000))
+    rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
     rndStringSensors += "|1|CO|"
-    rndStringSensors += str(getSimulatedSensorValue(10000, 20000))
+    rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
     rndStringSensors += "|2|Gen|"
-    rndStringSensors += str(getSimulatedSensorValue(10000, 20000))
+    rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
     rndStringSensors += "|3|Alcohol|"
-    rndStringSensors += str(getSimulatedSensorValue(40000, 50000))
+    rndStringSensors += str(getSimulatedSensorValue(40000, 50000, 100))
     rndStringSensors += "|4|NH3|"
-    rndStringSensors += str(getSimulatedSensorValue(10000, 20000))
+    rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
     rndStringSensors += "|5|Comb|"
-    rndStringSensors += str(getSimulatedSensorValue(30000, 40000))
+    rndStringSensors += str(getSimulatedSensorValue(30000, 40000, 100))
     rndStringSensors += "|"
     return rndStringSensors
+
+def getSimulatedSCDContent():
+    rndSCDContent = []
+    rndSCDContent.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+    rndSCDContent.append(str(getSimulatedSensorValue(10000, 20000, 100)))
+    rndSCDContent.append(str(getSimulatedSensorValue(300, 359, 10)))
+    rndSCDContent.append(str(time.time()))
+    rndSCDContent.append(str(getSimulatedSensorValue(10000, 20000, 100)))
+    rndSCDContent.append(str(time.time()))
+    return rndSCDContent
     
 ######################################################## 
 
-# launching the different processes of the program
-def mainSensorsProcess(sensorsObj):
-    arduino = NULL
+def mqDetectionProcess(sensorsObj):
+    arduino = None
     if(sensorsObj.activeArduino == True):
         arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
     nowTime = datetime.now()
     startTime = time.time()
     csvHeader = []
+    csvHeaderSCD = ["SCD time", "ppm CO2", "C", "ticksC", "RH", "ticksRH"]
     while(True):
-        line = NULL
-        if(arduino != NULL):
+        line = None
+        if(arduino != None):
             line = arduino.readline() 
         else:
             line = getSimulatedArduinoStringSensors(startTime)
@@ -218,16 +242,40 @@ def mainSensorsProcess(sensorsObj):
             sensorsRawLine = cleanMQSensorsRawString(sensorsRawLine)
 
             # STEP4: Reading infomration for the current line 
-            sensorsCurrLine = readMQSensorsLine(sensorsRawLine);
+            sensorsCurrLine = readMQSensorsLine(sensorsRawLine)
 
-            # STEP5: Inserting the read line into the queue 
-            sensorsObj.sensorDataQueue().put(sensorsCurrLine)
+            # STEP5: building the header of CSV File 
             if(len(csvHeader) == 0):
-                csvHeader = createMQSensorsHeaders(sensorsRawLine);
+                csvHeader = createMQSensorsHeaders(sensorsRawLine)
+                csvHeader = addSCDHeaderPart(csvHeader, csvHeaderSCD) # adding the SCD Header part 
                 sensorsObj.setHeader(csvHeader)
-
                 
+            # STEP8: enqueuing the line content 
+            sensorsObj.sensorDataQueue().put(sensorsCurrLine)
 
+def scdSensorDetectionThread(sensorsObj):
+    scd41 = None
+    sensorContent = []
+    if(sensorsObj.activeSCD):
+        with LinuxI2cTransceiver('/dev/i2c-1') as i2c_transceiver:
+            i2c_connection = I2cConnection(i2c_transceiver)
+            scd41 = Scd4xI2cDevice(i2c_connection)
+            scd41.start_periodic_measurement()
+            while(True):
+                time.sleep(int(sensorsObj.scdMeasureTime))
+                co2, temperature, humidity = scd41.read_measurement()
+                sensorContent.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+                sensorContent.append(str(co2.co2))
+                sensorContent.append(str(temperature.degrees_celsius))
+                sensorContent.append(str(temperature.ticks))
+                sensorContent.append(str(humidity.percent_rh))
+                sensorContent.append(str(humidity.ticks))
+                sensorsObj.sensorSCDQueue().put(sensorContent)
+    else:
+        while(True):
+            sensorContent = getSimulatedSCDContent()
+            sensorsObj.sensorSCDQueue().put(sensorContent)
+            
 def writeCSVFile(sensorsObj):
     csvHeaderInit = False
     lineIncrement = 0
@@ -237,6 +285,7 @@ def writeCSVFile(sensorsObj):
     # path for the output and for the final download 
     csvOutputPath = os.path.join(sensorsDataPath, csvFileName)
     csvDownloadPath = os.path.join(downloadDataPath, csvFileName)
+    sensorMQLine = ["", "", "", "", "", ""]
     print(csvOutputPath)
     print(csvDownloadPath)
     while(True):
@@ -247,6 +296,12 @@ def writeCSVFile(sensorsObj):
             print(sensorsObj.getHeader())
             writeCSVLine(sensorsObj.getHeader(), csvOutputPath)
             csvHeaderInit = True
+        
+        if(sensorsObj.sensorSCDQueue().qsize() == 0):
+            sensorDLine = appendExtraContentToSensorLine(sensorDLine, sensorMQLine)
+        else:
+            sensorMQLine = sensorsObj.sensorSCDQueue().get()
+            sensorDLine = appendExtraContentToSensorLine(sensorDLine, sensorMQLine)
         print(sensorDLine)
         writeCSVLine(sensorDLine, csvOutputPath)
         # management of the new file creation 
@@ -262,13 +317,16 @@ def writeCSVFile(sensorsObj):
 if __name__ == '__main__':
     SensorsDataObj = SensorsData()
     #mainSensorsProcess(SensorsDataObj)
-    sensorsDataProcess = Process(target=mainSensorsProcess, args=(SensorsDataObj,))
+    scdDetectionThread = threading.Thread(target=scdSensorDetectionThread, args=(SensorsDataObj,))
+    sensorsDataProcess = Process(target=mqDetectionProcess, args=(SensorsDataObj,))
     writeCSVFileProcess = Process(target=writeCSVFile, args=(SensorsDataObj,))
     # Start both processes
+    scdDetectionThread.start()
     sensorsDataProcess.start()
     time.sleep(2)
     writeCSVFileProcess.start()
     # Wait for both processes to finish
+    scdDetectionThread.join()
     sensorsDataProcess.join()
     writeCSVFileProcess.join()
     
