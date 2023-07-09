@@ -1,0 +1,24 @@
+<data>
+  <!-- main parameters -->
+  <!-- refers to the CSV max number of lines per file created (header excluded) -->
+  <config name="csv_max_line">100</config>
+  <!-- output main path: successive folders will be created inside of it -->
+  <config name="main_procedure_path">C:\Users\Fede\Documents\Arduino</config>
+  <config name="sensors_folder_out">SensorsData</config>
+  <config name="download_folder_out">DownloadFolderData</config>
+  <!-- principal part of the CSV name, this part will follow data of the file -->
+  <config name="csv_basic_name">sensorsAnalysis</config>
+  
+  <!-- True: data will be read from the following serial port / False: the simulator is activated -->
+  <config name="arduino_activated">True</config>
+  <config name="arduino_serial_port">COM3</config>
+  <!-- arduino baud rate -->
+  <config name="arduino_baud_rate">115200</config>
+  <!-- fraction of second in which the arduino serial is read -->
+  <config name="arduino_duty_time">0.1</config>
+  <!-- True: data will be read on the I2C following port / False: the simulator is activated -->
+  <config name="scd_activated">False</config>
+  <config name="scd_i2c_port">/dev/i2c-1</config>
+  <!-- expressed in seconds: the time cycle of thread detector of SCD sensor -->
+  <config name="scd_duty_time">5</config>
+</data>

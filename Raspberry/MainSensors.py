@@ -9,7 +9,7 @@ from csv import writer
 import random
 from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection
 from sensirion_i2c_scd import Scd4xI2cDevice
-
+from xml.dom import minidom
 
 
 #variables
@@ -27,19 +27,62 @@ class SensorsData:
         self.csvBasicName = "sensorsAnalysis"                       # basic name part for the sensor data sheet 
         # debug Arduino - Raspberry
         self.activeArduino = True                                  # if False a simulation string is replaced to the Arduino sensors
+        self.arduinoSerialPort = "COM3"
+        self.arduinoBaudRate = 115200
+        self.arduinoDutyCycle = 0.1
+        self.scdPort = '/dev/i2c-1'
         self.activeSCD = False                                      # if False a simulation string is replaced to the SCD sensor
         self.scdMeasureTime = 5
+
     def sensorDataQueue(self):
         return self.queueDataSensorsMQ
     def sensorSCDQueue(self):
         return self.queueSCD
+
     def setHeader(self, header):
         for headerCol in header:
             self.csvDataHeader.append(headerCol)
     def getHeader(self):
         return self.csvDataHeader
+
     def getMaxLineNum(self):
         return self.maxLineNum
+    def setMaxLineNum(self, maxLine):
+        self.maxLineNum = maxLine
+
+    def setMainDataPath(self, mainPath):
+        self.mainPath = mainPath
+    def setSensorsDataFolder(self, sensorsDataFolder):
+        self.outputSensorFolder = sensorsDataFolder
+    def setSensorsDownloadFolder(self, seonsorsDownloadFolder):
+        self.outputDownloadFolder = seonsorsDownloadFolder
+    def setFileCSVBasicName(self, csvBasicName):
+        self.csvBasicName = csvBasicName
+
+    def setArduinoActivated(self, activationValue):
+        self.activeArduino = activationValue
+    def setArduinoSerialPort(self, arduinoSerialPort):
+        self.arduinoSerialPort = arduinoSerialPort
+    def getArduinoSerialPort(self):
+        return self.arduinoSerialPort
+    def setArduinoBaudRate(self, arduinoBaudRate):
+        self.arduinoBaudRate = arduinoBaudRate
+    def getArduinoBaudRate(self):
+        return self.arduinoBaudRate
+    def setArduinoDutyCycle(self, arduinoDutyCycle):
+        self.arduinoDutyCycle = arduinoDutyCycle
+    def getArduinoTime(self):
+        return self.arduinoDutyCycle
+
+    def setSCDActivated(self, activationValue):
+        self.activeSCD = activationValue
+    def setSCDPort(self, scdPort):
+        self.scdPort = scdPort
+    def getI2CPortSCD(self):
+        return self.scdPort
+    def setSCDDutyTime(self, scdDutyTime):
+        self.scdMeasureTime = scdDutyTime
+
     def getSensorsDataPath(self):
         pathSensors = os.path.join(self.mainPath, self.outputSensorFolder)
         if(os.path.isdir(pathSensors)):
@@ -213,7 +256,7 @@ def getSimulatedSCDContent():
 def mqDetectionProcess(sensorsObj):
     arduino = None
     if(sensorsObj.activeArduino == True):
-        arduino = serial.Serial(port='COM3', baudrate=115200, timeout=.1)
+        arduino = serial.Serial(port=sensorsObj.getArduinoSerialPort(), baudrate=sensorsObj.getArduinoBaudRate(), timeout=sensorsObj.getArduinoTime())
     nowTime = datetime.now()
     startTime = time.time()
     csvHeader = []
@@ -257,7 +300,7 @@ def scdSensorDetectionThread(sensorsObj):
     scd41 = None
     sensorContent = []
     if(sensorsObj.activeSCD):
-        with LinuxI2cTransceiver('/dev/i2c-1') as i2c_transceiver:
+        with LinuxI2cTransceiver(sensorsObj.getI2CPortSCD()) as i2c_transceiver:
             i2c_connection = I2cConnection(i2c_transceiver)
             scd41 = Scd4xI2cDevice(i2c_connection)
             scd41.start_periodic_measurement()
@@ -273,6 +316,7 @@ def scdSensorDetectionThread(sensorsObj):
                 sensorsObj.sensorSCDQueue().put(sensorContent)
     else:
         while(True):
+            time.sleep(int(sensorsObj.scdMeasureTime))
             sensorContent = getSimulatedSCDContent()
             sensorsObj.sensorSCDQueue().put(sensorContent)
             
@@ -313,9 +357,45 @@ def writeCSVFile(sensorsObj):
             csvOutputPath = os.path.join(sensorsDataPath, csvFileName)
             csvDownloadPath = os.path.join(downloadDataPath, csvFileName)
 
+def booleConverter(stringValue):
+    if(stringValue == "True"): return True
+    return False
+
+def readConfiguration(configFile):
+    SensorsDataObj = SensorsData()
+    xmlConfig = minidom.parse(configFile)
+    configurations = xmlConfig.getElementsByTagName('config')
+    for configuration in configurations:
+        if(configuration.attributes['name'].value == "csv_max_line"):
+            SensorsDataObj.setMaxLineNum(int(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "main_procedure_path"):
+            SensorsDataObj.setMainDataPath(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "sensors_folder_out"):
+            SensorsDataObj.setSensorsDataFolder(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "download_folder_out"):
+            SensorsDataObj.setSensorsDownloadFolder(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "csv_basic_name"):
+            SensorsDataObj.setFileCSVBasicName(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "arduino_activated"):
+            SensorsDataObj.setArduinoActivated(booleConverter(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "arduino_serial_port"):
+            SensorsDataObj.setArduinoSerialPort(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "arduino_baud_rate"):
+            SensorsDataObj.setArduinoBaudRate(int(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "arduino_duty_time"):
+            SensorsDataObj.setArduinoDutyCycle(float(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "scd_activated"):
+            SensorsDataObj.setSCDActivated(booleConverter(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "scd_i2c_port"):
+            SensorsDataObj.setSCDPort(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "scd_duty_time"):
+            SensorsDataObj.setSCDDutyTime(int(configuration.firstChild.data))
+
+    return SensorsDataObj
+            
 
 if __name__ == '__main__':
-    SensorsDataObj = SensorsData()
+    SensorsDataObj = readConfiguration("analysisConf.xml")
     #mainSensorsProcess(SensorsDataObj)
     scdDetectionThread = threading.Thread(target=scdSensorDetectionThread, args=(SensorsDataObj,))
     sensorsDataProcess = Process(target=mqDetectionProcess, args=(SensorsDataObj,))
