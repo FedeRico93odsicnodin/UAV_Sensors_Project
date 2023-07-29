@@ -4,9 +4,14 @@
 # insert statements 
 # query methods for accessing with filters definitions
 #
+# standard modules 
 import sqlite3
 import os
 import time 
+#custom modules 
+import dbmodels
+
+DatabaseLocation = ''
 
 def createDatabase(databaseLocation):
     # creation of database only if does not exist
@@ -66,5 +71,27 @@ def createDatabase(databaseLocation):
     cur.execute(sqlite_sensors_table)
     time.sleep(0.1)
     cur.execute(sqllite_sensorsdata_table)
+    con.close()
+    DatabaseLocation = databaseLocation
 
-
+def getSensorsDefinitions():
+    con = sqlite3.connect(DatabaseLocation)
+    cur = con.cursor()
+    returnedSensors = []
+    sqllite_selectsensors_statement = """
+    SELECT 
+        id,
+        name,
+        description,
+        gas_detection_ref,
+        FROM sensors
+"""
+    sensorsRecords = cur.fetchall()
+    for sensorRow in sensorsRecords:
+        currSensorsDefition = dbmodels.SensorObj()
+        currSensorsDefition.id = int(sensorRow[0])
+        currSensorsDefition.name = str(sensorRow[1])
+        currSensorsDefition.descrition = str(sensorRow[2])
+        currSensorsDefition.gas_detection_ref = str(sensorRow[3])
+        sensorsRecords.append(currSensorsDefition)
+    return sensorsRecords

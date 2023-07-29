@@ -6,13 +6,20 @@ import configurator
 import databaseServer
 
 def initServer():
-    ServerDataObj = configurator.readConfiguration("serverConf.xml")
+    # getting the current configuration from the xml file 
+    serverDataObj = configurator.readConfiguration("serverConf.xml")
+    # creation of the data folders for the file csv out and the database storage
     currDir = os.getcwd()
-    databaseLocation = os.path.join(currDir, ServerDataObj.getProcessedDBFolder())
+    outputCSVLocation = os.path.join(currDir, serverDataObj.getUploadCSVFolder())
+    databaseLocation = os.path.join(currDir, serverDataObj.getProcessedDBFolder())
     if(os.path.exists(databaseLocation) == False):
         os.mkdir(databaseLocation)
-    databasePath = os.path.join(databaseLocation, ServerDataObj.getDatabaseName())
+    if(os.path.exists(outputCSVLocation) == False):
+        os.mkdir(outputCSVLocation)
+    databasePath = os.path.join(databaseLocation, serverDataObj.getDatabaseName())
+    # database creation (if does not exist)
     databaseServer.createDatabase(databasePath)
+    return serverDataObj
 
 initServer()
 app = Flask(__name__)
