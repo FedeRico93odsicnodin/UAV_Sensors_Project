@@ -1,6 +1,12 @@
 from flask import Flask, render_template, request, url_for, jsonify
+import configurator
 
+ServerDataObj = configurator.readConfiguration("serverConf.xml")
+print(ServerDataObj.getMaxProcessedCSVFile())
+print(ServerDataObj.getProcessedCSVFolder())
+print(ServerDataObj.getUploadCSVFolder())
 app = Flask(__name__)
+
 # used for checking if the server is available 
 @app.route('/')
 def testConnection():
@@ -23,7 +29,6 @@ def upload_file():
       f.save(f.filename)
       print('file uploaded successfully')
       return 'file uploaded successfully'
- 
-if __name__ == '__main__':
-    app.run(host="0.0.0.0")
+
+    
 
