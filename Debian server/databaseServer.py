@@ -74,6 +74,20 @@ def createDatabase(databaseLocation):
     con.close()
     DatabaseLocation = databaseLocation
 
+def insertCompoundsData(compoundsData):
+    con = sqlite3.connect(DatabaseLocation)
+    cur = con.cursor()
+    sqllite_insertcompounds_statement = """
+    INSERT INTO detected_substances (name)
+        VALUES 
+"""
+    for rowCompound in compoundsData:
+        insertValue = "('" + rowCompound.name + "')"
+        sqllite_insertcompounds_statement += insertValue + " "
+    cur.execute(sqllite_insertcompounds_statement)
+    con.commit()
+    con.close()
+
 def getSensorsDefinitions():
     con = sqlite3.connect(DatabaseLocation)
     cur = con.cursor()
@@ -95,3 +109,5 @@ def getSensorsDefinitions():
         currSensorsDefition.gas_detection_ref = str(sensorRow[3])
         sensorsRecords.append(currSensorsDefition)
     return sensorsRecords
+
+

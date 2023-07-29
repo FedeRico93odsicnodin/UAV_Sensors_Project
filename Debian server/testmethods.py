@@ -34,7 +34,10 @@ def executeCurrTestCase(serverDataObj):
         insertHeaderData_test(serverDataObj)
 
 def insertHeaderData_test(serverDataObj):
-    print('starting the test ')
+    compounds = ["test1", "test2", "test3"]
+    compObj = []
+    # TODO: implementation of the insert of starting data 
+
 
 serverDataObj = initServer()
 executeCurrTestCase(serverDataObj)
