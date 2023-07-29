@@ -2,7 +2,7 @@
     <!-- server location for the uploaded CSV by the client -->
     <config name="csv_upload_folder">upladed_csv</config>
     <!-- server location for the POST Processed CSV by the server -->
-    <config name="csv_post_folder">processed_csv</config>
-    <!-- post processed CSV max dimension (bytes) -->
-    <config name="processed_csv_max_size">5000000000</config>
+    <config name="csv_post_folder">processed_db</config>
+    <!-- specifications of the database name -->
+    <config name="database_name">sensorsAnalysis.db</config>
 </data>

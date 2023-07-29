@@ -1,11 +1,23 @@
 from flask import Flask, render_template, request, url_for, jsonify
-import configurator
 
-ServerDataObj = configurator.readConfiguration("serverConf.xml")
-print(ServerDataObj.getMaxProcessedCSVFile())
-print(ServerDataObj.getProcessedCSVFolder())
-print(ServerDataObj.getUploadCSVFolder())
+import os
+
+import configurator
+import databaseServer
+
+def initServer():
+    ServerDataObj = configurator.readConfiguration("serverConf.xml")
+    currDir = os.getcwd()
+    databaseLocation = os.path.join(currDir, ServerDataObj.getProcessedDBFolder())
+    if(os.path.exists(databaseLocation) == False):
+        os.mkdir(databaseLocation)
+    databasePath = os.path.join(databaseLocation, ServerDataObj.getDatabaseName())
+    databaseServer.createDatabase(databasePath)
+
+initServer()
 app = Flask(__name__)
+
+
 
 # used for checking if the server is available 
 @app.route('/')

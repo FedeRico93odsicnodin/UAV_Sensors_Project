@@ -11,21 +11,21 @@ class ServerDataConfig:
     def __init__(self):
         # CSV parameters and specifications
         self.uploadCSVFolder = "uploaded_csv"
-        self.processCSVFolder = "processed_csv"
-        self.maxProcessedCSVSize = 5000000000
+        self.processCSVFolder = "processed_db"
+        self.databaseName = "sensorsAnalysis.db"
 
     def setUploadCSVFolder(self, folderUpload):
         self.uploadCSVFolder = folderUpload 
     def getUploadCSVFolder(self):
         return self.uploadCSVFolder
-    def setProcessedCSVFolder(self, folderProcessedCSV):
+    def setProcessedDBFolder(self, folderProcessedCSV):
         self.processCSVFolder = folderProcessedCSV
-    def getProcessedCSVFolder(self):
+    def getProcessedDBFolder(self):
         return self.processCSVFolder
-    def setMaxProcessedCSVFile(self, maxSizeCSV):
-        self.maxProcessedCSVSize = maxSizeCSV
-    def getMaxProcessedCSVFile(self):
-        return self.maxProcessedCSVSize
+    def setDatabaseName(self, databaseName):
+        self.databaseName = databaseName
+    def getDatabaseName(self):
+        return self.databaseName
 
 # read configuration method
 def readConfiguration(configFile):
@@ -36,8 +36,7 @@ def readConfiguration(configFile):
         if(configuration.attributes['name'].value == "csv_upload_folder"):
             ServerDataObj.setUploadCSVFolder(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "csv_post_folder"):
-            ServerDataObj.setProcessedCSVFolder(str(configuration.firstChild.data))
-        if(configuration.attributes['name'].value == "processed_csv_max_size"):
-            ServerDataObj.setMaxProcessedCSVFile(int(configuration.firstChild.data))
-    
+            ServerDataObj.setProcessedDBFolder(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "database_name"):
+            ServerDataObj.setDatabaseName(str(configuration.firstChild.data))
     return ServerDataObj
