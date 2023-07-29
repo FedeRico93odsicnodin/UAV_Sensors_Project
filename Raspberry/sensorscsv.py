@@ -71,7 +71,7 @@ def appendExtraContentToSensorLine(csvContent, csvExtraContent):
     return csvContent
   
 def getNewFileCSVName(csvBasicName):
-    return datetime.now().strftime('%Y%m%d%H%M%S') + "_" + csvBasicName + ".csv"
+    return datetime.now().strftime('%Y_%m_%d_%H_%M_%S_%f')[:-3] + "_" + csvBasicName + ".csv"
 
 def writeCSVLine(csvNewLine, csvFilePath):
      with open(csvFilePath, 'a', newline='') as csvFile:

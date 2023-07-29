@@ -11,21 +11,23 @@ import configurator
 import arduinomanager
 import scddetectionmanager
 import csvwritermanager
+import postcontenttoserver
 
 if __name__ == '__main__':
     SensorsDataObj = configurator.readConfiguration("analysisConf.xml")
-    #mainSensorsProcess(SensorsDataObj)
-    scdDetectionThread = threading.Thread(target=scddetectionmanager.scdSensorDetectionThread, args=(SensorsDataObj,))
-    sensorsDataProcess = Process(target=arduinomanager.MQDetectionProcess, args=(SensorsDataObj,))
-    # csv writer manager process
-    writeCSVFileProcess = Process(target=csvwritermanager.CSVFileWriterProcess, args=(SensorsDataObj,))
-    # Start both processes
-    scdDetectionThread.start()
-    sensorsDataProcess.start()
-    time.sleep(2)
-    writeCSVFileProcess.start()
-    # Wait for both processes to finish
-    scdDetectionThread.join()
-    sensorsDataProcess.join()
-    writeCSVFileProcess.join()
+    ##mainSensorsProcess(SensorsDataObj)
+    #scdDetectionThread = threading.Thread(target=scddetectionmanager.scdSensorDetectionThread, args=(SensorsDataObj,))
+    #sensorsDataProcess = Process(target=arduinomanager.MQDetectionProcess, args=(SensorsDataObj,))
+    ## csv writer manager process
+    #writeCSVFileProcess = Process(target=csvwritermanager.CSVFileWriterProcess, args=(SensorsDataObj,))
+    ## Start both processes
+    #scdDetectionThread.start()
+    #sensorsDataProcess.start()
+    #time.sleep(2)
+    #writeCSVFileProcess.start()
+    ## Wait for both processes to finish
+    #scdDetectionThread.join()
+    #sensorsDataProcess.join()
+    #writeCSVFileProcess.join()
+    postcontenttoserver.CSVPostToServer(SensorsDataObj)
     
