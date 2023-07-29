@@ -42,6 +42,13 @@ class SensorsDataConfig:
         self.activeSCD = False                                     
         self.scdMeasureTime = 5
 
+        # remote server for sending csv 
+        self.remoteServerAddress = ""
+
+        # waiting time for sending upload requests
+        self.uploadWaitingTime = 5
+        self.uploadWaitingErrorTime = 10
+
     def setCurrSys(self, currSys):
         self.currSys = currSys
 
@@ -108,6 +115,21 @@ class SensorsDataConfig:
         return pathDownload
     def getCSVBasicName(self):
         return self.csvBasicName
+
+    def setRemoteServerAddress(self, remoteServerAddress):
+        self.remoteServerAddress = remoteServerAddress
+    def getRemoteServerAddress(self):
+        return self.remoteServerAddress
+
+    def setUploadWaitingTime(self, uploadWaitingTime):
+        self.uploadWaitingTime = uploadWaitingTime
+    def getUploadWaitingTime(self):
+        return self.uploadWaitingTime
+    def setUploadWaitingErrorTime(self, uploadWaitingErrorTime):
+        self.uploadWaitingErrorTime = uploadWaitingErrorTime
+    def getUploadWaitingErrorTime(self):
+        return self.uploadWaitingErrorTime
+    
     
 # simple method for conversion from string to bool
 def booleConverter(stringValue):
@@ -146,6 +168,12 @@ def readConfiguration(configFile):
             SensorsDataObj.setSCDDutyTime(int(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "sys_analysis"):
             SensorsDataObj.setCurrSys(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "server_addr"):
+            SensorsDataObj.setRemoteServerAddress(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "upload_waiting_time"):
+            SensorsDataObj.setUploadWaitingTime(int(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "upload_waiting_err_time"):
+            SensorsDataObj.setUploadWaitingErrorTime(int(configuration.firstChild.data))
 
     return SensorsDataObj
 

@@ -30,13 +30,17 @@ def createSensorsHeader(sensorsRawLine):
             csvHeader.append(content)           # NH3 concentration
         if(indCol == 18):
             csvHeader.append(content)           # Combustibles concentration
-        addSCDHeaderPart(csvHeader, csvHeaderSCD)
+    addSCDHeaderPart(csvHeader, csvHeaderSCD)
+    addSessionHeaderPart(csvHeader)
     return csvHeader # header initialized
 
 def addSCDHeaderPart(csvHeader, scdHeaderPart):
     for scdHCol in scdHeaderPart:
         csvHeader.append(scdHCol)
     return csvHeader
+
+def addSessionHeaderPart(csvHeader):
+    csvHeader.append("Session")
 
 ########### CONTENT CREATION ############
 # Reading the content to put in a line of the CSV analysis file

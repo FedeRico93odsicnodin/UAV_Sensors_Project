@@ -1,7 +1,7 @@
 <data>
   <!-- main parameters -->
   <!-- refers to the CSV max number of lines per file created (header excluded) -->
-  <config name="csv_max_line">100</config>
+  <config name="csv_max_line">1000</config>
   <!-- output main path: successive folders will be created inside of it -->
   <config name="main_procedure_path">C:\Users\Fede\Documents\Arduino</config>
   <config name="sensors_folder_out">SensorsData</config>
@@ -23,4 +23,11 @@
   <config name="scd_duty_time">5</config>
   <!-- choose the system in which the analysis is lauched: WIN / RASP -->
   <config name="sys_analysis">WIN</config>
+  
+  <!-- location of the server to which forward the data -->
+  <config name="server_addr">http://192.168.100.8:5000/</config>
+  <!-- upload waiting time: time to wait before new upload requests to server -->
+  <config name="upload_waiting_time">5</config>
+  <!-- upload waiting error time: time to wait when an error in reaching the server is encountered before a new try -->
+  <config name="upload_waiting_err_time">10</config>
 </data>

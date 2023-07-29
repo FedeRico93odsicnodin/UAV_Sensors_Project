@@ -4,8 +4,11 @@
 
 # standard modules 
 import os
+import threading 
+from datetime import datetime
 # custom modules 
 import sensorscsv
+import postcontenttoserver
 
 # main body for the writer manager of CSV obtained from the read sensors data 
 def CSVFileWriterProcess(sensorsObj):
@@ -17,9 +20,13 @@ def CSVFileWriterProcess(sensorsObj):
     # path for the output and for the final download 
     csvOutputPath = os.path.join(sensorsDataPath, csvFileName)
     csvDownloadPath = os.path.join(downloadDataPath, csvFileName)
+    sessionDateTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     sensorMQLine = ["", "", "", "", "", ""]
     print(csvOutputPath)
     print(csvDownloadPath)
+    # upload to server thread 
+    uploadingToServerThread = threading.Thread(target=postcontenttoserver.CSVPostToServer, args=(sensorsObj,))
+    uploadingToServerThread.start()
     while(True):
         if(sensorsObj.sensorDataQueue().qsize() == 0): continue
         sensorDLine = sensorsObj.sensorDataQueue().get()
@@ -34,8 +41,9 @@ def CSVFileWriterProcess(sensorsObj):
         else:
             sensorMQLine = sensorsObj.sensorSCDQueue().get()
             sensorDLine = sensorscsv.appendExtraContentToSensorLine(sensorDLine, sensorMQLine)
-        print(sensorDLine)
+        sensorDLine.append(sessionDateTime)
         sensorscsv.writeCSVLine(sensorDLine, csvOutputPath)
+        print(sensorDLine)
         # management of the new file creation 
         if(lineIncrement == sensorsObj.getMaxLineNum()):
             csvHeaderInit = False
