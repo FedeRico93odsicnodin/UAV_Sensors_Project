@@ -11,24 +11,30 @@ import os
 # Creating the column header for the CSV file of analysis
 def createSensorsHeader(sensorsRawLine):
     csvHeader = []
-    csvHeaderSCD = ["SCD time", "ppm CO2", "C", "ticksC", "RH", "ticksRH"]
+    csvHeaderSCD = ["SCD4 time|SCD41|description SCD41", "ppm CO2|SCD41|description SCD41", "C|SCD41|description SCD41", "ticksC|SCD41|description SCD41", "RH|SCD41|description SCD41", "ticksRH|SCD41|description SCD41"]
     sensorsLineParts = utilitiesmanager.splitSensorDataLine(sensorsRawLine)
     # line of arduino is the first in header overall initialization 
     for indCol, content in enumerate(sensorsLineParts):
         if(indCol == 0):
-            csvHeader.append("TS (Arduino)")    # timestamp inferred for Arduino
-            csvHeader.append("TS (Rpi)")        # timestamp inferred for the script 
+            csvHeader.append("TS|(Arduino)")    # timestamp inferred for Arduino
+            csvHeader.append("TS|(Rpi)")        # timestamp inferred for the script 
         if(indCol == 3):
+            content = content.replace('_', '|')
             csvHeader.append(content)           # CH4 concentration
         if(indCol == 6):
+            content = content.replace('_', '|')
             csvHeader.append(content)           # CO concentration
         if(indCol == 9):
+            content = content.replace('_', '|')
             csvHeader.append(content)           # Generic concentrations
         if(indCol == 12):
+            content = content.replace('_', '|')
             csvHeader.append(content)           # Alcohol concentration
         if(indCol == 15):
+            content = content.replace('_', '|')
             csvHeader.append(content)           # NH3 concentration
         if(indCol == 18):
+            content = content.replace('_', '|')
             csvHeader.append(content)           # Combustibles concentration
     addSCDHeaderPart(csvHeader, csvHeaderSCD)
     addSessionHeaderPart(csvHeader)
