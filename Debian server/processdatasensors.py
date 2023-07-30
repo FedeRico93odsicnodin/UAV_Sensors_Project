@@ -16,7 +16,7 @@ def dataSensorsElaborateThread(serverDataObj):
     currDir = os.getcwd()
     outputCSVFolder = os.path.join(currDir, serverDataObj.getUploadCSVFolder())
     waitingProcessTime = serverDataObj.getWaitingProcessTime()
-    initDB
+
     while(True):
         orderedFilesToProcess = []
         pendingCSVFiles = os.listdir(outputCSVFolder)
@@ -31,8 +31,8 @@ def dataSensorsElaborateThread(serverDataObj):
             with open(filePath, 'rb') as f:
                 csvreader = csv.reader(f)
 
-                initGasesAndSensors(csvreader[0])
-                for row in csvreader:
+                #initGasesAndSensors(csvreader[0])
+                #for row in csvreader:
 
 
 def getFileDate(filePath):
@@ -62,12 +62,25 @@ def addFileRefToDictionary(currFilePath, currFileDate, orderedFilesToUpload):
     return orderedFilesToUpload
 
 def initGasesAndSensors(rowHeader):
-    for colHeader in rowHeader:
-        # way for identifying timestamp column 
-        if(colHeader.startswith('TS')):
-            continue
-        # identification of compound and relative sensor
-        colHeaderParts = colHeader.split('|')
-        if(len(colHeaderParts) != 3):
-            continue
+    # selection of the first row 
+    for rowH in rowHeader:
+        # the list of the retrieved values 
+        retrievedStartInfo = []
+        for colHeader in rowH:
+            # way for identifying timestamp column 
+            if(colHeader.startswith('TS')):
+                continue
+            # identification of compound and relative sensor
+            colHeaderParts = colHeader.split('|')
+            if(len(colHeaderParts) != 3):
+                continue
+            
+            currColValues = {
+                "gas": colHeaderParts[0]
+                , "sensor": colHeaderParts[1]
+                , "sensorDescr": colHeaderParts[2]}
+            retrievedStartInfo.append(currColValues)
+        break
+    return retrievedStartInfo
+
         

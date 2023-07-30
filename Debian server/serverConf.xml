@@ -11,6 +11,8 @@
 
     <!-- TEST: the method that is in testing -->
     <config name="curr_execution_test">insert_header_data</config>
+    <!-- TEST: the reference folder for the test documents -->
+    <config name="ref_docs_folder">ref_docs</config>
     <!-- TEST: the name of the CSV reference used for the test cases -->
     <config name="csv_test_ref">2023_07_29_18_07_51_417_sensorsAnalysis_ref.csv</config>
 </data>

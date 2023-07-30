@@ -18,6 +18,7 @@ class ServerDataConfig:
         # test cases utilities 
         self.curr_test_case = ''
         self.ref_csv_path = ''
+        self.ref_docs_folder = ''
 
     def setUploadCSVFolder(self, folderUpload):
         self.uploadCSVFolder = folderUpload 
@@ -41,10 +42,14 @@ class ServerDataConfig:
         self.curr_test_case = testCase
     def getCurrTestCase(self):
         return self.curr_test_case
-    def setCurrCsvRefPath(self, ref_csv):
+    def setCurrCsvRefName(self, ref_csv):
         self.ref_csv_path = ref_csv
-    def getCurrCsvRefPath(self):
+    def getCurrCsvRefName(self):
         return self.ref_csv_path
+    def setRefDocsFolder(self, ref_docs_folder):
+        self.ref_docs_folder = ref_docs_folder
+    def getRefDocsFolder(self):
+        return self.ref_docs_folder
         
 
 # read configuration method
@@ -64,5 +69,7 @@ def readConfiguration(configFile):
         if(configuration.attributes['name'].value == "curr_execution_test"):
             ServerDataObj.setCurrTestCase(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "csv_test_ref"):
-            ServerDataObj.setCurrCsvRefPath(str(configuration.firstChild.data))
+            ServerDataObj.setCurrCsvRefName(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "ref_docs_folder"):
+            ServerDataObj.setRefDocsFolder(str(configuration.firstChild.data))
     return ServerDataObj

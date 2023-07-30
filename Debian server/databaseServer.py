@@ -11,8 +11,6 @@ import time
 #custom modules 
 import dbmodels
 
-DatabaseLocation = ''
-
 def createDatabase(databaseLocation):
     # creation of database only if does not exist
     if(os.path.exists(databaseLocation)):
@@ -23,7 +21,7 @@ def createDatabase(databaseLocation):
     sqlite_detectedsubstances_table = """
         CREATE TABLE
         detected_substances(
-        id integer PRIMARY KEY,
+        id integer PRIMARY KEY AUTOINCREMENT,
         name text
         )
 """
@@ -31,7 +29,7 @@ def createDatabase(databaseLocation):
     sqlite_sessions_table = """
         CREATE TABLE 
         sessions(
-        id integer PRIMARY KEY,
+        id integer PRIMARY KEY AUTOINCREMENT,
         name text,
         begin_date datetime,
         end_date datetime 
@@ -41,7 +39,7 @@ def createDatabase(databaseLocation):
     sqlite_sensors_table = """
         CREATE TABLE
         sensors(
-        id integer PRIMARY KEY,
+        id integer PRIMARY KEY AUTOINCREMENT,
         name text,
         description text,
         gas_detection_ref integer,
@@ -52,7 +50,7 @@ def createDatabase(databaseLocation):
     sqllite_sensorsdata_table = """
         CREATE TABLE 
         processed_sensors_data(
-            id integer PRIMARY KEY, 
+            id integer PRIMARY KEY AUTOINCREMENT, 
             date datetime, 
             detected_substance_ref integer,
             detected_substance_value real,
@@ -73,33 +71,56 @@ def createDatabase(databaseLocation):
     cur.execute(sqllite_sensorsdata_table)
     con.close()
     DatabaseLocation = databaseLocation
+    print('DB LOCATION ' + DatabaseLocation)
 
-def insertCompoundsData(compoundsData):
-    con = sqlite3.connect(DatabaseLocation)
+def insertCompoundsData(databaseLocation, compoundsData):
+    con = sqlite3.connect(databaseLocation)
     cur = con.cursor()
-    sqllite_insertcompounds_statement = """
-    INSERT INTO detected_substances (name)
-        VALUES 
-"""
-    for rowCompound in compoundsData:
-        insertValue = "('" + rowCompound.name + "')"
-        sqllite_insertcompounds_statement += insertValue + " "
-    cur.execute(sqllite_insertcompounds_statement)
+    sqllite_insertcompounds_statement = "INSERT INTO detected_substances (id, name) VALUES (?, ?);"
+    cur.executemany(sqllite_insertcompounds_statement, compoundsData)
     con.commit()
     con.close()
 
-def getSensorsDefinitions():
-    con = sqlite3.connect(DatabaseLocation)
+def insertSensorsData(databaseLocation, sensorsData):
+    con = sqlite3.connect(databaseLocation)
     cur = con.cursor()
-    returnedSensors = []
+    sqllite_insertcompounds_statement = """INSERT INTO sensors 
+    (id, name, description, gas_detection_ref) VALUES (?, ?, ?, ?);"""
+    cur.executemany(sqllite_insertcompounds_statement, sensorsData)
+    con.commit()
+    con.close()
+
+# getting all the already stored compounds: 
+# data are returned in dictionary definition for easing the comparisons
+def getCompoundsDefinitions(databaseLocation):
+    print('DB LOCATION: ' + databaseLocation)
+    con = sqlite3.connect(databaseLocation)
+    sqllite_selectcompounds_statement = "SELECT id, name FROM detected_substances"
+    cur = con.execute(sqllite_selectcompounds_statement)
+    returnedCompounds = {}
+    
+    compoundsRecords = cur.fetchall()
+    for compRec in compoundsRecords:
+        currCompObj = dbmodels.CompoundObj()
+        currCompObj.id = int(compRec[0])
+        currCompObj.name = str(compRec[1])
+        returnedCompounds[currCompObj.name] = currCompObj
+    con.close()
+    return returnedCompounds
+
+def getSensorsDefinitions(databaseLocation):
+    con = sqlite3.connect(databaseLocation)
     sqllite_selectsensors_statement = """
     SELECT 
         id,
         name,
         description,
-        gas_detection_ref,
+        gas_detection_ref
         FROM sensors
 """
+    cur = con.execute(sqllite_selectsensors_statement)
+    returnedSensors = {}
+    
     sensorsRecords = cur.fetchall()
     for sensorRow in sensorsRecords:
         currSensorsDefition = dbmodels.SensorObj()
@@ -107,7 +128,8 @@ def getSensorsDefinitions():
         currSensorsDefition.name = str(sensorRow[1])
         currSensorsDefition.descrition = str(sensorRow[2])
         currSensorsDefition.gas_detection_ref = str(sensorRow[3])
-        sensorsRecords.append(currSensorsDefition)
-    return sensorsRecords
+        returnedSensors[currSensorsDefition.name] = currSensorsDefition
+    con.close()
+    return returnedSensors
 
 
