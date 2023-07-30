@@ -25,6 +25,8 @@ sessionCol = 0
 initGasesData = {} 
 # currently saved sensors characteristics
 initSensorsData = {}
+# current session for the CSV
+currSession = {}
 
 def dataSensorsElaborateThread(serverDataObj):
     currDir = os.getcwd()
@@ -33,7 +35,9 @@ def dataSensorsElaborateThread(serverDataObj):
     waitingProcessTime = serverDataObj.getWaitingProcessTime()
     global initGasesData
     global initSensorsData
+    global currSession
     while(True):
+        currSession = {}
         orderedFilesToProcess = []
         pendingCSVFiles = os.listdir(outputCSVFolder)
         if(len(pendingCSVFiles) == 0):
@@ -62,6 +66,8 @@ def dataSensorsElaborateThread(serverDataObj):
 def dataSnesorsElaborateThreadTEST(refCSVPath, dbLocation):
     global initGasesData
     global initSensorsData
+    global currSession
+    currSession = None
     with open(refCSVPath, 'r') as f:
         csvdata = csv.reader(f)
         # getting the first header definition on the first csv row 
@@ -229,10 +235,12 @@ def beginProcessSensorsData(csvdata, csvHeader, dbLocation):
         if(idx == 1): 
             currSession = checkSessionDB(sensorData, dbLocation)
         # processing sensor data row
-        processSensorsDataRow(sensorData, csvHeader, currSession)
-        idx = idx + 1
+        processSensorsDataRow(sensorData, csvHeader, currSession, dbLocation)
 
 def checkSessionDB(sensorData, dbLocation):
+    global currSession
+    if(currSession != None):
+        return currSession
     dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
     currSessionDatestamp = sensorData[sessionCol]
     currSessionDate = datetime.strptime(currSessionDatestamp, dateStampFormat)
@@ -242,9 +250,10 @@ def checkSessionDB(sensorData, dbLocation):
         databaseServer.addNewSessionValue(dbLocation, currSessionName, currSessionDate)
         currSessionObj = databaseServer.getSensorCurrSession(dbLocation, currSessionName)
     else: print('session present')
-    return currSessionObj
+    currSession = currSessionObj
+    return currSession
 
-def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
+def processSensorsDataRow(sensorDataRow, csvHeader, currSession, dbLocation):
     # date formats 
     dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
     # analysis start from the retrieved CSV header 
@@ -259,9 +268,10 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
     # all row analysis
     print(initSensorsData)
     for csvContent in csvHeader:
-        print(csvContent)
         if(trackNotAnalyzedColumn(csvContent)):
+            idxCsv = idxCsv + 1
             continue
+        print(csvContent)
         # definition of other parameters not to persist as data sensors 
         if(csvContent['gas'] == 'other'):
             idxCsv = idxCsv + 1
@@ -279,6 +289,7 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
             continue
         # sensed value 
         sensedValue = processSensorData(csvContent, sensorDataRow[idxCsv])
+        print(sensedValue)
         sensorRefId = initSensorsData[csvContent['sensor']].id
         gasRefId = initGasesData[csvContent['gas']].id
         sessionRefId = currSession.id
@@ -296,7 +307,7 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
         idxCsv = idxCsv + 1
     # insert values to db 
     print(toInsertValues)
-    #databaseServer.insertDataSensor(toInsertValues)
+    databaseServer.insertDataSensor(dbLocation, toInsertValues)
         
 
 def isArduinoSensor(sensorName):
@@ -318,10 +329,15 @@ def isArduinoSensor(sensorName):
 def trackNotAnalyzedColumn(colDefinition):
      if(colDefinition['gas'] == 'SCD time'):
          return True
+     if(colDefinition['gas'] == 'ticksC'):
+         return True
+     if(colDefinition['gas'] == 'ticksRH'):
+         return True
+     if(colDefinition['sensor'] == 'Session'):
+         return True
      return False
         
 def processSensorData(sensorDefinition, sensorValue):
-    print(sensorValue)
     sensedValue = 0
     if(sensorValue != ''):
         sensedValue = float(sensorValue)
@@ -338,6 +354,7 @@ def processSensorData(sensorDefinition, sensorValue):
         sensorValue = calibrateMQ135Sensor(sensorValue)
     if(sensorDefinition['sensor'] == 'MQ2'):
         sensorValue = calibrateMQ2Sensor(sensorValue)
+    return sensorValue
     
 
 def calibrateMQ4Sensor(sensorValue):

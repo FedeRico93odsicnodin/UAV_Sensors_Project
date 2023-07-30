@@ -112,8 +112,8 @@ def insertDataSensor(databaseLocation, dataSensedList):
     session_ref) VALUES (?, ?, ?, ?, ?, ?);"""
     dataToInsert = []
     for sensedData in dataSensedList:
-        dataToInsert.add(None, dataToInsert.date, dataToInsert.detected_substance_id, dataToInsert.detected_substance_val, dataToInsert.sensor_id, dataToInsert.session_ref)
-    cur.execute(sqllite_insertdata_statement, sensedData)
+        dataToInsert.append((None, sensedData.date, sensedData.detected_substance_id, sensedData.detected_substance_val, sensedData.sensor_id, sensedData.session_ref))
+    cur.executemany(sqllite_insertdata_statement, dataToInsert)
     con.commit()
     con.close()
 
