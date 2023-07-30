@@ -9,8 +9,11 @@
     <!-- post process time to wait for new incoming files in folder upload -->
     <config name="post_process_waiting_time">5</config>
 
-    <!-- TEST: the method that is in testing -->
-    <config name="curr_execution_test">insert_header_data</config>
+    <!-- TEST: the method that is in testing: selected among
+    insert_header_data
+    insert_all_csv_info
+     -->
+    <config name="curr_execution_test">insert_all_csv_info</config>
     <!-- TEST: the reference folder for the test documents -->
     <config name="ref_docs_folder">ref_docs</config>
     <!-- TEST: the name of the CSV reference used for the test cases -->

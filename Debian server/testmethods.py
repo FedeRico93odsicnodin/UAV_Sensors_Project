@@ -34,6 +34,8 @@ def executeCurrTestCase(serverDataObj):
     print('TEST CASE: ' + curr_test_case)
     if(curr_test_case == 'insert_header_data'):
         insertHeaderData_test(serverDataObj)
+    if(curr_test_case == 'insert_all_csv_info'):
+        insertAllCSVInfo_test(serverDataObj)
 
 def getRefCSVLocation(serverDataObj):
     currDir = os.getcwd()
@@ -45,7 +47,6 @@ def getDBLocation(serverDataObj):
     currDir = os.getcwd()
     outputDBPath = os.path.join(currDir, serverDataObj.getProcessedDBFolder(), serverDataObj.getDatabaseName())
     return outputDBPath
-
 
 def insertHeaderData_test(serverDataObj):
     refCSVLocation = getRefCSVLocation(serverDataObj)
@@ -105,9 +106,11 @@ def insertHeaderData_test(serverDataObj):
         print('no necessity for data addition to DB (SENSORS)')
     print('\n')
 
-
-
-
+def insertAllCSVInfo_test(serverDataObj):
+    currDir = os.getcwd()
+    databaseLocation = getDBLocation(serverDataObj)
+    refCSV = getRefCSVLocation(serverDataObj)
+    processdatasensors.dataSnesorsElaborateThreadTEST(refCSV, databaseLocation)
 
 serverDataObj = initServer()
 executeCurrTestCase(serverDataObj)

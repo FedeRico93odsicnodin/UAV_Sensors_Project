@@ -31,6 +31,8 @@ def dataSensorsElaborateThread(serverDataObj):
     outputCSVFolder = os.path.join(currDir, serverDataObj.getUploadCSVFolder())
     dbLocation = getDBLocation(serverDataObj)
     waitingProcessTime = serverDataObj.getWaitingProcessTime()
+    global initGasesData
+    global initSensorsData
     while(True):
         orderedFilesToProcess = []
         pendingCSVFiles = os.listdir(outputCSVFolder)
@@ -55,7 +57,40 @@ def dataSensorsElaborateThread(serverDataObj):
                 # checking if need to add initial or extra sensors to current analysis 
                 initSensorsData = checkIfNewSensorsToAdd(csvheader, initSensorsData, initGasesData, dbLocation)
                 # prepare and store current data values
-                beginProcessSensorsData(csvdata, csvheader)
+                beginProcessSensorsData(csvdata, csvheader, dbLocation)
+
+def dataSnesorsElaborateThreadTEST(refCSVPath, dbLocation):
+    global initGasesData
+    global initSensorsData
+    with open(refCSVPath, 'r') as f:
+        csvdata = csv.reader(f)
+        # getting the first header definition on the first csv row 
+        print('\n')
+        csvheader = initGasesAndSensors(csvdata)
+        print('STEP1: csv header parameter:')
+        print(csvheader)
+        # getting the SCD columns params for calibration
+        print('\n')
+        scdParams = initSCDParametersCalibration(csvheader)
+        print('STEP2: scd parameters for calibration:')
+        print(scdParams)
+        # getting the session header column index 
+        print('\n')
+        sessionCol = initSessionColIndex(csvheader)
+        print('STEP3: session col index')
+        print(sessionCol)
+        # checking if need to add initial or extra gases to current analysis 
+        print('\n')
+        initGasesData = checkIfNewGasesToAdd(csvheader, initGasesData, dbLocation)
+        print('STEP4: current gases')
+        print(initGasesData)
+        # checking if need to add initial or extra sensors to current analysis 
+        print('\n')
+        initSensorsData = checkIfNewSensorsToAdd(csvheader, initSensorsData, initGasesData, dbLocation)
+        print('STEP5: current sensors')
+        print(initSensorsData)
+        # prepare and store current data values
+        beginProcessSensorsData(csvdata, csvheader, dbLocation)
 
 def getFileDate(filePath):
     fileNameParts = filePath.split("_")
@@ -120,19 +155,27 @@ def initGasesAndSensors(rowHeader):
 
 def initSCDParametersCalibration(csvHeader):
     scdMarkers = {}
-    for idx, csvH in csvHeader:
+    idx = 0
+    for csvH in csvHeader:
         if csvH['sensor'] == 'SCD41' and csvH['gas'] == "C":
             scdMarkers['temperature_colindex'] = idx
         if csvH['sensor'] == 'SCD41' and csvH['gas'] == 'RH':
             scdMarkers['RH_colindex'] = idx
+        idx = idx + 1
     return scdMarkers
 
 def initSessionColIndex(rowHeader):
     sessionColHeader = 0
-    for idx, csvH in rowHeader:
-        if csvH['gas'] != 'other': continue
-        if csvH['sensor'] != 'Session': continue
+    idx = 0
+    for csvH in rowHeader:
+        if csvH['gas'] != 'other': 
+            idx = idx + 1
+            continue
+        if csvH['sensor'] != 'Session': 
+            idx = idx + 1
+            continue
         sessionColHeader = idx
+        idx = idx + 1
     return idx
 
 def getDBLocation(serverDataObj):
@@ -175,49 +218,64 @@ def checkIfNewSensorsToAdd(rowHeader, prevStoredSensors, checkedStoredGases, dbL
         prevStoredSensors = databaseServer.getCompoundsDefinitions(dbLocation)
     return prevStoredSensors
  
-def beginProcessSensorsData(csvdata, csvHeader):
-    for idx, sensorData in csvdata:
+def beginProcessSensorsData(csvdata, csvHeader, dbLocation):
+    idx = 0
+    for sensorData in csvdata:
         # data of the already analyzed header
-        if(idx == 0): continue
+        if(idx == 0): 
+            idx = idx + 1
+            continue
         # initializing the session
         if(idx == 1): 
-            currSession = checkSessionDB(sensorData)
+            currSession = checkSessionDB(sensorData, dbLocation)
         # processing sensor data row
         processSensorsDataRow(sensorData, csvHeader, currSession)
+        idx = idx + 1
 
-def checkSessionDB(sensorData):
-    dateStampFormat = '%Y-%m-%d %H:%M:%S'
+def checkSessionDB(sensorData, dbLocation):
+    dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
     currSessionDatestamp = sensorData[sessionCol]
     currSessionDate = datetime.strptime(currSessionDatestamp, dateStampFormat)
     currSessionName = 'session started in ' + currSessionDatestamp
-    currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
+    currSessionObj = databaseServer.getSensorCurrSession(dbLocation, currSessionName)
     if(currSessionObj == None):
-        databaseServer.addNewSessionValue(currSessionName, currSessionDate)
-        currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
+        databaseServer.addNewSessionValue(dbLocation, currSessionName, currSessionDate)
+        currSessionObj = databaseServer.getSensorCurrSession(dbLocation, currSessionName)
+    else: print('session present')
     return currSessionObj
 
 def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
     # date formats 
     dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
     # analysis start from the retrieved CSV header 
-    arduinoTimestamp = datetime.datetime(1, 1, 1, 0, 0)
-    raspberryTimestamp = datetime.datetime(1, 1, 1, 0, 0)
+    arduinoTimestamp = datetime(1, 1, 1, 0, 0)
+    raspberryTimestamp = datetime(1, 1, 1, 0, 0)
     sensedValue = 0
     sensorRefId = 0
     gasRefId = 0
     sessionRefId = 0
     toInsertValues = []
+    idxCsv = 0
     # all row analysis
-    for idxCsv, csvContent in csvHeader:
+    print(initSensorsData)
+    for csvContent in csvHeader:
+        print(csvContent)
+        if(trackNotAnalyzedColumn(csvContent)):
+            continue
         # definition of other parameters not to persist as data sensors 
         if(csvContent['gas'] == 'other'):
+            idxCsv = idxCsv + 1
             continue
         # definition for the timestamps of the current row 
-        if csvContent['gas'] == 'TS' and csvContent['sensor'] == 'Arduino':
+        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Arduino)':
             arduinoTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
+            print(arduinoTimestamp)
+            idxCsv = idxCsv + 1
             continue
-        if csvContent['gas'] == 'TS' and csvContent['sensor'] == 'Raspberry':
+        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Rpi)':
             raspberryTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
+            print(raspberryTimestamp)
+            idxCsv = idxCsv + 1
             continue
         # sensed value 
         sensedValue = processSensorData(csvContent, sensorDataRow[idxCsv])
@@ -235,8 +293,10 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
         currSensorObj.sensor_id = sensorRefId
         currSensorObj.session_ref = sessionRefId
         toInsertValues.append(currSensorObj)
+        idxCsv = idxCsv + 1
     # insert values to db 
-    databaseServer.insertDataSensor(toInsertValues)
+    print(toInsertValues)
+    #databaseServer.insertDataSensor(toInsertValues)
         
 
 def isArduinoSensor(sensorName):
@@ -254,9 +314,17 @@ def isArduinoSensor(sensorName):
     if(sensorName == 'MQ2'):
         isMQ = True
     return isMQ
+
+def trackNotAnalyzedColumn(colDefinition):
+     if(colDefinition['gas'] == 'SCD time'):
+         return True
+     return False
         
 def processSensorData(sensorDefinition, sensorValue):
-    sensedValue = int(sensorValue)
+    print(sensorValue)
+    sensedValue = 0
+    if(sensorValue != ''):
+        sensedValue = float(sensorValue)
     # calibration for the MQ sensors 
     if(sensorDefinition['sensor'] == 'MQ4'):
         sensedValue = calibrateMQ4Sensor(sensorValue)

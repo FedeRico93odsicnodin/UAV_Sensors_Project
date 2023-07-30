@@ -8,6 +8,7 @@
 import sqlite3
 import os
 import time 
+from datetime import datetime 
 #custom modules 
 import dbmodels
 
@@ -162,18 +163,27 @@ def getSensorCurrSession(databaseLocation, sessionName):
     sqllite_selectcompounds_statement = """SELECT 
     id, 
     name, 
-    begin_date 
-    FROM detected_substances
-    WHERE name = """ + '' + sessionName + ''
+    begin_date,
+    end_date
+    FROM sessions
+    WHERE name = """ + "'" + sessionName + "'"
     cur = con.execute(sqllite_selectcompounds_statement)
-    sessionRecord = cur.fetchone
-    if sessionRecord != None:
+    sessionRecord = cur.fetchone()
+    print(sessionRecord)
+    try:
         currSession = dbmodels.SessionObj()
-        currSession.id = sessionRecord[0]
-        currSession.name = sessionRecord[1]
-        currSession.begin_date = sessionRecord[2]
-        currSession.end_date = sessionRecord[3]
+        currSession.id = int(sessionRecord[0])
+        currSession.name = str(sessionRecord[1])
+        datetime1 = sessionRecord[2][:-3]
+        currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S.%f')
+        if(sessionRecord[3] != None):
+            datetime2 = sessionRecord[3][:-3]
+            currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S.%f')
         return currSession
+    except:
+        con.close()
+        return None
+    con.close()
     return None
 
 
