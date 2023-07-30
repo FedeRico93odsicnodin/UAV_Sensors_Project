@@ -41,12 +41,14 @@ def dataSensorsElaborateThread(serverDataObj):
         orderedFilesToProcess = []
         pendingCSVFiles = os.listdir(outputCSVFolder)
         if(len(pendingCSVFiles) == 0):
+            print('waiting for files')
             time.sleep(waitingProcessTime)
         for fileCSV in pendingCSVFiles:
             currFileDate = getFileDate(fileCSV)
             orderedFilesToProcess = addFileRefToDictionary(fileCSV, currFileDate, orderedFilesToProcess)
         while(len(orderedFilesToProcess) > 0):
             fileName = orderedFilesToProcess[0]["fileName"]
+            print('processing file ' + fileName)
             filePath = os.path.join(outputCSVFolder, fileName)
             with open(filePath, 'r') as f:
                 csvdata = csv.reader(f)
@@ -62,6 +64,11 @@ def dataSensorsElaborateThread(serverDataObj):
                 initSensorsData = checkIfNewSensorsToAdd(csvheader, initSensorsData, initGasesData, dbLocation)
                 # prepare and store current data values
                 beginProcessSensorsData(csvdata, csvheader, dbLocation)
+                print('file sensors rows has been added to DB')
+            # deletion of file
+            orderedFilesToProcess.remove(orderedFilesToProcess[0])
+            os.remove(filePath)
+            time.sleep(0.25)
 
 def dataSnesorsElaborateThreadTEST(refCSVPath, dbLocation):
     global initGasesData
@@ -249,7 +256,6 @@ def checkSessionDB(sensorData, dbLocation):
     if(currSessionObj == None):
         databaseServer.addNewSessionValue(dbLocation, currSessionName, currSessionDate)
         currSessionObj = databaseServer.getSensorCurrSession(dbLocation, currSessionName)
-    else: print('session present')
     currSession = currSessionObj
     return currSession
 
@@ -266,12 +272,10 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession, dbLocation):
     toInsertValues = []
     idxCsv = 0
     # all row analysis
-    print(initSensorsData)
     for csvContent in csvHeader:
         if(trackNotAnalyzedColumn(csvContent)):
             idxCsv = idxCsv + 1
             continue
-        print(csvContent)
         # definition of other parameters not to persist as data sensors 
         if(csvContent['gas'] == 'other'):
             idxCsv = idxCsv + 1
@@ -279,17 +283,14 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession, dbLocation):
         # definition for the timestamps of the current row 
         if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Arduino)':
             arduinoTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
-            print(arduinoTimestamp)
             idxCsv = idxCsv + 1
             continue
         if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Rpi)':
             raspberryTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
-            print(raspberryTimestamp)
             idxCsv = idxCsv + 1
             continue
         # sensed value 
         sensedValue = processSensorData(csvContent, sensorDataRow[idxCsv])
-        print(sensedValue)
         sensorRefId = initSensorsData[csvContent['sensor']].id
         gasRefId = initGasesData[csvContent['gas']].id
         sessionRefId = currSession.id
@@ -306,7 +307,6 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession, dbLocation):
         toInsertValues.append(currSensorObj)
         idxCsv = idxCsv + 1
     # insert values to db 
-    print(toInsertValues)
     databaseServer.insertDataSensor(dbLocation, toInsertValues)
         
 

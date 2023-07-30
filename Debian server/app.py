@@ -1,11 +1,14 @@
 from flask import Flask, render_template, request, url_for, jsonify
-
 import os
-
+import threading 
 import configurator
 import databaseServer
+import processdatasensors
+
+fileUploadPath = ''
 
 def initServer():
+    global fileUploadPath
     # getting the current configuration from the xml file 
     serverDataObj = configurator.readConfiguration("serverConf.xml")
     # creation of the data folders for the file csv out and the database storage
@@ -16,15 +19,17 @@ def initServer():
         os.mkdir(databaseLocation)
     if(os.path.exists(outputCSVLocation) == False):
         os.mkdir(outputCSVLocation)
+    fileUploadPath = outputCSVLocation
     databasePath = os.path.join(databaseLocation, serverDataObj.getDatabaseName())
     # database creation (if does not exist)
     databaseServer.createDatabase(databasePath)
+    # start thread for monitoring incoming uploads 
+    uploadDetectionThread = threading.Thread(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj,))
+    uploadDetectionThread.start()
     return serverDataObj
 
 initServer()
 app = Flask(__name__)
-
-
 
 # used for checking if the server is available 
 @app.route('/')
@@ -39,14 +44,17 @@ def endpoint():
     print('data from client:', input_json)
     dictToReturn = {'answer':42}
     return jsonify(dictToReturn)
+
 # UPLOAD request test
-@app.route('/tests/upload', methods = ['GET', 'POST'])
+@app.route('/CSV/upload', methods = ['GET', 'POST'])
 def upload_file():
+   global fileUploadPath
    if request.method == 'POST':
       print('begin')
       f = request.files['upload']
-      f.save(f.filename)
-      print('file uploaded successfully')
+      fileFinalPath = os.path.join(fileUploadPath, f.filename)
+      f.save(fileFinalPath)
+      print('file ' + f.name + 'has been uploaded successfully')
       return 'file uploaded successfully'
 
     
