@@ -90,10 +90,35 @@ def insertSensorsData(databaseLocation, sensorsData):
     con.commit()
     con.close()
 
+def addNewSessionValue(databaseLocation, sessionName, sessionBeginDate):
+    con = sqlite3.connect(databaseLocation)
+    cur = con.cursor()
+    sqllite_insertsession_statement = """INSERT INTO sessions
+    (id, name, begin_date, end_date) VALUES (?, ?, ?, ?)"""
+    cur.execute(sqllite_insertsession_statement, (None, sessionName, sessionBeginDate, None))
+    con.commit()
+    con.close()
+
+def insertDataSensor(databaseLocation, dataSensedList):
+    con = sqlite3.connect(databaseLocation)
+    cur = con.cursor()
+    sqllite_insertdata_statement = """INSERT INTO processed_sensors_data 
+    (id, 
+    date, 
+    detected_substance_ref, 
+    detected_substance_value, 
+    sensor_ref, 
+    session_ref) VALUES (?, ?, ?, ?, ?, ?);"""
+    dataToInsert = []
+    for sensedData in dataSensedList:
+        dataToInsert.add(None, dataToInsert.date, dataToInsert.detected_substance_id, dataToInsert.detected_substance_val, dataToInsert.sensor_id, dataToInsert.session_ref)
+    cur.execute(sqllite_insertdata_statement, sensedData)
+    con.commit()
+    con.close()
+
 # getting all the already stored compounds: 
 # data are returned in dictionary definition for easing the comparisons
 def getCompoundsDefinitions(databaseLocation):
-    print('DB LOCATION: ' + databaseLocation)
     con = sqlite3.connect(databaseLocation)
     sqllite_selectcompounds_statement = "SELECT id, name FROM detected_substances"
     cur = con.execute(sqllite_selectcompounds_statement)
@@ -131,5 +156,25 @@ def getSensorsDefinitions(databaseLocation):
         returnedSensors[currSensorsDefition.name] = currSensorsDefition
     con.close()
     return returnedSensors
+
+def getSensorCurrSession(databaseLocation, sessionName):
+    con = sqlite3.connect(databaseLocation)
+    sqllite_selectcompounds_statement = """SELECT 
+    id, 
+    name, 
+    begin_date 
+    FROM detected_substances
+    WHERE name = """ + '' + sessionName + ''
+    cur = con.execute(sqllite_selectcompounds_statement)
+    sessionRecord = cur.fetchone
+    if sessionRecord != None:
+        currSession = dbmodels.SessionObj()
+        currSession.id = sessionRecord[0]
+        currSession.name = sessionRecord[1]
+        currSession.begin_date = sessionRecord[2]
+        currSession.end_date = sessionRecord[3]
+        return currSession
+    return None
+
 
 

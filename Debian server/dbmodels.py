@@ -16,3 +16,19 @@ class SensorObj:
           self.name = ''
           self.descrition = ''
           self.gas_detection_ref = 0
+
+class SessionObj:
+     def __init__(self):
+          self.id = 0
+          self.name = ''
+          self.begin_date = datetime.datetime(1,1,1,0,0)
+          self.end_date = datetime.datetime(1,1,1,0,0)
+
+class SensorDataObj:
+     def __init__(self):
+          self.id = 0
+          self.date = datetime.datetime(1,1,1,0,0)
+          self.detected_substance_id = 0
+          self.detected_substance_val = 0
+          self.sensor_id = 0
+          self.session_ref = 0
