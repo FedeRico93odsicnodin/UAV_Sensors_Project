@@ -70,6 +70,8 @@ def insertHeaderData_test(serverDataObj):
     for sensorHeaderCol in initSensorsElements:
         if sensorHeaderCol['gas'] in storedCompounds.keys():
             continue
+        if sensorHeaderCol['gas'] == 'timestamp' or sensorHeaderCol['gas'] == 'other':
+            continue
         allNewCompoundsInCSV.append((None, sensorHeaderCol['gas']))
 
     if(len(allNewCompoundsInCSV) > 0):
@@ -88,6 +90,8 @@ def insertHeaderData_test(serverDataObj):
     sensorsToPersist = []
     for sensorHeaderCol in initSensorsElements:
         if(sensorHeaderCol['sensor'] in storedSensorsInfo.keys()):
+            continue
+        if sensorHeaderCol['gas'] == 'timestamp' or sensorHeaderCol['gas'] == 'other':
             continue
         # getting the information to persist for current row
         sensorName = sensorHeaderCol['sensor']
