@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, url_for, jsonify
 import os
 import threading 
+from multiprocessing import Process
 import configurator
 import databaseServer
 import processdatasensors
@@ -24,8 +25,8 @@ def initServer():
     # database creation (if does not exist)
     databaseServer.createDatabase(databasePath)
     # start thread for monitoring incoming uploads 
-    uploadDetectionThread = threading.Thread(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj,))
-    uploadDetectionThread.start()
+    uploadDetectionProcess = Process(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj,))
+    uploadDetectionProcess.start()
     return serverDataObj
 
 initServer()

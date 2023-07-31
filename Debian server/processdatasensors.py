@@ -37,20 +37,24 @@ def dataSensorsElaborateThread(serverDataObj):
     global initSensorsData
     global currSession
     while(True):
-        currSession = {}
+        currSession = None
         orderedFilesToProcess = []
+        print('running analysis')
         pendingCSVFiles = os.listdir(outputCSVFolder)
+        print(pendingCSVFiles)
         if(len(pendingCSVFiles) == 0):
             print('waiting for files')
             time.sleep(waitingProcessTime)
         for fileCSV in pendingCSVFiles:
             currFileDate = getFileDate(fileCSV)
+            print(currFileDate)
             orderedFilesToProcess = addFileRefToDictionary(fileCSV, currFileDate, orderedFilesToProcess)
         while(len(orderedFilesToProcess) > 0):
             fileName = orderedFilesToProcess[0]["fileName"]
             print('processing file ' + fileName)
             filePath = os.path.join(outputCSVFolder, fileName)
             with open(filePath, 'r') as f:
+                print(filePath)
                 csvdata = csv.reader(f)
                 # getting the first header definition on the first csv row 
                 csvheader = initGasesAndSensors(csvdata)
@@ -228,7 +232,7 @@ def checkIfNewSensorsToAdd(rowHeader, prevStoredSensors, checkedStoredGases, dbL
         allNewSensorsInCSV.append((None, sensorName, sensorDescription, refGasID))
     if(len(allNewSensorsInCSV) > 0):
         databaseServer.insertSensorsData(dbLocation, allNewSensorsInCSV)
-        prevStoredSensors = databaseServer.getCompoundsDefinitions(dbLocation)
+        prevStoredSensors = databaseServer.getSensorsDefinitions(dbLocation)
     return prevStoredSensors
  
 def beginProcessSensorsData(csvdata, csvHeader, dbLocation):
