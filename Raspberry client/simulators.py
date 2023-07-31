@@ -18,17 +18,17 @@ def getSimulatedArduinoStringSensors(startTime):
     elapsedTime = int(round((endTime - startTime)*1000))
     rndStringSensors = "Ms|"
     rndStringSensors += str(elapsedTime)
-    rndStringSensors += "|0|CH4|"
+    rndStringSensors += "|0|CH4_MQ4_Description for MQ4|"
     rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
-    rndStringSensors += "|1|CO|"
+    rndStringSensors += "|1|CO_MQ7_Description for MQ7|"
     rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
-    rndStringSensors += "|2|Gen|"
+    rndStringSensors += "|2|Gen_MQ5_Description for MQ5|"
     rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
-    rndStringSensors += "|3|Alcohol|"
+    rndStringSensors += "|3|Alcohol_MQ3_Description for MQ3|"
     rndStringSensors += str(getSimulatedSensorValue(40000, 50000, 100))
-    rndStringSensors += "|4|NH3|"
+    rndStringSensors += "|4|NH3_MQ135_Description for MQ135|"
     rndStringSensors += str(getSimulatedSensorValue(10000, 20000, 100))
-    rndStringSensors += "|5|Comb|"
+    rndStringSensors += "|5|Comb_MQ2_Description for MQ2|"
     rndStringSensors += str(getSimulatedSensorValue(30000, 40000, 100))
     rndStringSensors += "|"
     return rndStringSensors

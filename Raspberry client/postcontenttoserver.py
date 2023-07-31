@@ -25,7 +25,7 @@ def CSVPostToServer(sensorsObj):
                 try:
                     if(serverAddress.endswith("/") == False):
                         serverAddress = serverAddress + "/"
-                    postAddress = serverAddress +  "/tests/upload"
+                    postAddress = serverAddress +  "/CSV/upload"
                     r = requests.post(postAddress, files = {'upload': f})
                     if(r.status_code == 200 and r.text == 'file uploaded successfully' and r.reason == 'OK'):
                         print("upload success")
