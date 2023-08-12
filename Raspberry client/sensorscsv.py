@@ -11,7 +11,7 @@ import os
 # Creating the column header for the CSV file of analysis
 def createSensorsHeader(sensorsRawLine):
     csvHeader = []
-    csvHeaderSCD = ["SCD4 time|SCD41|description SCD41", "ppm CO2|SCD41|description SCD41", "C|SCD41|description SCD41", "ticksC|SCD41|description SCD41", "RH|SCD41|description SCD41", "ticksRH|SCD41|description SCD41"]
+    csvHeaderSCD = ["SCD time|SCD41|description SCD41", "ppm CO2|SCD41|description SCD41", "C|SCD41|description SCD41", "ticksC|SCD41|description SCD41", "RH|SCD41|description SCD41", "ticksRH|SCD41|description SCD41"]
     sensorsLineParts = utilitiesmanager.splitSensorDataLine(sensorsRawLine)
     # line of arduino is the first in header overall initialization 
     for indCol, content in enumerate(sensorsLineParts):
