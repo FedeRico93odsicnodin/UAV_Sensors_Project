@@ -36,10 +36,10 @@ def dataSensorsElaborateThread(serverDataObj):
     global initGasesData
     global initSensorsData
     global currSession
+    print('thread analyzer start')
     while(True):
         currSession = None
         orderedFilesToProcess = []
-        print('running analysis')
         pendingCSVFiles = os.listdir(outputCSVFolder)
         print(pendingCSVFiles)
         if(len(pendingCSVFiles) == 0):
@@ -112,27 +112,38 @@ def dataSnesorsElaborateThreadTEST(refCSVPath, dbLocation):
 def getFileDate(filePath):
     fileNameParts = filePath.split("_")
     fileYear = int(fileNameParts[0])
+    print(fileNameParts[0])
     fileMonth = int(fileNameParts[1])
+    print(fileNameParts[1])
     fileDay = int(fileNameParts[2])
+    print(fileNameParts[2])
     fileHour = int(fileNameParts[3])
+    print(fileNameParts[3])
     fileMinutes = int(fileNameParts[4])
+    print(fileNameParts[4])
     fileSeconds = int(fileNameParts[5])
+    print(fileNameParts[5])
     fileMillisicends = int(fileNameParts[6])
+    print(fileNameParts[6])
     fileDateTime = datetime(fileYear, fileMonth, fileDay, fileHour, fileMinutes, fileSeconds, fileMillisicends)
     return fileDateTime
 
 def addFileRefToDictionary(currFilePath, currFileDate, orderedFilesToUpload):
     if(len(orderedFilesToUpload) == 0):
         orderedFilesToUpload.append({ "fileName": currFilePath, "filedate": currFileDate})
+        print(orderedFilesToUpload)
         return orderedFilesToUpload
     inserted = False
     for indFile, listFilePath in enumerate(orderedFilesToUpload):
+        print(len(orderedFilesToUpload))
         if(listFilePath["filedate"] > currFileDate):
             orderedFilesToUpload.insert(indFile, { "fileName": currFilePath, "filedate": currFileDate})
             inserted = True
+            break
             
     if(inserted == False):
         orderedFilesToUpload.append({ "fileName": currFilePath, "filedate": currFileDate})
+    print(orderedFilesToUpload)
     return orderedFilesToUpload
 
 def initGasesAndSensors(rowHeader):
