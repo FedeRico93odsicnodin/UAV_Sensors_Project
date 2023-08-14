@@ -66,7 +66,7 @@
 
 
 
-    // Salse & Revenue Chart
+    // Salse & Revenue Chart: NB this is just a prototype!
     var ctx2 = $("#salse-revenue").get(0).getContext("2d");
     var myChart2 = new Chart(ctx2, {
         type: "line",
@@ -86,6 +86,30 @@
         }
     });
     
+    $("#dateFilters").click(function() {
+        $("#dashboardContent").hide()
+        $("#filterDateSelection").fadeIn('slow')
+    })
+
+    $("#backBtn").click(function() {
+        $("#filterDateSelection").hide()
+        $("#dashboardContent").fadeIn('slow')
+    })
+
+    $(document).ready(function() {
+        $("#dashboardContent").show()
+        $("#filterDateSelection").hide()
+        // Data Picker Initialization
+        $('#datetimepicker5').datetimepicker({
+            defaultDate: "11/1/2013",
+            disabledDates: [
+                moment("12/25/2013"),
+                new Date(2013, 11 - 1, 21),
+                "11/22/2013 00:53"
+            ]
+        });
+    })
     
 })(jQuery);
+
 
