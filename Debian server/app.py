@@ -35,7 +35,7 @@ app = Flask(__name__)
 # used for checking if the server is available 
 @app.route('/')
 def testConnection():
-    return 'Server is running'
+    return render_template('dashboard_main.html')
 # POST request test 
 @app.route('/tests/endpoint', methods=['POST'])
 def endpoint():
