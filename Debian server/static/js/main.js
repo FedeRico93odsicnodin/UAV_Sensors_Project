@@ -95,12 +95,28 @@
         $("#filterDateSelection").fadeIn('slow')
     })
     $("#sensorsFilters").click(function() {
-        $("#dashboardContent").hide()
-        $("#filterDateSelection").hide()
-        $("#filterGasesSelection").hide()
-        $("#filterSessionsSelection").hide()
-        $("#contextFiltersButtons").show()
-        $("#filterSensorsSelection").fadeIn('slow')
+        // TODO: substitution with configuration server 
+        $.ajax({
+            url: "http://192.168.1.16:5000/filters/sensors"
+            , success: function(data) {
+                var sensObj = JSON.parse(data)
+                $("#sensTable").empty()
+                for(var ind in sensObj) {
+                    var currRowSens = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>' + sensObj[ind].name + '</td></tr>'
+                    $('#sensTable').append(currRowSens);
+                    $("#dashboardContent").hide()
+                    $("#filterDateSelection").hide()
+                    $("#filterGasesSelection").hide()
+                    $("#filterSessionsSelection").hide()
+                    $("#contextFiltersButtons").show()
+                    $("#filterSensorsSelection").fadeIn('slow')
+                }
+            }
+            , error: function(err) {
+                console.log('an error occur retrieving sensors info:\n' + err)
+            }
+        })
+        
     })
     $("#gasFilters").click(function() {
         $("#dashboardContent").hide()

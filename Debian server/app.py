@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, url_for, jsonify
 import os
 import threading 
 from multiprocessing import Process
+import json
 import configurator
 import databaseServer
 import processdatasensors
@@ -65,7 +66,13 @@ def get_range_dates():
 
 @app.route('/filters/sensors', methods=['GET'])
 def get_range_sensors():
-    print('implementation of range sensors')
+    sensors = databaseServer.getSensorsDefinitions()
+    objSensors = []
+    for s in sensors:
+        objSensors.append(sensors[s].sensorObj())
+    res = json.dumps(objSensors)
+    print(res)
+    return res
 
 @app.route('/filters/gases', methods=['GET'])
 def get_range_gases():

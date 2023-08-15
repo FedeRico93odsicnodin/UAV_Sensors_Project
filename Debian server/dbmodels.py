@@ -4,6 +4,7 @@
 #
 
 import datetime 
+import json
 
 class CompoundObj:
      def __init__(self):
@@ -16,6 +17,8 @@ class SensorObj:
           self.name = ''
           self.descrition = ''
           self.gas_detection_ref = 0
+     def sensorObj(self):
+          return {"id":self.id, "name": self.name, "description": self.descrition, "ref_gas": self.gas_detection_ref}
 
 class SessionObj:
      def __init__(self):
