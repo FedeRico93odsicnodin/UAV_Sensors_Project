@@ -288,27 +288,6 @@ ui-lightness/jquery-ui.css'
         url_for('static', filename='js/main.js')
       }}"></script>
     
-      <script>
-        // TODO: creation of the GET function for the starting filters parameters
-        $(function() {
-            $( ".date_picker" ).datepicker({
-                minDate: new Date('02/11/2015'),
-                maxDate: new Date('03/05/2015')
-            });
-        // TODO: customize the time for the project and getting the min and max value depending on the interval
-        $(".time_picker").timepicker({
-            timeFormat: 'h:mm p',
-            interval: 30,
-            minTime: '10',
-            maxTime: '6:00pm',
-            defaultTime: '11',
-            startTime: '10:00',
-            dynamic: false,
-            dropdown: true,
-            scrollbar: true
-        });
-        });
-    </script>
 </body>
 
 </html>

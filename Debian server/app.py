@@ -62,7 +62,9 @@ def upload_file():
 # filters selections
 @app.route('/filters/date', methods=['GET'])
 def get_range_dates():
-    print('implementation of range date')
+    minMaxDates = databaseServer.getRangeDate()
+    res = json.dumps(minMaxDates)
+    return res
 
 @app.route('/filters/sensors', methods=['GET'])
 def get_range_sensors():
@@ -71,7 +73,6 @@ def get_range_sensors():
     for s in sensors:
         objSensors.append(sensors[s].sensorObj())
     res = json.dumps(objSensors)
-    print(res)
     return res
 
 @app.route('/filters/gases', methods=['GET'])

@@ -1,3 +1,29 @@
+function parseDate(currDate) {
+    var dateTimeParts = currDate.split(' ')
+    var dateParts = dateTimeParts[0].split('-')
+    return new Date(dateParts[0], dateParts[1], dateParts[2])
+}
+function parseTime(currDate) {
+    var dateTimeParts = currDate.split(' ')
+    var timeParts = dateTimeParts[1].split(':')
+    var hour = "0"
+    var minutes = "0"
+    console.log(timeParts)
+    if(timeParts[0].length == 2) {
+        hour = timeParts[0]
+    }
+    else {
+        hour += timeParts[0]
+    }
+    if(parseInt(timeParts[1] >= 30)) {
+        minutes = "30"
+    }
+    else {
+        minutes = "00"
+    }
+    return hour + ":" + minutes
+}
+
 (function ($) {
     "use strict";
 
@@ -85,14 +111,75 @@
             responsive: true
         }
     });
-    
+
     $("#dateFilters").click(function() {
-        $("#dashboardContent").hide()
-        $("#filterSensorsSelection").hide()
-        $("#filterGasesSelection").hide()
-        $("#filterSessionsSelection").hide()
-        $("#contextFiltersButtons").show()
-        $("#filterDateSelection").fadeIn('slow')
+        // TODO: substitution with configuration server 
+        $.ajax({
+            url: "http://192.168.1.16:5000/filters/date"
+            , success: function(data) {
+                var datesObj = JSON.parse(data)
+                // setting the range date for the current selection 
+                var minDateParsed = parseDate(datesObj['minDate'][0])
+                var maxDateParsed = parseDate(datesObj['maxDate'][0])
+                $( ".date_picker" ).datepicker({
+                    minDate: new Date(minDateParsed),
+                    maxDate: new Date(maxDateParsed)
+                });
+                // setting the time for the current selection 
+                var minTimeParsed = parseTime(datesObj['minDate'][0])
+                var maxTimeParsed = parseTime(datesObj['maxDate'][0])
+                // same starting and ending date 
+                if(minDateParsed.getTime() == maxDateParsed.getTime()) {
+                    $(".time_picker").timepicker({
+                        timeFormat: 'h:mm p',
+                        interval: 30,
+                        minTime: minTimeParsed,
+                        maxTime: maxTimeParsed,
+                        defaultTime: minTimeParsed,
+                        startTime: minTimeParsed,
+                        dynamic: false,
+                        dropdown: true,
+                        scrollbar: true
+                    });
+                }
+                // different dates for selection
+                else {
+                    $("#min_time_filter").timepicker({
+                        timeFormat: 'h:mm p',
+                        interval: 30,
+                        minTime: minTimeParsed,
+                        maxTime: "00:00",
+                        defaultTime: minTimeParsed,
+                        startTime: minTimeParsed,
+                        dynamic: false,
+                        dropdown: true,
+                        scrollbar: true
+                    });
+                    $("#max_time_filter").timepicker({
+                        timeFormat: 'h:mm p',
+                        interval: 30,
+                        minTime: "00:00",
+                        maxTime: maxTimeParsed,
+                        defaultTime: maxTimeParsed,
+                        startTime: maxTimeParsed,
+                        dynamic: false,
+                        dropdown: true,
+                        scrollbar: true
+                    });
+                }
+                $("#dashboardContent").hide()
+                $("#filterSensorsSelection").hide()
+                $("#filterGasesSelection").hide()
+                $("#filterSessionsSelection").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterDateSelection").fadeIn('slow')
+                
+            }
+            , error: function(err) {
+                console.log('an error occur retrieving sensors info:\n' + err)
+            }
+        })
+        
     })
     $("#sensorsFilters").click(function() {
         // TODO: substitution with configuration server 
@@ -101,22 +188,22 @@
             , success: function(data) {
                 var sensObj = JSON.parse(data)
                 $("#sensTable").empty()
+                // appending sensors to filters 
                 for(var ind in sensObj) {
                     var currRowSens = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>' + sensObj[ind].name + '</td></tr>'
                     $('#sensTable').append(currRowSens);
-                    $("#dashboardContent").hide()
-                    $("#filterDateSelection").hide()
-                    $("#filterGasesSelection").hide()
-                    $("#filterSessionsSelection").hide()
-                    $("#contextFiltersButtons").show()
-                    $("#filterSensorsSelection").fadeIn('slow')
                 }
+                $("#dashboardContent").hide()
+                $("#filterDateSelection").hide()
+                $("#filterGasesSelection").hide()
+                $("#filterSessionsSelection").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterSensorsSelection").fadeIn('slow')
             }
             , error: function(err) {
                 console.log('an error occur retrieving sensors info:\n' + err)
             }
         })
-        
     })
     $("#gasFilters").click(function() {
         $("#dashboardContent").hide()

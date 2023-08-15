@@ -187,7 +187,6 @@ def getSensorCurrSession(sessionName):
         WHERE name = """ + "'" + sessionName + "'"
         cur = con.execute(sqllite_selectcompounds_statement)
         sessionRecord = cur.fetchone()
-        print(sessionRecord)
         try:
             currSession = dbmodels.SessionObj()
             currSession.id = int(sessionRecord[0])
@@ -203,6 +202,31 @@ def getSensorCurrSession(sessionName):
             return None
         con.close()
     return None
+
+def getRangeDate():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_daterange_statement = """
+        select min(date) from processed_sensors_data dateSelector
+        union 
+        select max(date) from processed_sensors_data dateSelector
+        """
+        try:
+            cur = con.execute(sqlite_daterange_statement)
+            daterange = {}
+            minMaxDates = cur.fetchall()
+            daterange["minDate"] = minMaxDates[0]
+            daterange["maxDate"] = minMaxDates[1]
+            con.close()
+            return daterange
+        except:
+            con.close()
+            return None
+    return None     
+
+
+        
 
 
 
