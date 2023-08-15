@@ -25,7 +25,7 @@ def initServer():
     # database creation (if does not exist)
     databaseServer.createDatabase(databasePath)
     # start thread for monitoring incoming uploads 
-    uploadDetectionProcess = Process(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj,))
+    uploadDetectionProcess = Process(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj, ))
     uploadDetectionProcess.start()
     return serverDataObj
 
@@ -58,5 +58,21 @@ def upload_file():
       print('file ' + f.name + 'has been uploaded successfully')
       return 'file uploaded successfully'
 
+# filters selections
+@app.route('/filters/date', methods=['GET'])
+def get_range_dates():
+    print('implementation of range date')
+
+@app.route('/filters/sensors', methods=['GET'])
+def get_range_sensors():
+    print('implementation of range sensors')
+
+@app.route('/filters/gases', methods=['GET'])
+def get_range_gases():
+    print('implementation of range gases')
+
+@app.route('/filters/sessions', methods=['GET'])
+def get_range_sessions():
+    print('implementation of range sessions')
     
 

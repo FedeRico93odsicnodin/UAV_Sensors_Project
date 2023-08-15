@@ -9,12 +9,16 @@ import sqlite3
 import os
 import time 
 from datetime import datetime 
+from threading import Thread
+from threading import Lock
 #custom modules 
 import dbmodels
-
+DatabaseLocation = ''
 def createDatabase(databaseLocation):
+    global DatabaseLocation
     # creation of database only if does not exist
     if(os.path.exists(databaseLocation)):
+        DatabaseLocation = databaseLocation
         return
     
     con = sqlite3.connect(databaseLocation)
@@ -74,116 +78,130 @@ def createDatabase(databaseLocation):
     DatabaseLocation = databaseLocation
     print('DB LOCATION ' + DatabaseLocation)
 
-def insertCompoundsData(databaseLocation, compoundsData):
-    con = sqlite3.connect(databaseLocation)
-    cur = con.cursor()
-    sqllite_insertcompounds_statement = "INSERT INTO detected_substances (id, name) VALUES (?, ?);"
-    cur.executemany(sqllite_insertcompounds_statement, compoundsData)
-    con.commit()
-    con.close()
+def insertCompoundsData(compoundsData):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        cur = con.cursor()
+        sqllite_insertcompounds_statement = "INSERT INTO detected_substances (id, name) VALUES (?, ?);"
+        cur.executemany(sqllite_insertcompounds_statement, compoundsData)
+        con.commit()
+        con.close()
 
-def insertSensorsData(databaseLocation, sensorsData):
-    con = sqlite3.connect(databaseLocation)
-    cur = con.cursor()
-    sqllite_insertcompounds_statement = """INSERT INTO sensors 
-    (id, name, description, gas_detection_ref) VALUES (?, ?, ?, ?);"""
-    cur.executemany(sqllite_insertcompounds_statement, sensorsData)
-    con.commit()
-    con.close()
+def insertSensorsData(sensorsData):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        cur = con.cursor()
+        sqllite_insertcompounds_statement = """INSERT INTO sensors 
+        (id, name, description, gas_detection_ref) VALUES (?, ?, ?, ?);"""
+        cur.executemany(sqllite_insertcompounds_statement, sensorsData)
+        con.commit()
+        con.close()
 
-def addNewSessionValue(databaseLocation, sessionName, sessionBeginDate):
-    con = sqlite3.connect(databaseLocation)
-    cur = con.cursor()
-    sqllite_insertsession_statement = """INSERT INTO sessions
-    (id, name, begin_date, end_date) VALUES (?, ?, ?, ?)"""
-    cur.execute(sqllite_insertsession_statement, (None, sessionName, sessionBeginDate, None))
-    con.commit()
-    con.close()
+def addNewSessionValue(sessionName, sessionBeginDate):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        cur = con.cursor()
+        sqllite_insertsession_statement = """INSERT INTO sessions
+        (id, name, begin_date, end_date) VALUES (?, ?, ?, ?)"""
+        cur.execute(sqllite_insertsession_statement, (None, sessionName, sessionBeginDate, None))
+        con.commit()
+        con.close()
 
-def insertDataSensor(databaseLocation, dataSensedList):
-    con = sqlite3.connect(databaseLocation)
-    cur = con.cursor()
-    sqllite_insertdata_statement = """INSERT INTO processed_sensors_data 
-    (id, 
-    date, 
-    detected_substance_ref, 
-    detected_substance_value, 
-    sensor_ref, 
-    session_ref) VALUES (?, ?, ?, ?, ?, ?);"""
-    dataToInsert = []
-    for sensedData in dataSensedList:
-        dataToInsert.append((None, sensedData.date, sensedData.detected_substance_id, sensedData.detected_substance_val, sensedData.sensor_id, sensedData.session_ref))
-    cur.executemany(sqllite_insertdata_statement, dataToInsert)
-    con.commit()
-    con.close()
+def insertDataSensor(dataSensedList):
+    with Lock():
+        global DatabaseLocation 
+        con = sqlite3.connect(DatabaseLocation)
+        cur = con.cursor()
+        sqllite_insertdata_statement = """INSERT INTO processed_sensors_data 
+        (id, 
+        date, 
+        detected_substance_ref, 
+        detected_substance_value, 
+        sensor_ref, 
+        session_ref) VALUES (?, ?, ?, ?, ?, ?);"""
+        dataToInsert = []
+        for sensedData in dataSensedList:
+            dataToInsert.append((None, sensedData.date, sensedData.detected_substance_id, sensedData.detected_substance_val, sensedData.sensor_id, sensedData.session_ref))
+        cur.executemany(sqllite_insertdata_statement, dataToInsert)
+        con.commit()
+        con.close()
 
 # getting all the already stored compounds: 
 # data are returned in dictionary definition for easing the comparisons
-def getCompoundsDefinitions(databaseLocation):
-    con = sqlite3.connect(databaseLocation)
-    sqllite_selectcompounds_statement = "SELECT id, name FROM detected_substances"
-    cur = con.execute(sqllite_selectcompounds_statement)
-    returnedCompounds = {}
-    
-    compoundsRecords = cur.fetchall()
-    for compRec in compoundsRecords:
-        currCompObj = dbmodels.CompoundObj()
-        currCompObj.id = int(compRec[0])
-        currCompObj.name = str(compRec[1])
-        returnedCompounds[currCompObj.name] = currCompObj
-    con.close()
+def getCompoundsDefinitions():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqllite_selectcompounds_statement = "SELECT id, name FROM detected_substances"
+        cur = con.execute(sqllite_selectcompounds_statement)
+        returnedCompounds = {}
+        
+        compoundsRecords = cur.fetchall()
+        for compRec in compoundsRecords:
+            currCompObj = dbmodels.CompoundObj()
+            currCompObj.id = int(compRec[0])
+            currCompObj.name = str(compRec[1])
+            returnedCompounds[currCompObj.name] = currCompObj
+        con.close()
     return returnedCompounds
 
-def getSensorsDefinitions(databaseLocation):
-    con = sqlite3.connect(databaseLocation)
-    sqllite_selectsensors_statement = """
-    SELECT 
-        id,
-        name,
-        description,
-        gas_detection_ref
-        FROM sensors
-"""
-    cur = con.execute(sqllite_selectsensors_statement)
-    returnedSensors = {}
-    
-    sensorsRecords = cur.fetchall()
-    for sensorRow in sensorsRecords:
-        currSensorsDefition = dbmodels.SensorObj()
-        currSensorsDefition.id = int(sensorRow[0])
-        currSensorsDefition.name = str(sensorRow[1])
-        currSensorsDefition.descrition = str(sensorRow[2])
-        currSensorsDefition.gas_detection_ref = str(sensorRow[3])
-        returnedSensors[currSensorsDefition.name] = currSensorsDefition
-    con.close()
+def getSensorsDefinitions():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqllite_selectsensors_statement = """
+        SELECT 
+            id,
+            name,
+            description,
+            gas_detection_ref
+            FROM sensors
+    """
+        cur = con.execute(sqllite_selectsensors_statement)
+        returnedSensors = {}
+        
+        sensorsRecords = cur.fetchall()
+        for sensorRow in sensorsRecords:
+            currSensorsDefition = dbmodels.SensorObj()
+            currSensorsDefition.id = int(sensorRow[0])
+            currSensorsDefition.name = str(sensorRow[1])
+            currSensorsDefition.descrition = str(sensorRow[2])
+            currSensorsDefition.gas_detection_ref = str(sensorRow[3])
+            returnedSensors[currSensorsDefition.name] = currSensorsDefition
+        con.close()
     return returnedSensors
 
-def getSensorCurrSession(databaseLocation, sessionName):
-    con = sqlite3.connect(databaseLocation)
-    sqllite_selectcompounds_statement = """SELECT 
-    id, 
-    name, 
-    begin_date,
-    end_date
-    FROM sessions
-    WHERE name = """ + "'" + sessionName + "'"
-    cur = con.execute(sqllite_selectcompounds_statement)
-    sessionRecord = cur.fetchone()
-    print(sessionRecord)
-    try:
-        currSession = dbmodels.SessionObj()
-        currSession.id = int(sessionRecord[0])
-        currSession.name = str(sessionRecord[1])
-        datetime1 = sessionRecord[2][:-3]
-        currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S.%f')
-        if(sessionRecord[3] != None):
-            datetime2 = sessionRecord[3][:-3]
-            currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S.%f')
-        return currSession
-    except:
+def getSensorCurrSession(sessionName):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqllite_selectcompounds_statement = """SELECT 
+        id, 
+        name, 
+        begin_date,
+        end_date
+        FROM sessions
+        WHERE name = """ + "'" + sessionName + "'"
+        cur = con.execute(sqllite_selectcompounds_statement)
+        sessionRecord = cur.fetchone()
+        print(sessionRecord)
+        try:
+            currSession = dbmodels.SessionObj()
+            currSession.id = int(sessionRecord[0])
+            currSession.name = str(sessionRecord[1])
+            datetime1 = sessionRecord[2][:-3]
+            currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S.%f')
+            if(sessionRecord[3] != None):
+                datetime2 = sessionRecord[3][:-3]
+                currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S.%f')
+            return currSession
+        except:
+            con.close()
+            return None
         con.close()
-        return None
-    con.close()
     return None
 
 

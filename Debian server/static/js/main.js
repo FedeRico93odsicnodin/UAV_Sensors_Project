@@ -89,14 +89,34 @@
     $("#dateFilters").click(function() {
         $("#dashboardContent").hide()
         $("#filterSensorsSelection").hide()
+        $("#filterGasesSelection").hide()
+        $("#filterSessionsSelection").hide()
         $("#contextFiltersButtons").show()
         $("#filterDateSelection").fadeIn('slow')
     })
     $("#sensorsFilters").click(function() {
         $("#dashboardContent").hide()
         $("#filterDateSelection").hide()
+        $("#filterGasesSelection").hide()
+        $("#filterSessionsSelection").hide()
         $("#contextFiltersButtons").show()
         $("#filterSensorsSelection").fadeIn('slow')
+    })
+    $("#gasFilters").click(function() {
+        $("#dashboardContent").hide()
+        $("#filterSensorsSelection").hide()
+        $("#filterDateSelection").hide()
+        $("#filterSessionsSelection").hide()
+        $("#contextFiltersButtons").show()
+        $("#filterGasesSelection").fadeIn('slow')
+    })
+    $("#sessionFilters").click(function() {
+        $("#dashboardContent").hide()
+        $("#filterSensorsSelection").hide()
+        $("#filterGasesSelection").hide()
+        $("#filterDateSelection").hide()
+        $("#contextFiltersButtons").show()
+        $("#filterSessionsSelection").fadeIn('slow')
     })
 
     $("#backBtn").click(function() {
@@ -111,6 +131,8 @@
         $("#filterDateSelection").hide()
         $('#filterSensorsSelection').hide()
         $("#contextFiltersButtons").hide()
+        $("#filterGasesSelection").hide()
+        $("#filterSessionsSelection").hide()
     })
     
 })(jQuery);

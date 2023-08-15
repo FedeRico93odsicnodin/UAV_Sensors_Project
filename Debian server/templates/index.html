@@ -58,8 +58,10 @@
                         <div class="dropdown-menu bg-transparent border-0">
                             <a class="dropdown-item" id="dateFilters">Date</a>
                             <a class="dropdown-item" id="sensorsFilters">Sensor</a>
-                            <a href="element.html" class="dropdown-item">Session</a>
-                            <a href="element.html" class="dropdown-item">Position</a>
+                            <a class="dropdown-item" id="gasFilters">Gases</a>
+                            <a class="dropdown-item" id="sessionFilters">Session</a>
+                            <a class="dropdown-item" id="positionFilters">Position</a>
+                            <a class="dropdown-item" id="optionsFilters">Options</a>
                         </div>
                     </div>
                     <a href="widget.html" class="nav-item nav-link"><i class="bi bi-download me-2"></i>Download</a>
@@ -100,51 +102,53 @@
             <!-- Sales Chart End -->
             <!-- Content End -->
             <div id="filterDateSelection" style="margin:10px">
-                <div style="margin-top:40px" class="mx-auto">
-                    <h1>date filters</h1>
-                    <div class="bg-secondary rounded h-100 p-4">
-                        <table class="table table-dark">
-                            <tbody>
-                                <tr>
-                                    <td>Interval:</td>
-                                    <td></td>
-                                    <td>
-                                        <div class="dropdown">
-                                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                              Dropdown button
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                              <li><a class="dropdown-item" href="#">Today</a></li>
-                                              <li><a class="dropdown-item" href="#">This Week</a></li>
-                                              <li><a class="dropdown-item" href="#">This Month</a></li>
-                                              <li><a class="dropdown-item" href="#">Custom</a></li>
-                                            </ul>
-                                          </div>
-                                    </td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>Start date:</td>
-                                    <td>
-                                        <input type="text" class="date_picker" id="min_date_filter">
-                                    </td>
-                                    <td>Start time:</td>
-                                    <td>
-                                        <input type="text" class="time_picker" id="min_time_filter">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>End date:</td>
-                                    <td>
-                                        <input type="text" class="date_picker" id="max_date_filter">
-                                    </td>
-                                    <td>End time:</td>
-                                    <td>
-                                        <input type="text" class="time_picker" id="max_time_filter">
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div style="margin-top:40px" class="container-fluid pt-4 px-4">
+                    <h1>date selection</h1>
+                    <div class="bg-secondary rtext-center rounded p-4">
+                        <div class="table-responsive">
+                            <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td>Interval:</td>
+                                        <td></td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                                  Dropdown button
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                                  <li><a class="dropdown-item" href="#">Today</a></li>
+                                                  <li><a class="dropdown-item" href="#">This Week</a></li>
+                                                  <li><a class="dropdown-item" href="#">This Month</a></li>
+                                                  <li><a class="dropdown-item" href="#">Custom</a></li>
+                                                </ul>
+                                              </div>
+                                        </td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Start date:</td>
+                                        <td>
+                                            <input type="text" class="date_picker" id="min_date_filter">
+                                        </td>
+                                        <td>Start time:</td>
+                                        <td>
+                                            <input type="text" class="time_picker" id="min_time_filter">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>End date:</td>
+                                        <td>
+                                            <input type="text" class="date_picker" id="max_date_filter">
+                                        </td>
+                                        <td>End time:</td>
+                                        <td>
+                                            <input type="text" class="time_picker" id="max_time_filter">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -185,13 +189,88 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="fixed-bottom" id="contextFiltersButtons" style="margin:10px">
-            <div style="margin-right:50px;margin-bottom:10%;float:right">
-                <button type="button" class="btn btn-secondary btn-lg" id="backBtn" style="margin-right:25px;min-width: 100px;">Back</button>
-                <button type="button" class="btn btn-primary btn-lg" id="saveBtn" style="min-width: 100px;">Save</button>
+            <div id="filterGasesSelection" style="margin:10px">
+                <div class="container-fluid pt-4 px-4" style="margin-top:40px">
+                    <h1>gases selection</h1>
+                    <div class="bg-secondary text-center rounded p-4">
+                     <div class="table-responsive">
+                            <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ4</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ5</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ7</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ135</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ2</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>SCD41</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="filterSessionsSelection" style="margin:10px">
+                <div class="container-fluid pt-4 px-4" style="margin-top:40px">
+                    <h1>sessions selection</h1>
+                    <div class="bg-secondary text-center rounded p-4">
+                     <div class="table-responsive">
+                            <table class="table text-start align-middle table-bordered table-hover mb-0">
+                                <tbody>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ4</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ5</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ7</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ135</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>MQ2</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width:25px"><input class="form-check-input" type="checkbox"></td>
+                                        <td>SCD41</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="contextFiltersButtons" class="container-fluid pt-4 px-4">
+                <div style="margin-right:50px;margin-left:10px;float:left">
+                    <button type="button" class="btn btn-secondary btn-lg" id="backBtn" style="margin-right:25px;min-width: 100px;">Back</button>
+                    <button type="button" class="btn btn-primary btn-lg" id="saveBtn" style="min-width: 100px;">Save</button>
+                </div>
             </div>
         </div>
+        
         <!-- Back to Top -->
         <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
     </div>
