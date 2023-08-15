@@ -152,7 +152,7 @@ def getSensorsDefinitions():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqllite_selectsensors_statement = """
+        sqllite_selectsession_statement = """
         SELECT 
             id,
             name,
@@ -160,7 +160,7 @@ def getSensorsDefinitions():
             gas_detection_ref
             FROM sensors
     """
-        cur = con.execute(sqllite_selectsensors_statement)
+        cur = con.execute(sqllite_selectsession_statement)
         returnedSensors = {}
         
         sensorsRecords = cur.fetchall()
@@ -173,6 +173,38 @@ def getSensorsDefinitions():
             returnedSensors[currSensorsDefition.name] = currSensorsDefition
         con.close()
     return returnedSensors
+
+def getAllSessions():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqllite_selectallsessions_statement = """SELECT 
+        id, 
+        name, 
+        begin_date,
+        end_date
+        FROM sessions"""
+        cur = con.execute(sqllite_selectallsessions_statement)
+        returnedSessions = {}
+        allSessions = cur.fetchall()
+        try:
+            for sessionRecord in allSessions:
+                currSession = dbmodels.SessionObj()
+                currSession.id = int(sessionRecord[0])
+                currSession.name = str(sessionRecord[1])
+                datetime1 = sessionRecord[2][:-3]
+                currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S.%f')
+                if(sessionRecord[3] != None):
+                    datetime2 = sessionRecord[3][:-3]
+                    currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S.%f')
+                returnedSessions[currSession.name] = currSession
+            con.close()
+            return returnedSessions
+        except:
+            con.close()
+            return None
+    return None
+
 
 def getSensorCurrSession(sessionName):
     with Lock():
@@ -196,11 +228,11 @@ def getSensorCurrSession(sessionName):
             if(sessionRecord[3] != None):
                 datetime2 = sessionRecord[3][:-3]
                 currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S.%f')
+            con.close()
             return currSession
         except:
             con.close()
             return None
-        con.close()
     return None
 
 def getRangeDate():

@@ -176,7 +176,7 @@ function parseTime(currDate) {
                 
             }
             , error: function(err) {
-                console.log('an error occur retrieving sensors info:\n' + err)
+                console.log('an error occur retrieving range dates info:\n' + err)
             }
         })
         
@@ -206,20 +206,59 @@ function parseTime(currDate) {
         })
     })
     $("#gasFilters").click(function() {
-        $("#dashboardContent").hide()
-        $("#filterSensorsSelection").hide()
-        $("#filterDateSelection").hide()
-        $("#filterSessionsSelection").hide()
-        $("#contextFiltersButtons").show()
-        $("#filterGasesSelection").fadeIn('slow')
+        // TODO: substitution with configuration server 
+        $.ajax({
+            url: "http://192.168.1.16:5000/filters/gases"
+            , success: function(data) {
+                var gasesObj = JSON.parse(data)
+                $("#gasesTable").empty()
+                // appending sensors to filters 
+                for(var ind in gasesObj) {
+                    var currRowGas = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>' + gasesObj[ind].name + '</td></tr>'
+                    $('#gasesTable').append(currRowGas);
+                }
+                // same starting and ending date 
+                $("#dashboardContent").hide()
+                $("#filterSensorsSelection").hide()
+                $("#filterDateSelection").hide()
+                $("#filterSessionsSelection").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterGasesSelection").fadeIn('slow')
+                
+            }
+            , error: function(err) {
+                console.log('an error occur retrieving gases info:\n' + err)
+            }
+        })
+        
     })
     $("#sessionFilters").click(function() {
-        $("#dashboardContent").hide()
-        $("#filterSensorsSelection").hide()
-        $("#filterGasesSelection").hide()
-        $("#filterDateSelection").hide()
-        $("#contextFiltersButtons").show()
-        $("#filterSessionsSelection").fadeIn('slow')
+        // TODO: substitution with configuration server 
+        $.ajax({
+            url: "http://192.168.1.16:5000/filters/sessions"
+            , success: function(data) {
+                var sessionObj = JSON.parse(data)
+                $("#sessionsTable").empty()
+                // appending sensors to filters 
+                for(var ind in sessionObj) {
+                    console.log(sessionObj[ind])
+                    var currRowSession = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>' + sessionObj[ind].name + '</td></tr>'
+                    $('#sessionsTable').append(currRowSession);
+                }
+                // same starting and ending date 
+                $("#dashboardContent").hide()
+                $("#filterSensorsSelection").hide()
+                $("#filterGasesSelection").hide()
+                $("#filterDateSelection").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterSessionsSelection").fadeIn('slow')
+                
+            }
+            , error: function(err) {
+                console.log('an error occur retrieving gases info:\n' + err)
+            }
+        })
+        
     })
 
     $("#backBtn").click(function() {

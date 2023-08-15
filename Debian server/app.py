@@ -77,10 +77,22 @@ def get_range_sensors():
 
 @app.route('/filters/gases', methods=['GET'])
 def get_range_gases():
-    print('implementation of range gases')
+    compounds = databaseServer.getCompoundsDefinitions()
+    objCompounds = []
+    for c in compounds:
+        objCompounds.append(compounds[c].gasObj())
+    res = json.dumps(objCompounds)
+    return res
+    
 
 @app.route('/filters/sessions', methods=['GET'])
 def get_range_sessions():
-    print('implementation of range sessions')
+    allSessions = databaseServer.getAllSessions()
+    objSessions = []
+    for s in allSessions:
+        objSessions.append(allSessions[s].sessionObj())
+    res = json.dumps(objSessions)
+    return res
+
     
 
