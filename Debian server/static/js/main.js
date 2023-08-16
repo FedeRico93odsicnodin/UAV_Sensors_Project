@@ -39,6 +39,18 @@ function getSessionStorageFilters() {
     }
     return null
 }
+function getGasesToDisplay() {
+    var allFilters = getSessionStorageFilters()
+    var gasesToRetrieve = []
+    for(var currFilter in allFilters) {
+        if(allFilters[currFilter].filter_context != "Gases")
+            continue
+        if(allFilters[currFilter].selected == 0) 
+            continue
+        gasesToRetrieve.push({"gasId": parseInt(allFilters[currFilter].filter_value), "gasName": allFilters[currFilter].filter_name})
+    }
+    return gasesToRetrieve
+}
 function createFilterSessionObj(filterID, filterContext, selected, dataContent) {
     var newFilterOption = {}
     var selectedInt = 0
@@ -200,6 +212,7 @@ function initDateFilters(showView) {
                 $("#filterOptions").hide()
                 $("#contextFiltersButtons").show()
                 $("#filterDateSelection").fadeIn('slow')
+                return
             }
             if(checkIfLoadedFilters('DateFilters'))
                 loadDashboardData()
@@ -251,6 +264,7 @@ function initSensorsFilters(showView) {
                 $("#filterOptions").hide()
                 $("#contextFiltersButtons").show()
                 $("#filterSensorsSelection").fadeIn('slow')
+                return
             }
             if(checkIfLoadedFilters('SensorsFilters'))
                 loadDashboardData()
@@ -298,6 +312,7 @@ function initGasesFilters(showView) {
                 $("#filterOptions").hide()
                 $("#contextFiltersButtons").show()
                 $("#filterGasesSelection").fadeIn('slow')
+                return
             }
             if(checkIfLoadedFilters('GasesFilters'))
                 loadDashboardData()
@@ -345,6 +360,7 @@ function initSessionsFilters(showView) {
                 $("#filterOptions").hide()
                 $("#contextFiltersButtons").show()
                 $("#filterSessionsSelection").fadeIn('slow')
+                return
             }
             if(checkIfLoadedFilters('SessionsFilters'))
                 loadDashboardData()
@@ -412,6 +428,7 @@ function initOptionsFilters(showView) {
         $("#filterSessionsSelection").hide()
         $("#contextFiltersButtons").show()
         $("#filterOptions").fadeIn('slow')
+        return
     }
     if(checkIfLoadedFilters('OptionsFilters'))
         loadDashboardData()
@@ -450,20 +467,25 @@ function backToDashboardContext() {
 function loadDashboardData() {
     console.log('starting loading dashboard data')
     var gasTest = {"gasId": 3, "gasName": "CH4"}
-    $.ajax({
-        type: "POST",
-        url: "/gasdata",
-        data: JSON.stringify(gasTest),
-        contentType: "application/json",
-        dataType: 'json',
-        success: function(data) {
-            console.log(data)
-        },
-        error: function(err) {
-            alert('During saving filters an error occur')
-            console.log('error saving filters\n' + err)
-        }
-      });
+    var allGasesToRetrieve = getGasesToDisplay()
+    console.log(allGasesToRetrieve)
+    for(var currGas in allGasesToRetrieve) {
+        $.ajax({
+            type: "POST",
+            url: "/gasdata",
+            data: JSON.stringify(allGasesToRetrieve[currGas]),
+            contentType: "application/json",
+            dataType: 'json',
+            success: function(data) {
+                console.log(data)
+            },
+            error: function(err) {
+                alert('During saving filters an error occur')
+                console.log('error saving filters\n' + err)
+            }
+          });
+    }
+    
 }
 (function ($) {
     "use strict";

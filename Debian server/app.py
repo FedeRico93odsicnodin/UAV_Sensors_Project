@@ -107,7 +107,7 @@ def get_all_stored_filters():
     objFilters = {}
     for f in allFilters:
         if(allFilters[f].filter_context == 'Gases' or allFilters[f].filter_context == 'Sessions' or allFilters[f].filter_context == 'Sensors'):
-            nameProp = allFilters[f].filter_name + "_" + str(allFilters[f].id)
+            nameProp = allFilters[f].filter_name + "_" + str(allFilters[f].filter_value)
             objFilters[nameProp] = allFilters[f].filterObj()
             continue
         objFilters[allFilters[f].filter_name] = allFilters[f].filterObj()
@@ -122,16 +122,16 @@ def get_gasdata_selected():
     # verifying the selection as filter for the current substance 
     gasActivation = databaseServer.checkFilterActivatedOnGas(gasName, gasId)
     if(gasActivation == False):
-        return json.dumps({'status': 'gas not activated'})
+        return json.dumps({'status': gasName + ': gas not activated'})
     # verifying the activation of the respective sensor 
     sensorActivation = databaseServer.checkFilterActivateOnSensor(gasName, gasId)
     if(sensorActivation == False):
-       return json.dumps({'status': 'sensor not activated'})
+       return json.dumps({'status': gasName + ': sensor not activated'})
     # verifying presence of date filters 
     activeDateFilters = databaseServer.getActiveDataFilters()
     # getting the data for the current gas TODO: implement date filters selection
     currGasData = databaseServer.getAllDataSensorsToDisplay(gasId)
-    finalResult = {'status' : 'ok', 'gasData': currGasData}
+    finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 
