@@ -36,7 +36,7 @@ function getSessionStorageFilters() {
     }
     return null
 }
-function createFilterSessionObj(filterID, filterContext, selected) {
+function createFilterSessionObj(filterID, filterContext, selected, dataContent) {
     var newFilterOption = {}
     var selectedInt = 0
     if(selected) {
@@ -45,10 +45,15 @@ function createFilterSessionObj(filterID, filterContext, selected) {
     newFilterOption["selected"] = selectedInt 
     newFilterOption["filter_context"] = filterContext
     newFilterOption["filter_name"] = filterID 
-    if(typeof(document.getElementById(filterID).value) != 'undefined')
-        newFilterOption["filter_value"] = document.getElementById(filterID).value
-    else 
-        newFilterOption["filter_value"] = document.getElementById(filterID).innerHTML
+    if(dataContent !== undefined) {
+        newFilterOption["filter_value"] = dataContent
+    }
+    else {
+        if(typeof(document.getElementById(filterID).value) != 'undefined')
+            newFilterOption["filter_value"] = document.getElementById(filterID).value
+        else 
+            newFilterOption["filter_value"] = document.getElementById(filterID).innerHTML
+    }
     return newFilterOption
 }
 function setNewSessionStorageFilters() {
@@ -65,17 +70,17 @@ function setNewSessionStorageFilters() {
     for(var sensObj in OverallSensors) {
         var sensChecked = document.getElementById(OverallSensors[sensObj]['checkId']).checked
         var sensVal = OverallSensors[sensObj]['filterId']
-        newFilterObj[OverallSensors[sensObj]['filterNameId']] = createFilterSessionObj(OverallSensors[sensObj]['filterNameId'], "Sensors", sensChecked)
+        newFilterObj[OverallSensors[sensObj]['filterNameId']] = createFilterSessionObj(OverallSensors[sensObj]['name'], "Sensors", sensChecked, OverallSensors[sensObj]['id'])
     }
     for(var gasObj in OverallGases) {
         var gasChecked = document.getElementById(OverallGases[gasObj]['checkId']).checked 
         var gasVal = OverallGases[gasObj]['filterId']
-        newFilterObj[OverallGases[gasObj]['filterNameId']] = createFilterSessionObj(OverallGases[gasObj]['filterNameId'], "Gases", gasChecked)
+        newFilterObj[OverallGases[gasObj]['filterNameId']] = createFilterSessionObj(OverallGases[gasObj]['name'], "Gases", gasChecked, OverallGases[gasObj]['id'])
     }
     for(var sessionObj in OverallSessions) {
         var sessionChecked = document.getElementById(OverallSessions[sessionObj]['checkId']).checked 
         var sessionVal = OverallSessions[sessionObj]['filterId']
-        newFilterObj[OverallSessions[sessionObj]['filterNameId']] = createFilterSessionObj(OverallSessions[sessionObj]['filterNameId'], "Sessions", sessionChecked)
+        newFilterObj[OverallSessions[sessionObj]['filterNameId']] = createFilterSessionObj(OverallSessions[sessionObj]['name'], "Sessions", sessionChecked, OverallSessions[sessionObj]['id'])
     }
     // other options 
     newFilterObj['visualizationType'] = createFilterSessionObj("visualizationType", "FilterOptions", true)
@@ -561,6 +566,7 @@ function backToDashboardContext() {
             { 
                 // storing the string of session parameters 
                 sessionStorage.setItem("filterOptions", data);
+                console.log(JSON.parse(data))
                 // initializing all the filters visualizations
                 initAllFilters()
             }

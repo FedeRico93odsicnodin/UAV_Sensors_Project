@@ -295,32 +295,149 @@ def insertFilterOptions(selectedFilters):
         con.close()
 
 def getExistingFilters():
-    global DatabaseLocation
-    con = sqlite3.connect(DatabaseLocation)
-    sqllite_selectallsessions_statement = """SELECT 
-    id, 
-    selected, 
-    filter_context,
-    filter_name,
-    filter_value
-    FROM options_data_filters"""
-    cur = con.execute(sqllite_selectallsessions_statement)
-    returnedFilters = {}
-    allFilters = cur.fetchall()
-    try:
-        for filterRecord in allFilters:
-            currFilter = dbmodels.FilterObj()
-            currFilter.id = int(filterRecord[0])
-            currFilter.selected = int(filterRecord[1])
-            currFilter.filter_context = str(filterRecord[2])
-            currFilter.filter_name = str(filterRecord[3])
-            currFilter.filter_value = str(filterRecord[4])
-            returnedFilters[currFilter.filter_name] = currFilter
-        con.close()
-        return returnedFilters
-    except:
-        con.close()
-        return None
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqllite_selectallsessions_statement = """SELECT 
+        id, 
+        selected, 
+        filter_context,
+        filter_name,
+        filter_value
+        FROM options_data_filters"""
+        cur = con.execute(sqllite_selectallsessions_statement)
+        returnedFilters = {}
+        allFilters = cur.fetchall()
+        try:
+            for filterRecord in allFilters:
+                currFilter = dbmodels.FilterObj()
+                currFilter.id = int(filterRecord[0])
+                currFilter.selected = int(filterRecord[1])
+                currFilter.filter_context = str(filterRecord[2])
+                currFilter.filter_name = str(filterRecord[3])
+                currFilter.filter_value = str(filterRecord[4])
+                returnedFilters[currFilter.filter_name] = currFilter
+            con.close()
+            return returnedFilters
+        except:
+            con.close()
+            return None
     return None
 
+# data selections based on filters 
+# checking if the gas is selected in filters 
+def checkFilterActivatedOnGas(gasName, gasId):
+     with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_activefilter_statement = "SELECT selected FROM options_data_filters WHERE filter_name = '" + gasName + "' AND filter_value = " + gasId + " AND filter_context = 'Gases'"
+        cur = con.execute(sqlite_activefilter_statement)
+        gasRecord = cur.fetchone()
+        try:
+            if(gasRecord[0] == 1):
+                con.close()
+                return True
+            con.close()
+            return False
+        except:
+            con.close()
+            return False
+        return False
+     
+# checking if the sensor for the selected gas is selected in filters 
+def checkFilterActivateOnSensor(gasName, gasId):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_activefilter_statement = """
+                SELECT selected from options_data_filters
+                WHERE filter_name IN
+                (SELECT sensors.name from sensors JOIN detected_substances
+                ON sensors.gas_detection_ref = detected_substances.id 
+                WHERE detected_substances.name = ? AND detected_substances.id = ?)
+                AND filter_value in (SELECT sensors.id from sensors JOIN detected_substances
+                ON sensors.gas_detection_ref = detected_substances.id 
+                WHERE detected_substances.name = ? AND detected_substances.id = ?)
+                """
+        cur = con.execute(sqlite_activefilter_statement, (gasName, gasId, gasName, gasId))
+        gasRecord = cur.fetchone()
+        try:
+            if(gasRecord[0] == 1):
+                con.close()
+                return True
+            con.close()
+            return False
+        except:
+            con.close()
+            return False
+        return False
+
+# getting the active filters for the date 
+def getActiveDataFilters():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_activefilter_statement = """
+        SELECT id, selected, filter_context, filter_name, filter_value FROM options_data_filters
+        WHERE filter_context = 'Date' and selected = 1
+"""
+        returnedFilters = {}
+        cur = con.execute(sqlite_activefilter_statement)
+        dateRecords = cur.fetchall()
+        try:
+            for filterRecord in dateRecords:
+                currFilter = dbmodels.FilterObj()
+                currFilter.id = int(filterRecord[0])
+                currFilter.selected = int(filterRecord[1])
+                currFilter.filter_context = str(filterRecord[2])
+                currFilter.filter_name = str(filterRecord[3])
+                currFilter.filter_value = str(filterRecord[4])
+                returnedFilters[currFilter.filter_name] = currFilter
+            con.close()
+            return returnedFilters
+        except:
+            con.close()
+            return None
+    return None
+
+# getting all the data for the selected gas 
+def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin = None, dateRangeMax = None):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_dataselection_statement = """
+        SELECT 
+        processed_sensors_data.date
+        ,processed_sensors_data.detected_substance_value
+        FROM processed_sensors_data
+        WHERE processed_sensors_data.detected_substance_ref = ?
+        AND processed_sensors_data.session_ref in (SELECT 
+        filter_value FROM options_data_filters WHERE filter_context='Sessions')
+        ORDER BY processed_sensors_data.date 
+"""
+        # modification of the query for the selected data case TODO: implementation 
+        if(dateSelectionType == 'This week'):
+            sqlite_dataselection_statement = 'to implement'
+        if(dateSelectionType == 'This month'):
+            sqlite_dataselection_statement = 'to implement'
+        if(dateSelectionType == 'Today'):
+            sqlite_dataselection_statement = 'to implement'
+        if(dateSelectionType == 'Custom' and dateRangeMin != None and dateRangeMax != None):
+            sqlite_dataselection_statement = 'to implement'
+        if(dateSelectionType == 'None'):
+            cur = con.execute(sqlite_dataselection_statement, (gasId))
+        returnedData = []
+        dataRecords = cur.fetchall()
+        try:
+            for filterRecord in dataRecords:
+                currDataObj = {}
+                currDataObj['date'] = str(filterRecord[0])
+                currDataObj['value'] = float(filterRecord[1])
+                dataRecords.append(currDataObj)
+            con.close()
+            return dataRecords
+        except:
+            con.close()
+            return None
+        return None
 

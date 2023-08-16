@@ -110,5 +110,9 @@ def get_all_stored_filters():
     res = json.dumps(objFilters)
     return res
 
+@app.route('/gasdata', methods=['POST'])
+def get_gasdata_selected():
+    gasInputs = request.get_json() # TODO: implementation for returning the data object 
+
     
 
