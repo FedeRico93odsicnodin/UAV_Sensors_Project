@@ -330,7 +330,7 @@ def checkFilterActivatedOnGas(gasName, gasId):
      with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_activefilter_statement = "SELECT selected FROM options_data_filters WHERE filter_name = '" + gasName + "' AND filter_value = " + gasId + " AND filter_context = 'Gases'"
+        sqlite_activefilter_statement = "SELECT selected FROM options_data_filters WHERE filter_name = '" + gasName + "' AND filter_value = " + str(gasId) + " AND filter_context = 'Gases'"
         cur = con.execute(sqlite_activefilter_statement)
         gasRecord = cur.fetchone()
         try:
@@ -415,6 +415,7 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
         filter_value FROM options_data_filters WHERE filter_context='Sessions')
         ORDER BY processed_sensors_data.date 
 """
+        print(gasId)
         # modification of the query for the selected data case TODO: implementation 
         if(dateSelectionType == 'This week'):
             sqlite_dataselection_statement = 'to implement'
@@ -425,19 +426,15 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
         if(dateSelectionType == 'Custom' and dateRangeMin != None and dateRangeMax != None):
             sqlite_dataselection_statement = 'to implement'
         if(dateSelectionType == 'None'):
-            cur = con.execute(sqlite_dataselection_statement, (gasId))
+            cur = con.execute(sqlite_dataselection_statement, (gasId,))
         returnedData = []
         dataRecords = cur.fetchall()
-        try:
-            for filterRecord in dataRecords:
-                currDataObj = {}
-                currDataObj['date'] = str(filterRecord[0])
-                currDataObj['value'] = float(filterRecord[1])
-                dataRecords.append(currDataObj)
-            con.close()
-            return dataRecords
-        except:
-            con.close()
-            return None
-        return None
+        for filterRecord in dataRecords:
+            currDataObj = {}
+            currDataObj['date'] = filterRecord[0]
+            currDataObj['value'] = float(filterRecord[1])
+            returnedData.append(currDataObj)
+        
+        con.close()
+        return dataRecords
 

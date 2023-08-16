@@ -1,7 +1,10 @@
 // GLOBAL VARIABLES
+// overall loaded elements from GET filters requests 
 var OverallSensors = []
 var OverallGases = []
 var OverallSessions = []
+// loaded filters matrix 
+var loadedFiltersParams = {}
 // GLOBAL FUNCTIONS
 function parseDate(currDate) {
     var dateTimeParts = currDate.split(' ')
@@ -189,17 +192,17 @@ function initDateFilters(showView) {
             if(maxTimeToApply != '') {
                 document.getElementById("max_time_filter").value = maxTimeToApply
             }
-            if(showView == false) {
-                return
+            if(showView == true) {
+                $("#dashboardContent").hide()
+                $("#filterSensorsSelection").hide()
+                $("#filterGasesSelection").hide()
+                $("#filterSessionsSelection").hide()
+                $("#filterOptions").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterDateSelection").fadeIn('slow')
             }
-            $("#dashboardContent").hide()
-            $("#filterSensorsSelection").hide()
-            $("#filterGasesSelection").hide()
-            $("#filterSessionsSelection").hide()
-            $("#filterOptions").hide()
-            $("#contextFiltersButtons").show()
-            $("#filterDateSelection").fadeIn('slow')
-            
+            if(checkIfLoadedFilters('DateFilters'))
+                loadDashboardData()
         }
         , error: function(err) {
             console.log('an error occur retrieving range dates info:\n' + err)
@@ -240,16 +243,17 @@ function initSensorsFilters(showView) {
                 var checkId = sensorIdentifier + "_check"
                 document.getElementById(checkId).checked = checked
             }
-            if(showView == false) {
-                return
+            if(showView == true) {
+                $("#dashboardContent").hide()
+                $("#filterDateSelection").hide()
+                $("#filterGasesSelection").hide()
+                $("#filterSessionsSelection").hide()
+                $("#filterOptions").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterSensorsSelection").fadeIn('slow')
             }
-            $("#dashboardContent").hide()
-            $("#filterDateSelection").hide()
-            $("#filterGasesSelection").hide()
-            $("#filterSessionsSelection").hide()
-            $("#filterOptions").hide()
-            $("#contextFiltersButtons").show()
-            $("#filterSensorsSelection").fadeIn('slow')
+            if(checkIfLoadedFilters('SensorsFilters'))
+                loadDashboardData()
         }
         , error: function(err) {
             console.log('an error occur retrieving sensors info:\n' + err)
@@ -285,18 +289,18 @@ function initGasesFilters(showView) {
                 var checkId = gasesObj[ind]['checkId']
                 document.getElementById(checkId).checked = checked
             }
-            if(showView == false) {
-                return
+            if(showView == true) {
+                // same starting and ending date 
+                $("#dashboardContent").hide()
+                $("#filterSensorsSelection").hide()
+                $("#filterDateSelection").hide()
+                $("#filterSessionsSelection").hide()
+                $("#filterOptions").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterGasesSelection").fadeIn('slow')
             }
-            // same starting and ending date 
-            $("#dashboardContent").hide()
-            $("#filterSensorsSelection").hide()
-            $("#filterDateSelection").hide()
-            $("#filterSessionsSelection").hide()
-            $("#filterOptions").hide()
-            $("#contextFiltersButtons").show()
-            $("#filterGasesSelection").fadeIn('slow')
-            
+            if(checkIfLoadedFilters('GasesFilters'))
+                loadDashboardData()
         }
         , error: function(err) {
             console.log('an error occur retrieving gases info:\n' + err)
@@ -333,17 +337,17 @@ function initSessionsFilters(showView) {
                 var checkId = sessionObj[ind]['checkId']
                 document.getElementById(checkId).checked = checked
             }
-            if(showView == false) {
-                return
+            if(showView == true) {
+                $("#dashboardContent").hide()
+                $("#filterSensorsSelection").hide()
+                $("#filterGasesSelection").hide()
+                $("#filterDateSelection").hide()
+                $("#filterOptions").hide()
+                $("#contextFiltersButtons").show()
+                $("#filterSessionsSelection").fadeIn('slow')
             }
-            $("#dashboardContent").hide()
-            $("#filterSensorsSelection").hide()
-            $("#filterGasesSelection").hide()
-            $("#filterDateSelection").hide()
-            $("#filterOptions").hide()
-            $("#contextFiltersButtons").show()
-            $("#filterSessionsSelection").fadeIn('slow')
-            
+            if(checkIfLoadedFilters('SessionsFilters'))
+                loadDashboardData()
         }
         , error: function(err) {
             console.log('an error occur retrieving gases info:\n' + err)
@@ -400,16 +404,32 @@ function initOptionsFilters(showView) {
             document.getElementById("ppms_humidity_graph_check").checked = true
         }
     }
-    if(showView == false) {
-        return
+    if(showView == true) {
+        $("#dashboardContent").hide()
+        $("#filterSensorsSelection").hide()
+        $("#filterGasesSelection").hide()
+        $("#filterDateSelection").hide()
+        $("#filterSessionsSelection").hide()
+        $("#contextFiltersButtons").show()
+        $("#filterOptions").fadeIn('slow')
     }
-    $("#dashboardContent").hide()
-    $("#filterSensorsSelection").hide()
-    $("#filterGasesSelection").hide()
-    $("#filterDateSelection").hide()
-    $("#filterSessionsSelection").hide()
-    $("#contextFiltersButtons").show()
-    $("#filterOptions").fadeIn('slow')
+    if(checkIfLoadedFilters('OptionsFilters'))
+        loadDashboardData()
+}
+function initLoadedFiltersMatrix() {
+    loadedFiltersParams['DateFilters'] = false
+    loadedFiltersParams['SensorsFilters'] = false
+    loadedFiltersParams['GasesFilters'] = false
+    loadedFiltersParams['SessionsFilters'] = false
+    loadedFiltersParams['OptionsFilters'] = false
+}
+function checkIfLoadedFilters(currLoaded) {
+    loadedFiltersParams[currLoaded] = true
+    for(var k in loadedFiltersParams) {
+        if(loadedFiltersParams[k] == false) 
+            return false
+    }
+    return true
 }
 function initAllFilters() {
     initDateFilters(false)
@@ -426,6 +446,24 @@ function backToDashboardContext() {
     $("#dashboardContent").fadeIn('slow')
     $("#contextFiltersButtons").hide()
     $("#filterOptions").hide()
+}
+function loadDashboardData() {
+    console.log('starting loading dashboard data')
+    var gasTest = {"gasId": 3, "gasName": "CH4"}
+    $.ajax({
+        type: "POST",
+        url: "/gasdata",
+        data: JSON.stringify(gasTest),
+        contentType: "application/json",
+        dataType: 'json',
+        success: function(data) {
+            console.log(data)
+        },
+        error: function(err) {
+            alert('During saving filters an error occur')
+            console.log('error saving filters\n' + err)
+        }
+      });
 }
 (function ($) {
     "use strict";
@@ -564,9 +602,10 @@ function backToDashboardContext() {
             url: "/filters/allstored"
             , success: function(data) 
             { 
+                // resetting loaded filters markers 
+                initLoadedFiltersMatrix()
                 // storing the string of session parameters 
                 sessionStorage.setItem("filterOptions", data);
-                console.log(JSON.parse(data))
                 // initializing all the filters visualizations
                 initAllFilters()
             }
