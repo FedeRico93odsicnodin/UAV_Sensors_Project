@@ -23,7 +23,35 @@ function parseTime(currDate) {
     }
     return hour + ":" + minutes
 }
-
+function getSessionStorageFilters() {
+    var sessionStorageFiltersStr = sessionStorage.getItem("filterOptions");
+    if(typeof(sessionStorageFiltersStr != 'undefined')) {
+        var allFilters = JSON.parse(sessionStorageFiltersStr)
+        return allFilters
+    }
+    return null
+}
+function createFilterSessionObj(filterID, filterContext, selected) {
+    var newFilterOption = {}
+    newFilterOption["selected"] = selected 
+    newFilterOption["filter_context"] = filterContext
+    newFilterOption["filter_name"] = filterID 
+    newFilterOption["filter_value"] = document.getElementById(filterID).value
+    return newFilterOption
+}
+function setNewSessionStorageFilters() {
+    var newFilterObj = {}
+    var datesSelections = (document.getElementById("intervalSelection").value != "None")
+    newFilterObj["intervalSelection"] = createFilterSessionObj("intervalSelection", "Date", datesSelections)
+    newFilterObj["min_date_filter"] = createFilterSessionObj("min_date_filter", "Date", datesSelections)
+    newFilterObj["max_date_filter"] = createFilterSessionObj("max_date_filter", "Date", datesSelections)
+    newFilterObj["min_time_filter"] = createFilterSessionObj("min_time_filter", "Date", datesSelections)
+    newFilterObj["max_time_filter"] = createFilterSessionObj("max_time_filter", "Date", datesSelections)
+    // TODO: adding all the other filters options 
+    var filterObjToJSON = JSON.stringify(newFilterObj)
+    sessionStorage.setItem("filterOptions", filterObjToJSON)
+    return filterObjToJSON
+}
 (function ($) {
     "use strict";
 
@@ -115,9 +143,36 @@ function parseTime(currDate) {
     $("#dateFilters").click(function() {
         // TODO: substitution with configuration server 
         $.ajax({
-            url: "http://192.168.1.16:5000/filters/date"
+            url: "/filters/date"
             , success: function(data) {
                 var datesObj = JSON.parse(data)
+                // getting the already stored filters 
+                var filtersObj = getSessionStorageFilters()
+                var minDateToApply = ''
+                var maxDateToApply = ''
+                var minTimeToApply = ''
+                var maxTimeToApply = ''
+                if(filtersObj != null) {
+                    console.log(filtersObj)
+                    if("intervalSelection" in filtersObj) {
+                        document.getElementById("intervalSelection").value = filtersObj["intervalSelection"]["filter_value"]
+                    }
+                    else {
+                        document.getElementById("intervalSelection").value = "None"
+                    }
+                    if("min_date_filter" in filtersObj) {
+                        minDateToApply = filtersObj["min_date_filter"]["filter_value"]
+                    }
+                    if("max_date_filter" in filtersObj) {
+                        maxDateToApply = filtersObj["max_date_filter"]["filter_value"]
+                    }
+                    if("min_time_filter" in filtersObj) {
+                        minTimeToApply = filtersObj["min_time_filter"]["filter_value"]
+                    }
+                    if("max_time_filter" in filtersObj) {
+                        maxTimeToApply = filtersObj["max_time_filter"]["filter_value"]
+                    }
+                }
                 // setting the range date for the current selection 
                 var minDateParsed = parseDate(datesObj['minDate'][0])
                 var maxDateParsed = parseDate(datesObj['maxDate'][0])
@@ -125,6 +180,14 @@ function parseTime(currDate) {
                     minDate: new Date(minDateParsed),
                     maxDate: new Date(maxDateParsed)
                 });
+                // eventual application of retrieved dates 
+                if(minDateToApply != '') {
+                    document.getElementById("min_date_filter").value = minDateToApply
+                }
+                if(maxDateToApply != '') {
+                    document.getElementById("max_date_filter").value = maxDateToApply
+                }
+
                 // setting the time for the current selection 
                 var minTimeParsed = parseTime(datesObj['minDate'][0])
                 var maxTimeParsed = parseTime(datesObj['maxDate'][0])
@@ -167,6 +230,14 @@ function parseTime(currDate) {
                         scrollbar: true
                     });
                 }
+                // eventual application of retrieved times 
+                if(minTimeToApply != '') {
+                    document.getElementById("min_time_filter").value = minTimeToApply
+                }
+                if(maxTimeToApply != '') {
+                    document.getElementById("max_time_filter").value = maxTimeToApply
+                }
+                
                 $("#dashboardContent").hide()
                 $("#filterSensorsSelection").hide()
                 $("#filterGasesSelection").hide()
@@ -185,7 +256,7 @@ function parseTime(currDate) {
     $("#sensorsFilters").click(function() {
         // TODO: substitution with configuration server 
         $.ajax({
-            url: "http://192.168.1.16:5000/filters/sensors"
+            url: "/filters/sensors"
             , success: function(data) {
                 var sensObj = JSON.parse(data)
                 $("#sensTable").empty()
@@ -210,7 +281,7 @@ function parseTime(currDate) {
     $("#gasFilters").click(function() {
         // TODO: substitution with configuration server 
         $.ajax({
-            url: "http://192.168.1.16:5000/filters/gases"
+            url: "/filters/gases"
             , success: function(data) {
                 var gasesObj = JSON.parse(data)
                 $("#gasesTable").empty()
@@ -238,7 +309,7 @@ function parseTime(currDate) {
     $("#sessionFilters").click(function() {
         // TODO: substitution with configuration server 
         $.ajax({
-            url: "http://192.168.1.16:5000/filters/sessions"
+            url: "/filters/sessions"
             , success: function(data) {
                 var sessionObj = JSON.parse(data)
                 $("#sessionsTable").empty()
@@ -281,7 +352,16 @@ function parseTime(currDate) {
         $("#contextFiltersButtons").hide()
         $("#filterOptions").hide()
     })
-
+    $("#saveBtn").click(function() {
+        var newJSONFilters = setNewSessionStorageFilters()
+        $.ajax({
+            type: "POST",
+            url: "/filters/allstored",
+            data: newJSONFilters,
+            contentType: "application/json",
+            dataType: 'json' 
+          });
+    })
     $(document).ready(function() {
         $("#dashboardContent").show()
         $("#filterDateSelection").hide()
@@ -290,6 +370,18 @@ function parseTime(currDate) {
         $("#filterGasesSelection").hide()
         $("#filterSessionsSelection").hide()
         $("#filterOptions").hide()
+        $.ajax({
+            url: "/filters/allstored"
+            , success: function(data) 
+            { 
+                // storing the string of session parameters 
+                sessionStorage.setItem("filterOptions", data);
+            }
+            , error: function(err) {
+                console.log(err)
+            }
+        })
+
     })
     
 })(jQuery);

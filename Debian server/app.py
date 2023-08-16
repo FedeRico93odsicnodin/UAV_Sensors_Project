@@ -94,5 +94,22 @@ def get_range_sessions():
     res = json.dumps(objSessions)
     return res
 
+@app.route('/filters/allstored', methods=['GET', 'POST'])
+def get_all_stored_filters():
+    if request.method == "POST":
+        filtersJSON = request.get_json()
+        filtersToInsert = []
+        for f in filtersJSON:
+            filtersToInsert.append(filtersJSON[f])
+        print(filtersToInsert)
+        databaseServer.insertFilterOptions(filtersToInsert)
+        return 'ok'
+    allFilters = databaseServer.getExistingFilters()
+    objFilters = {}
+    for f in allFilters:
+        objFilters[allFilters[f].filter_name] = allFilters[f].filterObj()
+    res = json.dumps(objFilters)
+    return res
+
     
 

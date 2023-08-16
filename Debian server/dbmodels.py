@@ -31,6 +31,16 @@ class SessionObj:
      def sessionObj(self):
           return {"id": self.id, "name": self.name, "begin_date": str(self.begin_date), "end_date": str(self.end_date)}
 
+class FilterObj:
+     def __init__(self):
+          self.id = 0
+          self.selected = 0
+          self.filter_context = ''
+          self.filter_name = ''
+          self.filter_value = ''
+     def filterObj(self):
+          return {"id": self.id, "selected": self.selected, "filter_context": self.filter_context, "filter_name": self.filter_name, "filter_value": self.filter_value}
+
 class SensorDataObj:
      def __init__(self):
           self.id = 0
@@ -39,3 +49,4 @@ class SensorDataObj:
           self.detected_substance_val = 0
           self.sensor_id = 0
           self.session_ref = 0
+

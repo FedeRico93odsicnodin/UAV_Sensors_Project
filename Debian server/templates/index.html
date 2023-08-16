@@ -112,17 +112,13 @@
                                         <td>Interval:</td>
                                         <td></td>
                                         <td>
-                                            <div class="dropdown">
-                                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                                  Dropdown button
-                                                </button>
-                                                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                                  <li><a class="dropdown-item" href="#">Today</a></li>
-                                                  <li><a class="dropdown-item" href="#">This Week</a></li>
-                                                  <li><a class="dropdown-item" href="#">This Month</a></li>
-                                                  <li><a class="dropdown-item" href="#">Custom</a></li>
-                                                </ul>
-                                              </div>
+                                              <select class="select" id="intervalSelection">
+                                                <option value="None">None</option>
+                                                <option value="This week">This week</option>
+                                                <option value="This month">This month</option>
+                                                <option value="Custom">Custom</option>
+                                                <option value="Today">Today</option>
+                                              </select>
                                         </td>
                                         <td></td>
                                     </tr>

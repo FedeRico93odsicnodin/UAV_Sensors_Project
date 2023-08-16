@@ -66,6 +66,17 @@ def createDatabase(databaseLocation):
             FOREIGN KEY (detected_substance_ref) REFERENCES detected_substances (id)
             )
             """
+    # creation of options table 
+    sqllite_optionsfilters_table = """
+    CREATE TABLE
+    options_data_filters(
+    id integer PRIMARY KEY AUTOINCREMENT,
+    selected integer,
+    filter_context text,
+    filter_name text,
+    filter_value text
+    )
+"""
     cur = con.cursor()
     cur.execute(sqlite_detectedsubstances_table)
     time.sleep(0.1)
@@ -74,6 +85,8 @@ def createDatabase(databaseLocation):
     cur.execute(sqlite_sensors_table)
     time.sleep(0.1)
     cur.execute(sqllite_sensorsdata_table)
+    time.sleep(0.1)
+    cur.execute(sqllite_optionsfilters_table)
     con.close()
     DatabaseLocation = databaseLocation
     print('DB LOCATION ' + DatabaseLocation)
@@ -257,8 +270,57 @@ def getRangeDate():
             return None
     return None     
 
+def insertFilterOptions(selectedFilters):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_del_oldfilters_statement = """DELETE FROM options_data_filters
+        """
+        # deletion of old values for the filters 
+        cur = con.cursor()
+        cur.execute(sqlite_del_oldfilters_statement)
+        time.sleep(0.1)
+        # creation of the new filters 
+        sqllite_insertdata_statement = """INSERT INTO options_data_filters 
+        (id, 
+        selected, 
+        filter_context, 
+        filter_name, 
+        filter_value) VALUES (?, ?, ?, ?, ?);"""
+        dataToInsert = []
+        for filterOption in selectedFilters:
+            dataToInsert.append((None, filterOption["selected"], filterOption["filter_context"], filterOption["filter_name"], filterOption["filter_value"]))
+        cur.executemany(sqllite_insertdata_statement, dataToInsert)
+        con.commit()
+        con.close()
 
-        
-
+def getExistingFilters():
+    global DatabaseLocation
+    con = sqlite3.connect(DatabaseLocation)
+    sqllite_selectallsessions_statement = """SELECT 
+    id, 
+    selected, 
+    filter_context,
+    filter_name,
+    filter_value
+    FROM options_data_filters"""
+    cur = con.execute(sqllite_selectallsessions_statement)
+    returnedFilters = {}
+    allFilters = cur.fetchall()
+    try:
+        for filterRecord in allFilters:
+            currFilter = dbmodels.FilterObj()
+            currFilter.id = int(filterRecord[0])
+            currFilter.selected = int(filterRecord[1])
+            currFilter.filter_context = str(filterRecord[2])
+            currFilter.filter_name = str(filterRecord[3])
+            currFilter.filter_value = str(filterRecord[4])
+            returnedFilters[currFilter.filter_name] = currFilter
+        con.close()
+        return returnedFilters
+    except:
+        con.close()
+        return None
+    return None
 
 
