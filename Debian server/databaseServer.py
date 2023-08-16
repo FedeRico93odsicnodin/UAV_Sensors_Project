@@ -289,7 +289,7 @@ def insertFilterOptions(selectedFilters):
         filter_value) VALUES (?, ?, ?, ?, ?);"""
         dataToInsert = []
         for filterOption in selectedFilters:
-            dataToInsert.append((None, filterOption["selected"], filterOption["filter_context"], filterOption["filter_name"], filterOption["filter_value"]))
+            dataToInsert.append((None, int(filterOption["selected"]), str(filterOption["filter_context"]), str(filterOption["filter_name"]), str(filterOption["filter_value"])))
         cur.executemany(sqllite_insertdata_statement, dataToInsert)
         con.commit()
         con.close()

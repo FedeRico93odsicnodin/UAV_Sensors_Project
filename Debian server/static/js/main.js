@@ -1,3 +1,8 @@
+// GLOBAL VARIABLES
+var OverallSensors = []
+var OverallGases = []
+var OverallSessions = []
+// GLOBAL FUNCTIONS
 function parseDate(currDate) {
     var dateTimeParts = currDate.split(' ')
     var dateParts = dateTimeParts[0].split('-')
@@ -33,20 +38,35 @@ function getSessionStorageFilters() {
 }
 function createFilterSessionObj(filterID, filterContext, selected) {
     var newFilterOption = {}
-    newFilterOption["selected"] = selected 
+    var selectedInt = 0
+    if(selected) {
+        selectedInt = 1
+    }
+    newFilterOption["selected"] = selectedInt 
     newFilterOption["filter_context"] = filterContext
     newFilterOption["filter_name"] = filterID 
-    newFilterOption["filter_value"] = document.getElementById(filterID).value
+    if(typeof(document.getElementById(filterID).value) != 'undefined')
+        newFilterOption["filter_value"] = document.getElementById(filterID).value
+    else 
+        newFilterOption["filter_value"] = document.getElementById(filterID).innerHTML
     return newFilterOption
 }
 function setNewSessionStorageFilters() {
+    // overall filter object to persist 
     var newFilterObj = {}
+    // all the filters concerning the dates 
     var datesSelections = (document.getElementById("intervalSelection").value != "None")
     newFilterObj["intervalSelection"] = createFilterSessionObj("intervalSelection", "Date", datesSelections)
     newFilterObj["min_date_filter"] = createFilterSessionObj("min_date_filter", "Date", datesSelections)
     newFilterObj["max_date_filter"] = createFilterSessionObj("max_date_filter", "Date", datesSelections)
     newFilterObj["min_time_filter"] = createFilterSessionObj("min_time_filter", "Date", datesSelections)
     newFilterObj["max_time_filter"] = createFilterSessionObj("max_time_filter", "Date", datesSelections)
+    // all the filters concerning the sensors 
+    for(var sensObj in OverallSensors) {
+        var sensChecked = document.getElementById(OverallSensors[sensObj]['checkId']).checked
+        var sensVal = OverallSensors[sensObj]['filterId']
+        newFilterObj[OverallSensors[sensObj]['filterNameId']] = createFilterSessionObj(OverallSensors[sensObj]['filterNameId'], "Sensors", sensChecked)
+    }
     // TODO: adding all the other filters options 
     var filterObjToJSON = JSON.stringify(newFilterObj)
     sessionStorage.setItem("filterOptions", filterObjToJSON)
@@ -258,12 +278,36 @@ function setNewSessionStorageFilters() {
         $.ajax({
             url: "/filters/sensors"
             , success: function(data) {
+                OverallSensors = []
                 var sensObj = JSON.parse(data)
+                var sessionFilters = getSessionStorageFilters()
                 $("#sensTable").empty()
                 // appending sensors to filters 
                 for(var ind in sensObj) {
-                    var currRowSens = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>' + sensObj[ind].name + '</td></tr>'
+                    var checked = true
+                    var sensorIdentifier = sensObj[ind].name + "_" + sensObj[ind].id
+                    if(sensorIdentifier in sessionFilters) {
+                        if(sessionFilters[sensorIdentifier]["selected"] == "0") {
+                            checked = false
+                        }
+                    }
+                    var checkId = sensorIdentifier + "_check"
+                    var currRowSens = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="' + checkId + '" checked="' + checked + '"></td><td id="' + sensorIdentifier + '">' + sensObj[ind].name + '</td></tr>'
+                    sensObj[ind]['checkId'] = checkId
+                    sensObj[ind]['filterNameId'] = sensorIdentifier
                     $('#sensTable').append(currRowSens);
+                    OverallSensors.push(sensObj[ind])
+                }
+                for(var ind in sensObj) {
+                    var checked = true
+                    var sensorIdentifier = sensObj[ind].name + "_" + sensObj[ind].id
+                    if(sensorIdentifier in sessionFilters) {
+                        if(sessionFilters[sensorIdentifier]["selected"] == "0") {
+                            checked = false
+                        }
+                    }
+                    var checkId = sensorIdentifier + "_check"
+                    document.getElementById(checkId).checked = checked
                 }
                 $("#dashboardContent").hide()
                 $("#filterDateSelection").hide()
