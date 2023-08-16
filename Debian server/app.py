@@ -101,9 +101,8 @@ def get_all_stored_filters():
         filtersToInsert = []
         for f in filtersJSON:
             filtersToInsert.append(filtersJSON[f])
-        print(filtersToInsert)
         databaseServer.insertFilterOptions(filtersToInsert)
-        return 'ok'
+        return json.dumps({'status': 'ok'})
     allFilters = databaseServer.getExistingFilters()
     objFilters = {}
     for f in allFilters:

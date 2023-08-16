@@ -200,15 +200,12 @@
                                 <tbody id="sessionsTable">
                                     <tr>
                                         <td>visualization type</td>
-                                        <td><div class="dropdown">
-                                            <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                              Dropdown button
-                                            </button>
-                                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                              <li><a class="dropdown-item" href="#">Grouped by sensor type</a></li>
-                                              <li><a class="dropdown-item" href="#">Each sensor</a></li>
-                                            </ul>
-                                          </div></td>
+                                        <td>
+                                          <select class="select" id="visualizationType">
+                                            <option value="Each sensor">Each sensor</option>
+                                            <option value="Grouped by sensor type">Grouped by sensor type</option>
+                                          </select>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -216,16 +213,16 @@
                             <table class="table text-start align-middle table-bordered table-hover mb-0">
                                 <tbody id="sessionsTable">
                                     <!-- TODO: add all the other parameters to show here -->
-                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>show median</td></tr>
+                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="show_median_check"></td><td id="show_median">show median</td></tr>
                                 </tbody>
                             </table>
                             <h5 style="float:left;margin-top: 20px;margin-bottom: 5px;">other graphs</h5>
                             <table class="table text-start align-middle table-bordered table-hover mb-0">
                                 <tbody id="sessionsTable">
-                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>show temperature - time graph</td></tr>
-                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>show humidity - time graph</td></tr>
-                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox"></td><td>show all ppms - temperature graph</td></tr>
-                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox" value="true"></td><td>show all ppms - humidity graph</td></tr>
+                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="temperature_time_graph_check"></td><td id="temperature_time_graph">show temperature - time graph</td></tr>
+                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="humidity_time_graph_check"></td><td id="humidity_time_graph">show humidity - time graph</td></tr>
+                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="ppms_temperature_graph_check"></td><td id="ppms_temperature_graph">show all ppms - temperature graph</td></tr>
+                                    <tr><td style="width:25px"><input class="form-check-input" type="checkbox" value="true" id="ppms_humidity_graph_check"></td><td id="ppms_humidity_graph">show all ppms - humidity graph</td></tr>
                                 </tbody>
                             </table>
                         </div>
