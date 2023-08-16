@@ -106,6 +106,10 @@ def get_all_stored_filters():
     allFilters = databaseServer.getExistingFilters()
     objFilters = {}
     for f in allFilters:
+        if(allFilters[f].filter_context == 'Gases' or allFilters[f].filter_context == 'Sessions' or allFilters[f].filter_context == 'Sensors'):
+            nameProp = allFilters[f].filter_name + "_" + allFilters[f].id
+            objFilters[nameProp] = allFilters[f].filterObj()
+            continue
         objFilters[allFilters[f].filter_name] = allFilters[f].filterObj()
     res = json.dumps(objFilters)
     return res
