@@ -31,6 +31,17 @@ function parseTime(currDate) {
     }
     return hour + ":" + minutes
 }
+// this function returns an array of time values of the date string format to be compared 
+function parseTimeComplete(currDate) {
+    var dateTimeParts = currDate.split(' ')
+    var timeParts = dateTimeParts[1].split(':')
+    var hour = timeParts[0]
+    var minutes = timeParts[1]
+    var seconds = timeParts[2]
+    var secondsCleaned = seconds.split(".")
+    seconds = secondsCleaned[0]
+    return {"hh": hour, "mm": minutes, "ss": seconds}
+}
 function getSessionStorageFilters() {
     var sessionStorageFiltersStr = sessionStorage.getItem("filterOptions");
     if(typeof(sessionStorageFiltersStr != 'undefined')) {
@@ -464,6 +475,33 @@ function backToDashboardContext() {
     $("#contextFiltersButtons").hide()
     $("#filterOptions").hide()
 }
+function getDataToDisplay(dataObj, interval) {
+    var dataDisplay = {}
+    dataDisplay['labels'] = []
+    dataDisplay['data'] = []
+    var currMedian
+    var currTimeVal = null
+    for(var currEntry in dataObj.gasData) {
+        var currDate = dataObj.gasData[currEntry][0]
+        var currVal = dataObj.gasData[currEntry][1]
+        var dateRange = parseTimeComplete(currDate)
+        if(currTimeVal == null) {
+            currTimeVal = dateRange[interval]
+            currMedian = currVal
+            continue
+        }
+        if(currTimeVal == dateRange[interval]) {
+            currMedian += currVal
+            currMedian = currMedian / 2
+            continue
+        }
+        dataDisplay['labels'].push(currTimeVal)
+        dataDisplay['data'].push(currMedian)
+        currTimeVal = dateRange[interval]
+        currMedian = currVal
+    }
+    return dataDisplay
+}
 function loadDashboardData() {
     console.log('starting loading dashboard data')
     var gasTest = {"gasId": 3, "gasName": "CH4"}
@@ -477,7 +515,31 @@ function loadDashboardData() {
             contentType: "application/json",
             dataType: 'json',
             success: function(data) {
-                console.log(data)
+                if(data['status'].startsWith("ok_") == false) {
+                    console.log("nothing to display")
+                    return 
+                }
+                var dataDisplay = getDataToDisplay(data, "ss")
+                console.log(dataDisplay)
+                // Salse & Revenue Chart: NB this is just a prototype!
+                var ctx2 = $("#salse-revenue").get(0).getContext("2d");
+                var myChart2 = new Chart(ctx2, {
+                    type: "line",
+                    data: {
+                        labels: dataDisplay['labels'],
+                        datasets: [
+                            {
+                                label: "Revenue",
+                                data: dataDisplay['data'],
+                                backgroundColor: "rgba(235, 22, 22, .5)",
+                                fill: true
+                            }
+                        ]
+                        },
+                    options: {
+                        responsive: true
+                    }
+                });
             },
             error: function(err) {
                 alert('During saving filters an error occur')
@@ -555,25 +617,7 @@ function loadDashboardData() {
 
 
 
-    // Salse & Revenue Chart: NB this is just a prototype!
-    var ctx2 = $("#salse-revenue").get(0).getContext("2d");
-    var myChart2 = new Chart(ctx2, {
-        type: "line",
-        data: {
-            labels: ["2016", "2017", "2018", "2019", "2020", "2021", "2022"],
-            datasets: [
-                {
-                    label: "Revenue",
-                    data: [99, 135, 170, 130, 190, 180, 270],
-                    backgroundColor: "rgba(235, 22, 22, .5)",
-                    fill: true
-                }
-            ]
-            },
-        options: {
-            responsive: true
-        }
-    });
+    
 
     $("#dateFilters").click(function() {
         initDateFilters(true)

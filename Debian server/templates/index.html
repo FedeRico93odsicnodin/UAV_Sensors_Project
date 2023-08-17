@@ -88,11 +88,18 @@
             <!-- Sales Chart Start -->
             
             <div class="container-fluid pt-4 px-10" id="dashboardContent">
-                <div class="row">
-                    <div class="col-sm-12 col-xl-6 mx-auto">
+                <div class="row" style="margin-top: 15px;">
+                    <div class="col-sm-24 col-xl-10 mx-auto">
                         <div class="bg-secondary text-center rounded p-4">
                             <div class="d-flex align-items-center justify-content-between mb-4">
                                 <h6 class="mb-0">Salse & Revenue</h6>
+                                <select class="select" id="intervalDashboardSel">
+                                    <option value="mm">mm</option>
+                                    <option value="hh">hh</option>
+                                    <option value="d">d</option>
+                                    <option value="w">w</option>
+                                    <option value="m">m</option>
+                                  </select>
                             </div>
                             <canvas id="salse-revenue"></canvas>
                         </div>
