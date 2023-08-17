@@ -278,8 +278,19 @@ ui-lightness/jquery-ui.css'
     <script src="{{
         url_for('static', filename='lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js')
       }}"></script>
-
-    <!-- Template Javascript -->
+    <!-- Refresh visualized pages script -->
+    <script src="{{
+        url_for('static', filename='js/refreshView.js')
+    }}"></script>
+    <!-- Session storage script -->
+    <script src="{{
+        url_for('static', filename='js/sessionStorage.js')
+    }}"></script>
+    <!-- Load filters script -->
+    <script src="{{
+        url_for('static', filename='js/filtersLoad.js')
+    }}"></script>
+    <!-- Main script: User interaction -->
     <script src="{{
         url_for('static', filename='js/main.js')
       }}"></script>
