@@ -131,7 +131,7 @@ def get_gasdata_selected():
     activeDateFilters = databaseServer.getActiveDataFilters()
     # getting the data for the current gas TODO: implement date filters selection
     currGasData = databaseServer.getAllDataSensorsToDisplay(gasId)
-    finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData}
+    finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 
