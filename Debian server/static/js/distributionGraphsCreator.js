@@ -1,17 +1,36 @@
+function setNewIntervalGraph(sel, gasNameId) {
+    console.log(sel)
+    console.log(gasNameId)
+}
+function setNewPointNumberGraph(sel, gasNameId) {
+    console.log(sel)
+    console.log(gasNameId, gasNameId)
+}
 // html for rendering single canvas gas visualizer
 function createGasCanvas(gasName, gasNameId) {
+    // rendered html 
+    var selTimeInterval = 'intervalDashboardSel' + gasNameId
+    var selPointsInterval = 'pointsIntervalSel_' + gasNameId
     var htmlCanvas ='<div class="row" style="margin-top: 15px;">' +  
                         '<div class="col-sm-24 col-xl-10 mx-auto">' + 
                             '<div class="bg-secondary text-center rounded p-4">' +
-                                '<div class="d-flex align-items-center justify-content-between mb-4">' +
-                                    '<h6 class="mb-0">' + gasName + '</h6>' +
-                                    '<select class="select" id="intervalDashboardSel">' +
+                                '<div>' +
+                                    '<h6 class="mb-0" style="float:left">' + gasName + '</h6>' +
+                                    '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraph(this);">' +
                                         '<option value="ss">ss</option>' +
                                         '<option value="mm">mm</option>' +
                                         '<option value="hh">hh</option>' +
                                         '<option value="d">d</option>' +
                                         '<option value="w">w</option>' +
                                         '<option value="m">m</option>' +
+                                    '</select>' +
+                                    '<select class="select" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);">' +
+                                        '<option value="5">5</option>' +
+                                        '<option value="10">10</option>' +
+                                        '<option value="25">25</option>' +
+                                        '<option value="50">50</option>' +
+                                        '<option value="100">100</option>' +
+                                        '<option value="all">all</option>' +
                                     '</select>' +
                                 '</div>' +
                                 '<canvas id="' + gasNameId + '"></canvas>' +
@@ -78,5 +97,4 @@ function loadDashboardData() {
             }
           });
     }
-    
 }

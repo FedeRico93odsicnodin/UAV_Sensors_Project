@@ -103,13 +103,7 @@
           });
     })
     $(document).ready(function() {
-        $("#dashboardContent").show()
-        $("#filterDateSelection").hide()
-        $('#filterSensorsSelection').hide()
-        $("#contextFiltersButtons").hide()
-        $("#filterGasesSelection").hide()
-        $("#filterSessionsSelection").hide()
-        $("#filterOptions").hide()
+        backToDashboardContext()
         $.ajax({
             url: "/filters/allstored"
             , success: function(data) 
@@ -129,5 +123,3 @@
     })
     
 })(jQuery);
-
-
