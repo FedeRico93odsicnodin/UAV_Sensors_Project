@@ -34,9 +34,22 @@ function parseTimeComplete(currDate) {
     var seconds = timeParts[2]
     var secondsCleaned = seconds.split(".")
     seconds = secondsCleaned[0]
-    return {"hh": hour, "mm": minutes, "ss": seconds}
+    return {"hh": hour, "mm": minutes, "ss": seconds, "mmm": seconds[1]}
 }
-// gettting the approximated data to visualize in seconds interval. Everything in the interval of seconds will be mediated 
+// getting the approximated data to visualize in milliseconds interval. In this case all the set of points will be retrieved 
+function getDataToDisplayMMM(dataObj) {
+    var dataDisplay = {}
+    dataDisplay['labels'] = []
+    dataDisplay['data'] = []
+    for(var currEntry in dataObj.gasData) {
+        var currDate = dataObj.gasData[currEntry][0]
+        var currVal = dataObj.gasData[currEntry][1]
+        dataDisplay['labels'].push(currDate)
+        dataDisplay['data'].push(currVal)
+    }
+    return dataDisplay
+}
+// getting the approximated data to visualize in seconds interval. Everything in the interval of seconds will be mediated 
 function getDataToDisplaySS(dataObj) {
     var dataDisplay = {}
     dataDisplay['labels'] = []
@@ -70,5 +83,72 @@ function getDataToDisplaySS(dataObj) {
         currHours = dateRange['hh']
         currMedian = currVal
     }
+    dataDisplay['labels'].push(currHours + ":" + currMins + ':' + currTimeVal)
+    dataDisplay['data'].push(currMedian)
+    return dataDisplay
+}
+// getting the approximated data to visualize in minutes interval. Everything in the interval of minutes will be mediated 
+function getDataToDisplayMM(dataObj) {
+    var dataDisplay = {}
+    dataDisplay['labels'] = []
+    dataDisplay['data'] = []
+    var currMedian
+    var currTimeVal = null
+    var currHours
+    for(var currEntry in dataObj.gasData) {
+        var currDate = dataObj.gasData[currEntry][0]
+        var currVal = dataObj.gasData[currEntry][1]
+        var dateRange = parseTimeComplete(currDate)
+        if(currTimeVal == null) {
+            currTimeVal = dateRange['mm']
+            currHours = dateRange['hh']
+            currMedian = currVal
+            continue
+        }
+        if(currTimeVal == dateRange['mm'] && dateRange['hh'] == currHours) {
+            currMedian += currVal
+            currMedian = currMedian / 2
+            continue
+        
+        }
+        dataDisplay['labels'].push(currHours + ":" + currTimeVal)
+        dataDisplay['data'].push(currMedian)
+        currTimeVal = dateRange['mm']
+        currHours = dateRange['hh']
+        currMedian = currVal
+    }
+    dataDisplay['labels'].push(currHours + ":" + currTimeVal)
+    dataDisplay['data'].push(currMedian)
+    return dataDisplay
+}
+// getting the approximated data to visualize in hours interval. Everything in the interval of hours will be mediated 
+function getDataToDisplayHH(dataObj) {
+    var dataDisplay = {}
+    dataDisplay['labels'] = []
+    dataDisplay['data'] = []
+    var currMedian
+    var currTimeVal = null
+    for(var currEntry in dataObj.gasData) {
+        var currDate = dataObj.gasData[currEntry][0]
+        var currVal = dataObj.gasData[currEntry][1]
+        var dateRange = parseTimeComplete(currDate)
+        if(currTimeVal == null) {
+            currTimeVal = dateRange['hh']
+            currMedian = currVal
+            continue
+        }
+        if(currTimeVal == dateRange['hh']) {
+            currMedian += currVal
+            currMedian = currMedian / 2
+            continue
+        
+        }
+        dataDisplay['labels'].push(currTimeVal)
+        dataDisplay['data'].push(currMedian)
+        currTimeVal = dateRange['hh']
+        currMedian = currVal
+    }
+    dataDisplay['labels'].push(currTimeVal)
+    dataDisplay['data'].push(currMedian)
     return dataDisplay
 }
