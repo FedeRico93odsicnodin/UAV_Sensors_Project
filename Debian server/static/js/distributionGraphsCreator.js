@@ -100,6 +100,24 @@ function decidePointsIntervalSelection(gasNameId, visualizationType, currVisuali
     selStartHtml += '</select>'
     return selStartHtml
 }
+function moveBackward(arrId) {
+    console.log(arrId)
+}
+function moveForward(arrId) {
+    console.log(arrId)
+}
+// moving buttons through iterated points 
+function getMovingButtonsHtml() {
+    var renderHtml = '<div style="margin-top:35px">' + 
+    '<span onclick="moveBackward(this)" class="bi bi-arrow-left-circle" style="float:left;font-size: 1.5rem;"></span>' + 
+    '<input type="text" style="width:35px;height:20px;float:left;margin-left:7.5px;margin-top:8.5px" id="usr" value="1"></input>'+
+    
+    '<span onclick="moveForward(this)" class="bi bi-arrow-right-circle" style="float:right;font-size: 1.5rem;"></span>' + 
+    '<input type="text" style="width:35px;height:20px;float:right;margin-right:7.5px;margin-top:8.5px" id="usr" value="1"></input>'+
+    '</div>'
+    return renderHtml
+}
+
 // html for rendering single canvas gas visualizer
 function createGasCanvas(gasName, gasNameId, visualizationType, selIntervalHtml, selPointsHtml) {
     // rendered html 
@@ -115,6 +133,7 @@ function createGasCanvas(gasName, gasNameId, visualizationType, selIntervalHtml,
                                     selIntervalHtml + 
                                     selPointsHtml + 
                                 '</div>' +
+                                getMovingButtonsHtml() + 
                                 '<canvas id="' + gasVisualizationType + '"></canvas>' +
                             '</div>' +
                         '</div>'
