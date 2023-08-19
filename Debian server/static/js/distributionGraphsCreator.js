@@ -1,5 +1,6 @@
 // global variables of all the data to manage 
-var rawDataSensors = {}
+var allTimeDivisionPoints = {}
+var allChartsRefs = {}
 // getting the gasNameId from the selector id 
 function getGasNameIdFromSelectorId(selId) {
     var currIdParts = selId.split("_")
@@ -9,6 +10,11 @@ function getGasNameIdFromSelectorId(selId) {
 function getCurrTimeRangeFromSelectorId(selId) {
     var currIdParts = selId.split("_")
     var currTimeSel = currIdParts[1]
+    return currTimeSel
+}
+function getCurrTimeFromCurrGasSelectionId(selId) {
+    var currIdParts = selId.split("_")
+    var currTimeSel = currIdParts[0]
     return currTimeSel
 }
 // changing the visualization because of new inverval selection 
@@ -24,8 +30,8 @@ function setNewIntervalGraph(sel) {
     document.getElementById(sel.id).value = timeRange
 
     // creation of the selectors for the changing context 
-    var oldRowVisualization = gasNameId + "_" + timeRange + "_row"
-    var newRowVisualization = gasNameId + "_" + currSelectedTime + "_row"
+    var oldRowVisualization = timeRange + "_"  + gasNameId + "_row"
+    var newRowVisualization = currSelectedTime + "_" + gasNameId +  "_row"
     $("#" + oldRowVisualization).hide()
     $("#" + newRowVisualization).show()
 }
@@ -34,26 +40,38 @@ function setNewPointNumberGraph(sel) {
     // getting curr gasNameId and time interval 
     var gasNameId = getGasNameIdFromSelectorId(sel.id)
     var timeRange = getCurrTimeRangeFromSelectorId(sel.id)
-    console.log(timeRange)
+    var currSelectionVal = parseInt(document.getElementById(sel.id).value)
+    var contextArrowsMenuId = "moveButtons_"+ timeRange + "_" + gasNameId
+    console.log(currSelectionVal)
+    // visualization of the curr context menu 
+    if(currSelectionVal < allTimeDivisionPoints[timeRange + "_" + gasNameId]["data"].length) {
+        $("#" + contextArrowsMenuId).show() 
+    }
+    else {
+        $("#" + contextArrowsMenuId).hide() 
+    }
+    // changing the visualization of points on curve 
+    var gasVisualizationType = gasNameId + "_" + timeRange
+
 }
 // deciding how many selections for time visualizations add to curve  
 function decideTimeIntervalSelection(gasNameId, visualizationType, allPointsNum) {
     var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameId
     var selStartHtml = '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraph(this);">'
     + '<option value="mmm">mmm</option>'
-    if(allPointsNum['ss'] == 0) {
+    if(allPointsNum['ss_' + gasNameId]["data"].length == 0) {
         selStartHtml += '</select>'
         return selStartHtml
     }
     // adding the second selection choice 
     selStartHtml += '<option value="ss">ss</option>'
-    if(allPointsNum['mm'] == 0) {
+    if(allPointsNum['mm_' + gasNameId]["data"].length == 0) {
         selStartHtml += '</select>'
         return selStartHtml
     }
     // adding the minutes selection choice 
     selStartHtml += '<option value="mm">mm</option>'
-    if(allPointsNum['hh'] == 0) {
+    if(allPointsNum['hh_' + gasNameId]["data"].length == 0) {
         selStartHtml += '</select>'
         return selStartHtml
     } 
@@ -107,8 +125,9 @@ function moveForward(arrId) {
     console.log(arrId)
 }
 // moving buttons through iterated points 
-function getMovingButtonsHtml() {
-    var renderHtml = '<div style="margin-top:35px">' + 
+function getMovingButtonsHtml(gasNameId, visualizationType) {
+    var gasNameIdMoveBtnsMenuId = "moveButtons_" + visualizationType + "_" + gasNameId
+    var renderHtml = '<div style="margin-top:35px" id="' + gasNameIdMoveBtnsMenuId + '">' + 
     '<span onclick="moveBackward(this)" class="bi bi-arrow-left-circle" style="float:left;font-size: 1.5rem;"></span>' + 
     '<input type="text" style="width:35px;height:20px;float:left;margin-left:7.5px;margin-top:8.5px" id="usr" value="1"></input>'+
     
@@ -117,11 +136,10 @@ function getMovingButtonsHtml() {
     '</div>'
     return renderHtml
 }
-
 // html for rendering single canvas gas visualizer
 function createGasCanvas(gasName, gasNameId, visualizationType, selIntervalHtml, selPointsHtml) {
     // rendered html 
-    var rowIdGasVisualization = gasNameId + "_" + visualizationType + "_row"
+    var rowIdGasVisualization = visualizationType + "_" + gasNameId + "_row"
     var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameId
     var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameId
     var gasVisualizationType = gasNameId + "_" + visualizationType
@@ -133,7 +151,7 @@ function createGasCanvas(gasName, gasNameId, visualizationType, selIntervalHtml,
                                     selIntervalHtml + 
                                     selPointsHtml + 
                                 '</div>' +
-                                getMovingButtonsHtml() + 
+                                getMovingButtonsHtml(gasNameId, visualizationType) + 
                                 '<canvas id="' + gasVisualizationType + '"></canvas>' +
                             '</div>' +
                         '</div>'
@@ -144,7 +162,7 @@ function createGasCanvas(gasName, gasNameId, visualizationType, selIntervalHtml,
 function renderVisualizationPointsOnGraph(canvasId, gasName, visualizedInterval, visualizedData) {
     // getting the ID for the canvas and applying the data 
     var canvGas = $("#" + canvasId).get(0).getContext("2d");
-    var myChart2 = new Chart(canvGas, {
+    var lineChart = new Chart(canvGas, {
         type: "line",
         options: {
             tension: 1,
@@ -164,30 +182,38 @@ function renderVisualizationPointsOnGraph(canvasId, gasName, visualizedInterval,
             responsive: true
         }
     });
+    return lineChart
 }
+// default selections 
 function makeDefaultSelectionTimeCurve(gasNameId, defaultTimeSelection, defaultPointSelection, allTimeSelections) {
     // identifying the current gas context for rendered canvas
-    var rowIdGasVisualization = gasNameId + "_" + defaultTimeSelection + "_row"
+    var rowIdGasVisualization = defaultTimeSelection + "_" + gasNameId + "_row"
     // unique visualization for the current case of time selections 
     for(var currDisplayTime in allTimeSelections) {
-        var selTimeInterval = 'intervalDashboardSel_' + currDisplayTime + "_" + gasNameId
-        document.getElementById(selTimeInterval).value = currDisplayTime
+        var selTimeInterval = 'intervalDashboardSel_' + currDisplayTime
+        document.getElementById(selTimeInterval).value = getCurrTimeFromCurrGasSelectionId(currDisplayTime)
     }
     // default values for the selected points filter 
     for(var currDisplayTime in allTimeSelections) {
-        if(allTimeSelections[currDisplayTime] < 5) {
+        var gasNameIdMoveBtnsMenuId = "moveButtons_" + currDisplayTime
+        if(allTimeSelections[currDisplayTime]["data"].length < 5) {
+            $("#" + gasNameIdMoveBtnsMenuId).hide()
             continue
         }
-        var selPointsInterval = 'pointsIntervalSel_' + currDisplayTime + "_" + gasNameId
+        var selPointsInterval = 'pointsIntervalSel_' + currDisplayTime
         document.getElementById(selPointsInterval).value = defaultPointSelection
+        // no visualization for the context menu for moving on curve 
+        if(defaultPointSelection == "all") {
+            $("#" + gasNameIdMoveBtnsMenuId).hide()
+        }
     } 
     for(var currDisplayTime in allTimeSelections) {
-        var currIdGasVIsualization = gasNameId + "_" + currDisplayTime + "_row"
-        if(currIdGasVIsualization == rowIdGasVisualization) {
-            $("#" + currIdGasVIsualization).show()
+        var currIdGasVisualization = currDisplayTime + "_row"
+        if(currIdGasVisualization == rowIdGasVisualization) {
+            $("#" + currIdGasVisualization).show()
             continue
         }
-        $("#" + currIdGasVIsualization).hide()
+        $("#" + currIdGasVisualization).hide()
     }
 }
 // iteration for rendering the selected filtered substances
@@ -228,40 +254,44 @@ function loadDashboardData() {
                 }
                 // creation of time intervals object 
                 var currIntervalNumValues = {}
-                currIntervalNumValues["mmm"] = dataDisplayMMM['data'].length 
-                currIntervalNumValues["ss"] = dataDisplayS['data'].length
-                currIntervalNumValues["mm"] = dataDisplayM['data'].length 
-                currIntervalNumValues["hh"] = dataDisplayH['data'].length
+                currIntervalNumValues["mmm_" + gasNameId] = dataDisplayMMM 
+                currIntervalNumValues["ss_" + gasNameId] = dataDisplayS
+                currIntervalNumValues["mm_" + gasNameId] = dataDisplayM 
+                currIntervalNumValues["hh_" + gasNameId] = dataDisplayH
+                allTimeDivisionPoints["mmm_" + gasNameId] = dataDisplayMMM 
+                allTimeDivisionPoints["ss_" + gasNameId] = dataDisplayS
+                allTimeDivisionPoints["mm_" + gasNameId] = dataDisplayM 
+                allTimeDivisionPoints["hh_" + gasNameId] = dataDisplayH
                 // creation of the overall visualization of interval (valid for all the selections)
                 var selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "mmm", currIntervalNumValues)
                 // creation for the visualization of mmm points 
-                var selPointsHtml = decidePointsIntervalSelection(gasNameId, "mmm", currIntervalNumValues["mmm"])
+                var selPointsHtml = decidePointsIntervalSelection(gasNameId, "mmm", currIntervalNumValues["mmm_" + gasNameId]["data"].length)
                 var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "mmm", selIntervalsHtml, selPointsHtml)
                 $('#dashboardContent').append(htmlCanvasAppend)
                 var canvasID = gasNameId + "_mmm"
-                renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayMMM['labels'], dataDisplayMMM['data'])
+                var currChartMMM = renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayMMM['labels'], dataDisplayMMM['data'])
                 // creation of the visualization for the ss points 
-                if(currIntervalNumValues["ss"] > 0) {
+                if(currIntervalNumValues["ss_" + gasNameId]["data"].length > 0) {
                     selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "ss", currIntervalNumValues)
-                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "ss", currIntervalNumValues["ss"])
+                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "ss", currIntervalNumValues["ss_" + gasNameId]["data"].length)
                     var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "ss", selIntervalsHtml, selPointsHtml)
                     $('#dashboardContent').append(htmlCanvasAppend)
                     canvasID = gasNameId + "_ss"
                     renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayS['labels'], dataDisplayS['data'])
                 }
                 // creation of the visualization for the mm points 
-                if(currIntervalNumValues["mm"] > 0) {
+                if(currIntervalNumValues["mm_" + gasNameId]["data"].length > 0) {
                     selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "mm", currIntervalNumValues)
-                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "mm", currIntervalNumValues["mm"])
+                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "mm", currIntervalNumValues["mm_" + gasNameId]["data"].length)
                     var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "mm", selIntervalsHtml, selPointsHtml)
                     $('#dashboardContent').append(htmlCanvasAppend)
                     canvasID = gasNameId + "_mm"
                     renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayM['labels'], dataDisplayM['data'])
                 }
                 // creation of the visualization for the hh points 
-                if(currIntervalNumValues["hh"] > 0) {
+                if(currIntervalNumValues["hh_" + gasNameId]["data"].length > 0) {
                     selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "hh", currIntervalNumValues)
-                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "hh", currIntervalNumValues["hh"])
+                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "hh", currIntervalNumValues["hh_" + gasNameId]["data"].length)
                     var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "hh", selIntervalsHtml, selPointsHtml)
                     $('#dashboardContent').append(htmlCanvasAppend)
                     canvasID = gasNameId + "_hh"
