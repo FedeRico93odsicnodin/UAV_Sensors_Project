@@ -1,12 +1,40 @@
 // global variables of all the data to manage 
 var rawDataSensors = {}
+// getting the gasNameId from the selector id 
+function getGasNameIdFromSelectorId(selId) {
+    var currIdParts = selId.split("_")
+    var gasNameId = currIdParts[2] + "_" + currIdParts[3]
+    return gasNameId
+}
+function getCurrTimeRangeFromSelectorId(selId) {
+    var currIdParts = selId.split("_")
+    var currTimeSel = currIdParts[1]
+    return currTimeSel
+}
 // changing the visualization because of new inverval selection 
 function setNewIntervalGraph(sel) {
-    console.log(sel)
+    // getting curr gasNameId and time interval 
+    var gasNameId = getGasNameIdFromSelectorId(sel.id)
+    var timeRange = getCurrTimeRangeFromSelectorId(sel.id)
+    var currSelectedTime = document.getElementById(sel.id).value
+    var selTimeInterval = 'intervalDashboardSel_' + currSelectedTime + "_" + gasNameId
+    console.log(timeRange)
+    console.log(selTimeInterval)
+    // resetting the selection for the current visualized graph
+    document.getElementById(sel.id).value = timeRange
+
+    // creation of the selectors for the changing context 
+    var oldRowVisualization = gasNameId + "_" + timeRange + "_row"
+    var newRowVisualization = gasNameId + "_" + currSelectedTime + "_row"
+    $("#" + oldRowVisualization).hide()
+    $("#" + newRowVisualization).show()
 }
 // changing the visualization because of new points selection 
 function setNewPointNumberGraph(sel) {
-    console.log(sel)
+    // getting curr gasNameId and time interval 
+    var gasNameId = getGasNameIdFromSelectorId(sel.id)
+    var timeRange = getCurrTimeRangeFromSelectorId(sel.id)
+    console.log(timeRange)
 }
 // deciding how many selections for time visualizations add to curve  
 function decideTimeIntervalSelection(gasNameId, visualizationType, allPointsNum) {
