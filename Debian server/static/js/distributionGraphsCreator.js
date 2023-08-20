@@ -7,20 +7,35 @@ function getGasNameIdFromSelectorId(selId) {
     var gasNameId = currIdParts[2] + "_" + currIdParts[3]
     return gasNameId
 }
+// getting curr time range from selector id 
 function getCurrTimeRangeFromSelectorId(selId) {
     var currIdParts = selId.split("_")
     var currTimeSel = currIdParts[1]
     return currTimeSel
 }
+// getting curr time from gas selection id 
 function getCurrTimeFromCurrGasSelectionId(selId) {
     var currIdParts = selId.split("_")
     var currTimeSel = currIdParts[0]
     return currTimeSel
 }
+// getting gas name from id of the graph chart 
 function getGasNameFromGraphId(graphId) {
     var currIdParts = graphId.split("_")
     var currGasName = currIdParts[1]
     return currGasName
+}
+// getting gasnameid from backward / forward move buttons 
+function getGasNameIdFromBtnMovementsId(movId) {
+    var currIdParts = movId.split("_")
+    var currGasNameId = currIdParts[2] + "_" + currIdParts[3]
+    return currGasNameId
+}
+// getting visualization type from backward / forward move buttons 
+function getTimeGraphFromBtnMovementsId(movId) {
+    var currIdParts = movId.split("_")
+    var currTime = currIdParts[1]
+    return currTime
 }
 // changing the visualization because of new inverval selection 
 function setNewIntervalGraph(sel) {
@@ -140,20 +155,100 @@ function decidePointsIntervalSelection(gasNameId, visualizationType, currVisuali
     return selStartHtml
 }
 function moveBackward(arrId) {
-    console.log(arrId)
+    // getting the gas name id and visualization type 
+    var gasNameId = getGasNameIdFromBtnMovementsId(arrId.id)
+    var visualizationType = getTimeGraphFromBtnMovementsId(arrId.id)
+    // getting the current step movement 
+    var stepMovementId = "moveBackwardValue_" + visualizationType + "_" + gasNameId
+    var currStepValue = parseInt(document.getElementById(stepMovementId).value)
+    var currGraph = allChartsRefs[visualizationType + "_" + gasNameId]
+    var firstLabelValue = currGraph.data.labels[0]
+    console.log(currStepValue)
+    var newDataToDisplay = getNewPointsDivisionInterval(
+        gasNameId,
+        visualizationType,
+        currStepValue,
+        "back",
+        firstLabelValue
+    )
+    var remainingData = currGraph.data.datasets[0].data.slice(0, currGraph.data.datasets[0].data.length - currStepValue)
+    var remainingLabels = currGraph.data.labels.slice(0, currGraph.data.labels.length - currStepValue)
+    for(var iData in remainingData) {
+        newDataToDisplay["data"].push(remainingData[iData])
+    }
+    for(var iLabel in remainingLabels) {
+        newDataToDisplay["labels"].push(remainingLabels[iLabel])
+    }
+    currGraph.data.labels = [, 
+    ]
+    currGraph.data.labels = newDataToDisplay["labels"]
+    currGraph.data.datasets[0].data = newDataToDisplay["data"]
+    currGraph.update()
 }
 function moveForward(arrId) {
-    console.log(arrId)
+    // getting the gas name id 
+    var gasNameId = getGasNameIdFromBtnMovementsId(arrId.id)
+    var visualizationType = getTimeGraphFromBtnMovementsId(arrId.id)
+    // getting the current step movement 
+    var stepMovementId = "moveForwardValue_" + visualizationType + "_" + gasNameId
+    var currStepValue = document.getElementById(stepMovementId).value
+    console.log(currStepValue)
+}
+function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, direction, startIntervalPoint) {
+    // getting the current gas curve points 
+    var currIntervalsOnTime = allTimeDivisionPoints[visualizationType + "_" + gasNameId]
+    if(direction == "next") {
+        var indexOnCurve = 0
+        // counting the point before arriving to the last point on the showed curve 
+        for(var i = 0; i < currIntervalsOnTime["labels"].length; i++) {
+            if(currIntervalsOnTime["labels"][i] == startIntervalPoint) {
+                indexOnCurve = i
+                break
+            }
+        }
+        var lastVisualizedIndx = indexOnCurve + numStep
+        if(lastVisualizedIndx >= currIntervalsOnTime["labels"].length - 1) {
+            return;
+        }
+        // TODO: continuing the implementation for the move forward  
+        var arrLimitDownLabels = currIntervalsOnTime["labels"].slice(lastVisualizedIndx, currIntervalsOnTime["labels"].length - lastVisualizedIndx)
+        var arrLimitDownData = currIntervalsOnTime["data"].slice(lastVisualizedIndx, currIntervalsOnTime["labels"].length - lastVisualizedIndx)
+    }
+    else {
+        var indexOnCurve = 0
+        // counting the point before arriving to the selected value 
+        for(var i = 0; i < currIntervalsOnTime["labels"].length; i ++) {
+            if(currIntervalsOnTime["labels"][i] == startIntervalPoint) {
+                indexOnCurve = i
+                break
+            }
+        }
+        if(indexOnCurve == 0) {
+            return;
+        }
+        var arrLimitDownLabels = currIntervalsOnTime["labels"].slice(0, indexOnCurve -1)
+        var arrLimitDownData = currIntervalsOnTime["data"].slice(0, indexOnCurve -1)
+        if(arrLimitDownLabels.length < numStep) {
+            numStep = arrLimitDownLabels.length
+        } 
+        var currLabelsInterval = arrLimitDownLabels.slice(-numStep)
+        var currDataInterval = arrLimitDownData.slice(-numStep)
+        return {"labels": currLabelsInterval, "data": currDataInterval}
+    }
 }
 // moving buttons through iterated points 
 function getMovingButtonsHtml(gasNameId, visualizationType) {
+    var moveForwardValueId = "moveForwardValue_" + visualizationType + "_" + gasNameId
+    var moveBackwardValueId = "moveBackwardValue_" + visualizationType + "_" + gasNameId
+    var gasNameIdMoveForward = "moveBtnForward_" + visualizationType + "_" + gasNameId
+    var gasNameIdMoveBackward = "moveBtnBackward_" + visualizationType + "_" + gasNameId
     var gasNameIdMoveBtnsMenuId = "moveButtons_" + visualizationType + "_" + gasNameId
     var renderHtml = '<div style="margin-top:35px" id="' + gasNameIdMoveBtnsMenuId + '">' + 
-    '<span onclick="moveBackward(this)" class="bi bi-arrow-left-circle" style="float:left;font-size: 1.5rem;"></span>' + 
-    '<input type="text" style="width:35px;height:20px;float:left;margin-left:7.5px;margin-top:8.5px" id="usr" value="1"></input>'+
+    '<span onclick="moveBackward(this)" class="bi bi-arrow-left-circle" style="float:left;font-size: 1.5rem;" id="' + gasNameIdMoveBackward + '""></span>' + 
+    '<input type="text" style="width:35px;height:20px;float:left;margin-left:7.5px;margin-top:8.5px" value="1" id="' + moveBackwardValueId + '"></input>'+
     
-    '<span onclick="moveForward(this)" class="bi bi-arrow-right-circle" style="float:right;font-size: 1.5rem;"></span>' + 
-    '<input type="text" style="width:35px;height:20px;float:right;margin-right:7.5px;margin-top:8.5px" id="usr" value="1"></input>'+
+    '<span onclick="moveForward(this)" class="bi bi-arrow-right-circle" style="float:right;font-size: 1.5rem;" id="' + gasNameIdMoveForward +'"></span>' + 
+    '<input type="text" style="width:35px;height:20px;float:right;margin-right:7.5px;margin-top:8.5px" value="1" id="' + moveForwardValueId + '"></input>'+
     '</div>'
     return renderHtml
 }
@@ -187,6 +282,18 @@ function renderVisualizationPointsOnGraph(canvasId, gasName, visualizedInterval,
         type: "line",
         options: {
             tension: 1,
+            showLines: true,
+            animation: {duration: 0},
+            scales: {
+                yAxes: [{
+                display: true,
+                ticks: {
+                    beginAtZero:true,
+                    min: 0,
+                    max: 100  
+                }
+                }]
+            }
         },
         data: {
             labels: visualizedInterval,
