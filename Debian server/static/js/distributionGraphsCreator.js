@@ -17,6 +17,11 @@ function getCurrTimeFromCurrGasSelectionId(selId) {
     var currTimeSel = currIdParts[0]
     return currTimeSel
 }
+function getGasNameFromGraphId(graphId) {
+    var currIdParts = graphId.split("_")
+    var currGasName = currIdParts[1]
+    return currGasName
+}
 // changing the visualization because of new inverval selection 
 function setNewIntervalGraph(sel) {
     // getting curr gasNameId and time interval 
@@ -51,8 +56,24 @@ function setNewPointNumberGraph(sel) {
         $("#" + contextArrowsMenuId).hide() 
     }
     // changing the visualization of points on curve 
-    var gasVisualizationType = gasNameId + "_" + timeRange
-
+    var gasVisualizationType = timeRange + "_" + gasNameId
+    // retrieving the line chart 
+    var currGraphUpdate = allChartsRefs[gasVisualizationType]
+    console.log(currGraphUpdate)
+    currGraphUpdate.destroy()
+    // getting the curve for the current graph
+    var currentCurve = allTimeDivisionPoints[gasVisualizationType]
+    console.log(currentCurve)
+    // getting the last points for visualize (only if enought points)
+    if(currentCurve['data'].length < currSelectionVal) {
+        console.log('same curve')
+        return
+    }
+    // TODO: eventually take the first or the last set based on a decision
+    var currentTimeInterval = currentCurve['labels'].slice(-currSelectionVal)
+    var currentDataInterval = currentCurve['data'].slice(-currSelectionVal)
+    var currGasName = getGasNameFromGraphId(gasVisualizationType)
+    allChartsRefs[gasVisualizationType] = renderVisualizationPointsOnGraph(gasVisualizationType, currGasName, currentTimeInterval, currentDataInterval)
 }
 // deciding how many selections for time visualizations add to curve  
 function decideTimeIntervalSelection(gasNameId, visualizationType, allPointsNum) {
@@ -142,7 +163,7 @@ function createGasCanvas(gasName, gasNameId, visualizationType, selIntervalHtml,
     var rowIdGasVisualization = visualizationType + "_" + gasNameId + "_row"
     var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameId
     var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameId
-    var gasVisualizationType = gasNameId + "_" + visualizationType
+    var gasVisualizationType = visualizationType + "_" + gasNameId 
     var htmlCanvas ='<div class="row" style="margin-top: 15px;" id="' + rowIdGasVisualization + '">' +  
                         '<div class="col-sm-24 col-xl-10 mx-auto">' + 
                             '<div class="bg-secondary text-center rounded p-4">' +
@@ -268,16 +289,16 @@ function loadDashboardData() {
                 var selPointsHtml = decidePointsIntervalSelection(gasNameId, "mmm", currIntervalNumValues["mmm_" + gasNameId]["data"].length)
                 var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "mmm", selIntervalsHtml, selPointsHtml)
                 $('#dashboardContent').append(htmlCanvasAppend)
-                var canvasID = gasNameId + "_mmm"
-                var currChartMMM = renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayMMM['labels'], dataDisplayMMM['data'])
+                var currChartMMM = renderVisualizationPointsOnGraph("mmm_" + gasNameId, data['gasName'], dataDisplayMMM['labels'], dataDisplayMMM['data'])
+                allChartsRefs["mmm_" + gasNameId] = currChartMMM
                 // creation of the visualization for the ss points 
                 if(currIntervalNumValues["ss_" + gasNameId]["data"].length > 0) {
                     selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "ss", currIntervalNumValues)
                     selPointsHtml = decidePointsIntervalSelection(gasNameId, "ss", currIntervalNumValues["ss_" + gasNameId]["data"].length)
                     var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "ss", selIntervalsHtml, selPointsHtml)
                     $('#dashboardContent').append(htmlCanvasAppend)
-                    canvasID = gasNameId + "_ss"
-                    renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayS['labels'], dataDisplayS['data'])
+                    var curChartSS = renderVisualizationPointsOnGraph("ss_" + gasNameId, data['gasName'], dataDisplayS['labels'], dataDisplayS['data'])
+                    allChartsRefs["ss_" + gasNameId] = curChartSS
                 }
                 // creation of the visualization for the mm points 
                 if(currIntervalNumValues["mm_" + gasNameId]["data"].length > 0) {
@@ -285,8 +306,8 @@ function loadDashboardData() {
                     selPointsHtml = decidePointsIntervalSelection(gasNameId, "mm", currIntervalNumValues["mm_" + gasNameId]["data"].length)
                     var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "mm", selIntervalsHtml, selPointsHtml)
                     $('#dashboardContent').append(htmlCanvasAppend)
-                    canvasID = gasNameId + "_mm"
-                    renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayM['labels'], dataDisplayM['data'])
+                    var currChartMM = renderVisualizationPointsOnGraph("mm_" + gasNameId, data['gasName'], dataDisplayM['labels'], dataDisplayM['data'])
+                    allChartsRefs["mm_" + gasNameId] = currChartMM
                 }
                 // creation of the visualization for the hh points 
                 if(currIntervalNumValues["hh_" + gasNameId]["data"].length > 0) {
@@ -294,8 +315,8 @@ function loadDashboardData() {
                     selPointsHtml = decidePointsIntervalSelection(gasNameId, "hh", currIntervalNumValues["hh_" + gasNameId]["data"].length)
                     var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "hh", selIntervalsHtml, selPointsHtml)
                     $('#dashboardContent').append(htmlCanvasAppend)
-                    canvasID = gasNameId + "_hh"
-                    renderVisualizationPointsOnGraph(canvasID, data['gasName'], dataDisplayH['labels'], dataDisplayH['data'])
+                    var currChartHH = renderVisualizationPointsOnGraph("hh_" + gasNameId, data['gasName'], dataDisplayH['labels'], dataDisplayH['data'])
+                    allChartsRefs["hh_" + gasNameId] = currChartHH
                 }
                 // default selections for current graph curve 
                 makeDefaultSelectionTimeCurve(gasNameId, "mmm", "all", currIntervalNumValues)
