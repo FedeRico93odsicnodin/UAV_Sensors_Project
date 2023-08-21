@@ -154,6 +154,11 @@ function decidePointsIntervalSelection(gasNameId, visualizationType, currVisuali
     selStartHtml += '</select>'
     return selStartHtml
 }
+// eventual deactivation of the arrow movement on visualized set 
+function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNameId, visualizationType) {
+    // TODO: implementazione disattivazione di movimento 
+    // TODO: verifica caso di move forward (a volte non funziona)
+}
 function moveBackward(arrId) {
     // getting the gas name id and visualization type 
     var gasNameId = getGasNameIdFromBtnMovementsId(arrId.id)
@@ -171,16 +176,20 @@ function moveBackward(arrId) {
         "back",
         firstLabelValue
     )
-    var remainingData = currGraph.data.datasets[0].data.slice(0, currGraph.data.datasets[0].data.length - currStepValue)
-    var remainingLabels = currGraph.data.labels.slice(0, currGraph.data.labels.length - currStepValue)
+    // no data to add to graph
+    if(newDataToDisplay["labels"].length == 0) {
+        return
+    }
+    var remainingData = currGraph.data.datasets[0].data.slice(0, currGraph.data.datasets[0].data.length - newDataToDisplay["labels"].length)
+    var remainingLabels = currGraph.data.labels.slice(0, currGraph.data.labels.length - newDataToDisplay["labels"].length)
     for(var iData in remainingData) {
         newDataToDisplay["data"].push(remainingData[iData])
     }
     for(var iLabel in remainingLabels) {
         newDataToDisplay["labels"].push(remainingLabels[iLabel])
     }
-    currGraph.data.labels = [, 
-    ]
+    // verification and eventual deactivation of arrow movements 
+
     currGraph.data.labels = newDataToDisplay["labels"]
     currGraph.data.datasets[0].data = newDataToDisplay["data"]
     currGraph.update()
@@ -192,13 +201,59 @@ function moveForward(arrId) {
     // getting the current step movement 
     var stepMovementId = "moveForwardValue_" + visualizationType + "_" + gasNameId
     var currStepValue = document.getElementById(stepMovementId).value
+    var currGraph = allChartsRefs[visualizationType + "_" + gasNameId]
+    var firstLabelValue = currGraph.data.labels[0]
     console.log(currStepValue)
+    var newDataToDisplay = getNewPointsDivisionInterval(
+        gasNameId,
+        visualizationType,
+        currStepValue,
+        "next",
+        firstLabelValue
+    )
+    if(newDataToDisplay["labels"].length == 0) {
+        return
+    }
+    var remainingData = currGraph.data.datasets[0].data.slice(parseInt(currStepValue), (currGraph.data.datasets[0].data.length - newDataToDisplay["labels"].length + 1))
+    var remainingLabels = currGraph.data.labels.slice(parseInt(currStepValue), (currGraph.data.labels.length - newDataToDisplay["labels"].length + 1))
+    for(var iData in newDataToDisplay["data"]) {
+        remainingData.push(newDataToDisplay["data"][iData])
+    }
+    for(var iLabel in newDataToDisplay["labels"]) {
+        remainingLabels.push(newDataToDisplay["labels"][iLabel])
+    }
+    // verification and eventual deactivation of arrow movements 
+    
+    currGraph.data.labels = remainingLabels
+    currGraph.data.datasets[0].data = remainingData
+    currGraph.update()
+}
+// checking if last point in the set for disabling the forward movement 
+function checkIfLastPointInSet(currSet, allInterval) {
+    var lastOverallPoint = allInterval["labels"][allInterval["labels"].length - 1]
+    var currLastPointOnCurve = currSet["labels"][currSet["labels"].length - 1]
+    if(lastOverallPoint["labels"] == currLastPointOnCurve["labels"]) {
+        return true
+    }
+    return false
+}
+// checking if first point in the set for disabling backward movement 
+function checkIfFitstPointInSet(currSet, allInterval) {
+    var firstOverallPoint = allInterval[0]
+    var currFirstPointOnCurve = currSet[0]
+    if(firstOverallPoint["labels"] == currFirstPointOnCurve["labels"]) {
+        return true
+    }
+    return false
 }
 function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, direction, startIntervalPoint) {
     // getting the current gas curve points 
     var currIntervalsOnTime = allTimeDivisionPoints[visualizationType + "_" + gasNameId]
     if(direction == "next") {
         var indexOnCurve = 0
+        // getting the current visualization step 
+        var visualizationStepId = "pointsIntervalSel_" + visualizationType + "_" + gasNameId
+        var visualizationStep = parseInt(document.getElementById(visualizationStepId).value)
         // counting the point before arriving to the last point on the showed curve 
         for(var i = 0; i < currIntervalsOnTime["labels"].length; i++) {
             if(currIntervalsOnTime["labels"][i] == startIntervalPoint) {
@@ -206,13 +261,32 @@ function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, dir
                 break
             }
         }
-        var lastVisualizedIndx = indexOnCurve + numStep
-        if(lastVisualizedIndx >= currIntervalsOnTime["labels"].length - 1) {
-            return;
+        var lastVisualizedIndx = indexOnCurve + visualizationStep + 1
+        if(lastVisualizedIndx >= currIntervalsOnTime["labels"].length) {
+            // no data to return 
+            return {"labels": [], "data": [] };
         }
-        // TODO: continuing the implementation for the move forward  
-        var arrLimitDownLabels = currIntervalsOnTime["labels"].slice(lastVisualizedIndx, currIntervalsOnTime["labels"].length - lastVisualizedIndx)
-        var arrLimitDownData = currIntervalsOnTime["data"].slice(lastVisualizedIndx, currIntervalsOnTime["labels"].length - lastVisualizedIndx)
+        var arrLimitUpLabels = currIntervalsOnTime["labels"].slice(lastVisualizedIndx)
+        var arrLimitUpData = currIntervalsOnTime["data"].slice(lastVisualizedIndx)
+        if(arrLimitUpLabels.length < numStep) {
+            numStep = arrLimitUpData.length
+        }
+        var currLabelsInterval = arrLimitUpLabels.splice(0, parseInt(numStep))
+        var currDataInterval = arrLimitUpData.splice(0, parseInt(numStep))
+        var currSetPoints =  {"labels": currLabelsInterval, "data": currDataInterval }
+        var isLastSet = checkIfLastPointInSet(currSetPoints, currIntervalsOnTime)
+        // deactivation of the forward movement
+        var forwardMovementArrowId = "moveBtnForward_" + visualizationType + "_" + gasNameId
+        var forwardMovementInputId = "moveForwardValue_" + visualizationType + "_" + gasNameId
+        if(isLastSet) {
+            $("#" + forwardMovementArrowId).hide()
+            $("#" + forwardMovementInputId).hide()
+        }
+        else {
+            $("#" + forwardMovementArrowId).show()
+            $("#" + forwardMovementInputId).show()
+        }
+        return currSetPoints
     }
     else {
         var indexOnCurve = 0
@@ -224,7 +298,8 @@ function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, dir
             }
         }
         if(indexOnCurve == 0) {
-            return;
+            // no data to return 
+            return {"labels": [], "data": [] };;
         }
         var arrLimitDownLabels = currIntervalsOnTime["labels"].slice(0, indexOnCurve -1)
         var arrLimitDownData = currIntervalsOnTime["data"].slice(0, indexOnCurve -1)
@@ -233,7 +308,8 @@ function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, dir
         } 
         var currLabelsInterval = arrLimitDownLabels.slice(-numStep)
         var currDataInterval = arrLimitDownData.slice(-numStep)
-        return {"labels": currLabelsInterval, "data": currDataInterval}
+        var currSetPoints = {"labels": currLabelsInterval, "data": currDataInterval }
+        return currSetPoints
     }
 }
 // moving buttons through iterated points 
