@@ -89,6 +89,7 @@ function setNewPointNumberGraph(sel) {
     var currentDataInterval = currentCurve['data'].slice(-currSelectionVal)
     var currGasName = getGasNameFromGraphId(gasVisualizationType)
     allChartsRefs[gasVisualizationType] = renderVisualizationPointsOnGraph(gasVisualizationType, currGasName, currentTimeInterval, currentDataInterval)
+    checkArrowMovementsConsistency({"labels": currentTimeInterval, "data": currentDataInterval}, currentCurve, gasNameId, timeRange)
 }
 // deciding how many selections for time visualizations add to curve  
 function decideTimeIntervalSelection(gasNameId, visualizationType, allPointsNum) {
@@ -156,8 +157,30 @@ function decidePointsIntervalSelection(gasNameId, visualizationType, currVisuali
 }
 // eventual deactivation of the arrow movement on visualized set 
 function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNameId, visualizationType) {
-    // TODO: implementazione disattivazione di movimento 
-    // TODO: verifica caso di move forward (a volte non funziona)
+    // checking if at the border of the set 
+    var isLastSet = checkIfLastPointInSet(currVisualizedSet, currOverallSet)
+    var isFirstSet = checkIfFitstPointInSet(currVisualizedSet, currOverallSet)
+    // creating the selector for the movement commands 
+    var forwardMovementArrowId = "moveBtnForward_" + visualizationType + "_" + gasNameId
+    var forwardMovementInputId = "moveForwardValue_" + visualizationType + "_" + gasNameId
+    var backwardMovementArrowId = "moveBtnBackward_" + visualizationType + "_" + gasNameId
+    var backwardMovementInputId = "moveBackwardValue_" + visualizationType + "_" + gasNameId
+    if(isLastSet) {
+        $("#" + forwardMovementArrowId).hide()
+        $("#" + forwardMovementInputId).hide()
+    }
+    else {
+        $("#" + forwardMovementArrowId).show()
+        $("#" + forwardMovementInputId).show()
+    }
+    if(isFirstSet) {
+        $("#" + backwardMovementArrowId).hide()
+        $("#" + backwardMovementInputId).hide()
+    }
+    else {
+        $("#" + backwardMovementArrowId).show()
+        $("#" + backwardMovementInputId).show()
+    }
 }
 function moveBackward(arrId) {
     // getting the gas name id and visualization type 
@@ -214,8 +237,12 @@ function moveForward(arrId) {
     if(newDataToDisplay["labels"].length == 0) {
         return
     }
-    var remainingData = currGraph.data.datasets[0].data.slice(parseInt(currStepValue), (currGraph.data.datasets[0].data.length - newDataToDisplay["labels"].length + 1))
-    var remainingLabels = currGraph.data.labels.slice(parseInt(currStepValue), (currGraph.data.labels.length - newDataToDisplay["labels"].length + 1))
+    var remainingData = currGraph.data.datasets[0].data.slice(
+        parseInt(newDataToDisplay["data"].length), 
+        (currGraph.data.datasets[0].data.length))
+    var remainingLabels = currGraph.data.labels.slice(
+        parseInt(newDataToDisplay["labels"].length), 
+        (currGraph.data.labels.length))
     for(var iData in newDataToDisplay["data"]) {
         remainingData.push(newDataToDisplay["data"][iData])
     }
@@ -232,16 +259,16 @@ function moveForward(arrId) {
 function checkIfLastPointInSet(currSet, allInterval) {
     var lastOverallPoint = allInterval["labels"][allInterval["labels"].length - 1]
     var currLastPointOnCurve = currSet["labels"][currSet["labels"].length - 1]
-    if(lastOverallPoint["labels"] == currLastPointOnCurve["labels"]) {
+    if(lastOverallPoint == currLastPointOnCurve) {
         return true
     }
     return false
 }
 // checking if first point in the set for disabling backward movement 
 function checkIfFitstPointInSet(currSet, allInterval) {
-    var firstOverallPoint = allInterval[0]
-    var currFirstPointOnCurve = currSet[0]
-    if(firstOverallPoint["labels"] == currFirstPointOnCurve["labels"]) {
+    var firstOverallPoint = allInterval["labels"][0]
+    var currFirstPointOnCurve = currSet["labels"][0]
+    if(firstOverallPoint == currFirstPointOnCurve) {
         return true
     }
     return false
@@ -261,31 +288,27 @@ function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, dir
                 break
             }
         }
-        var lastVisualizedIndx = indexOnCurve + visualizationStep + 1
+        var lastVisualizedIndx = indexOnCurve + visualizationStep
         if(lastVisualizedIndx >= currIntervalsOnTime["labels"].length) {
             // no data to return 
             return {"labels": [], "data": [] };
         }
         var arrLimitUpLabels = currIntervalsOnTime["labels"].slice(lastVisualizedIndx)
         var arrLimitUpData = currIntervalsOnTime["data"].slice(lastVisualizedIndx)
-        if(arrLimitUpLabels.length < numStep) {
-            numStep = arrLimitUpData.length
-        }
-        var currLabelsInterval = arrLimitUpLabels.splice(0, parseInt(numStep))
-        var currDataInterval = arrLimitUpData.splice(0, parseInt(numStep))
-        var currSetPoints =  {"labels": currLabelsInterval, "data": currDataInterval }
-        var isLastSet = checkIfLastPointInSet(currSetPoints, currIntervalsOnTime)
-        // deactivation of the forward movement
-        var forwardMovementArrowId = "moveBtnForward_" + visualizationType + "_" + gasNameId
-        var forwardMovementInputId = "moveForwardValue_" + visualizationType + "_" + gasNameId
-        if(isLastSet) {
-            $("#" + forwardMovementArrowId).hide()
-            $("#" + forwardMovementInputId).hide()
+        var currLabelsInterval = []
+        var currDataInterval = []
+        if(arrLimitUpLabels.length < (parseInt(numStep) + 1)) {
+            currLabelsInterval = arrLimitUpLabels
+            currDataInterval = arrLimitUpData
         }
         else {
-            $("#" + forwardMovementArrowId).show()
-            $("#" + forwardMovementInputId).show()
+            currLabelsInterval = arrLimitUpLabels.slice(0, parseInt(numStep))
+            currDataInterval = arrLimitUpData.slice(0, parseInt(numStep))
         }
+        var currSetPoints =  {"labels": currLabelsInterval, "data": currDataInterval }
+       
+        // checking if arrows deactivation 
+        checkArrowMovementsConsistency(currSetPoints, currIntervalsOnTime, gasNameId, visualizationType)
         return currSetPoints
     }
     else {
@@ -301,14 +324,17 @@ function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, dir
             // no data to return 
             return {"labels": [], "data": [] };;
         }
-        var arrLimitDownLabels = currIntervalsOnTime["labels"].slice(0, indexOnCurve -1)
-        var arrLimitDownData = currIntervalsOnTime["data"].slice(0, indexOnCurve -1)
+        var arrLimitDownLabels = currIntervalsOnTime["labels"].slice(0, indexOnCurve)
+        var arrLimitDownData = currIntervalsOnTime["data"].slice(0, indexOnCurve)
         if(arrLimitDownLabels.length < numStep) {
             numStep = arrLimitDownLabels.length
         } 
         var currLabelsInterval = arrLimitDownLabels.slice(-numStep)
         var currDataInterval = arrLimitDownData.slice(-numStep)
         var currSetPoints = {"labels": currLabelsInterval, "data": currDataInterval }
+
+        // checking if arrows deactivation 
+        checkArrowMovementsConsistency(currSetPoints, currIntervalsOnTime, gasNameId, visualizationType)
         return currSetPoints
     }
 }
