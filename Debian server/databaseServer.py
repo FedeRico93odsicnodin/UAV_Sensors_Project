@@ -442,3 +442,49 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
         con.close()
         return dataRecords
 
+def getAllDataSensorsToDisplayReload(
+        gasId, 
+        dateUpLimit,
+        dateSelectionType = 'None', 
+        dateRangeMin = None, 
+        dateRangeMax = None):
+    with Lock():
+         global DatabaseLocation
+         con = sqlite3.connect(DatabaseLocation)
+         sqlite_dataselection_statement = """
+            SELECT 
+            processed_sensors_data.date
+            ,processed_sensors_data.detected_substance_value
+            ,sessions.name
+            , sessions.id
+            FROM processed_sensors_data
+            JOIN sessions on processed_sensors_data.session_ref = sessions.id
+            WHERE processed_sensors_data.detected_substance_ref = ?
+            AND processed_sensors_data.session_ref in (SELECT 
+            filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
+            AND processed_sensors_data.date > ?
+            ORDER BY sessions.id,processed_sensors_data.date 
+    """
+         # modification of the query for the selected data case TODO: implementation 
+         if(dateSelectionType == 'This week'):
+            sqlite_dataselection_statement = 'to implement'
+         if(dateSelectionType == 'This month'):
+            sqlite_dataselection_statement = 'to implement'
+         if(dateSelectionType == 'Today'):
+            sqlite_dataselection_statement = 'to implement'
+         if(dateSelectionType == 'Custom' and dateRangeMin != None and dateRangeMax != None):
+            sqlite_dataselection_statement = 'to implement'
+         if(dateSelectionType == 'None'):
+            cur = con.execute(sqlite_dataselection_statement, (gasId,dateUpLimit))
+         returnedData = []
+         dataRecords = cur.fetchall()
+         for filterRecord in dataRecords:
+            currDataObj = {}
+            currDataObj['date'] = filterRecord[0]
+            currDataObj['value'] = float(filterRecord[1])
+            currDataObj['session'] = str(filterRecord[2])
+            currDataObj['sessionID'] = int(filterRecord[3])
+            returnedData.append(currDataObj)
+        
+         con.close()
+         return dataRecords

@@ -114,6 +114,8 @@
                 sessionStorage.setItem("filterOptions", data);
                 // initializing all the filters visualizations
                 initAllFilters()
+                // calling data reload 
+                startUpdaterScript()
             }
             , error: function(err) {
                 console.log(err)

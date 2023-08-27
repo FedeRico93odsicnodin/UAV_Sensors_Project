@@ -590,7 +590,6 @@ function loadDashboardData() {
                 
             },
             error: function(err) {
-                alert('During saving filters an error occur')
                 console.log('error saving filters\n' + err)
             }
           });

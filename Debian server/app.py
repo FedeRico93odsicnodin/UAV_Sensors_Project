@@ -135,5 +135,24 @@ def get_gasdata_selected():
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 
-    
-
+@app.route('/gasdata_reload', methods=['POST'])
+def get_gasdata_selected_reload():
+    gasInputs = request.get_json() 
+    gasId = gasInputs["gasId"]
+    gasName = gasInputs["gasName"]
+    upTime = gasInputs["upTime"]
+    # verifying the selection as filter for the current substance 
+    gasActivation = databaseServer.checkFilterActivatedOnGas(gasName, gasId)
+    if(gasActivation == False):
+        return json.dumps({'status': gasName + ': gas not activated'})
+    # verifying the activation of the respective sensor 
+    sensorActivation = databaseServer.checkFilterActivateOnSensor(gasName, gasId)
+    if(sensorActivation == False):
+       return json.dumps({'status': gasName + ': sensor not activated'})
+    # verifying presence of date filters 
+    activeDateFilters = databaseServer.getActiveDataFilters()
+    # getting the data for the current gas TODO: implement date filters selection
+    currGasData = databaseServer.getAllDataSensorsToDisplayReload(gasId, upTime)
+    finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
+    finalResultJSON = json.dumps(finalResult)
+    return finalResultJSON
