@@ -208,7 +208,6 @@ function moveBackward(arrId) {
         newDataToDisplay["labels"].push(remainingLabels[iLabel])
     }
     // verification and eventual deactivation of arrow movements 
-
     currGraph.data.labels = newDataToDisplay["labels"]
     currGraph.data.datasets[0].data = newDataToDisplay["data"]
     currGraph.update()
@@ -250,24 +249,6 @@ function moveForward(arrId) {
     currGraph.data.labels = remainingLabels
     currGraph.data.datasets[0].data = remainingData
     currGraph.update()
-}
-// checking if last point in the set for disabling the forward movement 
-function checkIfLastPointInSet(currSet, allInterval) {
-    var lastOverallPoint = allInterval["labels"][allInterval["labels"].length - 1]
-    var currLastPointOnCurve = currSet["labels"][currSet["labels"].length - 1]
-    if(lastOverallPoint == currLastPointOnCurve) {
-        return true
-    }
-    return false
-}
-// checking if first point in the set for disabling backward movement 
-function checkIfFitstPointInSet(currSet, allInterval) {
-    var firstOverallPoint = allInterval["labels"][0]
-    var currFirstPointOnCurve = currSet["labels"][0]
-    if(firstOverallPoint == currFirstPointOnCurve) {
-        return true
-    }
-    return false
 }
 // getting the new point set on mevement through the graph
 function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, direction, startIntervalPoint) {
@@ -443,49 +424,6 @@ function makeDefaultSelectionTimeCurve(gasNameId, defaultTimeSelection, defaultP
         }
         $("#" + currIdGasVisualization).hide()
     }
-}
-// making the sets different from a session to another 
-function getSplittedSessionsData(rawData) {
-    var orderedSessionsData = []
-    var currSession = ''
-    var currSessionID = 0
-    var currSessionObj = {}
-    for(var i in rawData['gasData']) {
-        // initilization 
-        if(currSession == '') {
-            currSession = rawData['gasData'][i][2]
-            currSessionID = rawData['gasData'][i][3]
-            currSessionObj = {}
-            currSessionObj['status'] = rawData['status']
-            currSessionObj['gasName'] = rawData['gasName']
-            currSessionObj['gasId'] = rawData['gasId']
-            currSessionObj['gasData'] = []
-            currSessionObj['gasData'].push(rawData['gasData'][i])
-            // adding the overall session info 
-            currSessionObj['session'] = currSession
-            currSessionObj['sessionID'] = currSessionID
-            continue
-        }
-        if(currSession != rawData['gasData'][i][2]) {
-            currSession = rawData['gasData'][i][2]
-            currSessionID = rawData['gasData'][i][3]
-            orderedSessionsData.push(currSessionObj)
-            currSessionObj = {}
-            currSessionObj['status'] = rawData['status']
-            currSessionObj['gasName'] = rawData['gasName']
-            currSessionObj['gasId'] = rawData['gasId']
-            currSessionObj['gasData'] = []
-            currSessionObj['gasData'].push(rawData['gasData'][i])
-            // adding the overall session info
-            currSessionObj['session'] = currSession
-            currSessionObj['sessionID'] = currSessionID
-            continue
-        }
-        currSessionObj['gasData'].push(rawData['gasData'][i])
-    }
-    // pushing last element of sesssion 
-    orderedSessionsData.push(currSessionObj)
-    return orderedSessionsData
 }
 // return the overall container to be inserted in the carousel 
 function getOverallCarouselContainerOfGas(htmlGas) {

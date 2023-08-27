@@ -1,4 +1,5 @@
 (function ($) {
+    
     "use strict";
 
     // Spinner
@@ -64,23 +65,29 @@
     Chart.defaults.borderColor = "#000000";
 
     $("#dateFilters").click(function() {
+        isFilterContext = true
         initDateFilters(true)
     })
     $("#sensorsFilters").click(function() {
+        isFilterContext = true
         initSensorsFilters(true)
     })
     $("#gasFilters").click(function() {
+        isFilterContext = true
        initGasesFilters(true)    
     })
     $("#sessionFilters").click(function() {
+        isFilterContext = true
         initSessionsFilters(true)
     })
     $("#optionsFilters").click(function() {
+        isFilterContext = true
         initOptionsFilters(true)
     })
     $("#backBtn").click(function() {
         // TODO: eventual display of message of pending modifications 
         backToDashboardContext()
+        isFilterContext = false
     })
     $("#saveBtn").click(function() {
         var newJSONFilters = setNewSessionStorageFilters()
@@ -95,14 +102,19 @@
                 initLoadedFiltersMatrix()
                 initAllFilters()
                 backToDashboardContext()
+                isFilterContext = false
             },
             error: function(err) {
                 alert('During saving filters an error occur')
                 console.log('error saving filters\n' + err)
+                backToDashboardContext()
+                isFilterContext = false
             }
           });
     })
     $(document).ready(function() {
+        // at the beginning i'm visualizing data 
+        isFilterContext = false
         backToDashboardContext()
         $.ajax({
             url: "/filters/allstored"

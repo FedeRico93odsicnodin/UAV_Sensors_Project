@@ -154,5 +154,6 @@ def get_gasdata_selected_reload():
     # getting the data for the current gas TODO: implement date filters selection
     currGasData = databaseServer.getAllDataSensorsToDisplayReload(gasId, upTime)
     finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
+    print(len(finalResult['gasData']))
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
