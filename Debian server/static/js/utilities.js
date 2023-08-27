@@ -10,7 +10,6 @@ function parseTime(currDate) {
     var timeParts = dateTimeParts[1].split(':')
     var hour = "0"
     var minutes = "0"
-    console.log(timeParts)
     if(timeParts[0].length == 2) {
         hour = timeParts[0]
     }

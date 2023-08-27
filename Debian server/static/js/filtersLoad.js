@@ -18,7 +18,6 @@ function initDateFilters(showView) {
             var minTimeToApply = ''
             var maxTimeToApply = ''
             if(filtersObj != null) {
-                console.log(filtersObj)
                 if("intervalSelection" in filtersObj) {
                     document.getElementById("intervalSelection").value = filtersObj["intervalSelection"]["filter_value"]
                 }
@@ -211,7 +210,6 @@ function initSessionsFilters(showView) {
             var sessionObj = JSON.parse(data)
             var sessionFilters = getSessionStorageFilters()
             OverallSessions = []
-            console.log(sessionObj)
             $("#sessionsTable").empty()
             // appending sensors to filters 
             for(var ind in sessionObj) {

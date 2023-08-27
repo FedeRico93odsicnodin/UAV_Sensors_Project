@@ -2,7 +2,6 @@
 var allTimeDivisionPoints = {}
 var setCanvasPoints = []
 var allChartsRefs = {}
-var carouselSessionsInit = false
 // getting the gasNameId from the selector id 
 function getGasNameSessionIdFromSelectorId(selId) {
     var currIdParts = selId.split("_")
@@ -46,8 +45,6 @@ function setNewIntervalGraph(sel) {
     var timeRange = getCurrTimeRangeFromSelectorId(sel.id)
     var currSelectedTime = document.getElementById(sel.id).value
     var selTimeInterval = 'intervalDashboardSel_' + currSelectedTime + "_" + gasNameSessionId
-    console.log(timeRange)
-    console.log(selTimeInterval)
     // resetting the selection for the current visualized graph
     document.getElementById(sel.id).value = timeRange
 
@@ -64,7 +61,6 @@ function setNewPointNumberGraph(sel) {
     var timeRange = getCurrTimeRangeFromSelectorId(sel.id)
     var currSelectionVal = parseInt(document.getElementById(sel.id).value)
     var contextArrowsMenuId = "moveButtons_"+ timeRange + "_" + gasNameSessionId
-    console.log(currSelectionVal)
     // visualization of the curr context menu 
     if(currSelectionVal < allTimeDivisionPoints[timeRange + "_" + gasNameSessionId]["data"].length) {
         $("#" + contextArrowsMenuId).show() 
@@ -76,11 +72,9 @@ function setNewPointNumberGraph(sel) {
     var gasVisualizationType = timeRange + "_" + gasNameSessionId
     // retrieving the line chart 
     var currGraphUpdate = allChartsRefs[gasVisualizationType]
-    console.log(currGraphUpdate)
     currGraphUpdate.destroy()
     // getting the curve for the current graph
     var currentCurve = allTimeDivisionPoints[gasVisualizationType]
-    console.log(currentCurve)
     // getting the last points for visualize (only if enought points)
     if(currentCurve['data'].length < currSelectionVal) {
         console.log('same curve')
@@ -194,7 +188,6 @@ function moveBackward(arrId) {
     var currStepValue = parseInt(document.getElementById(stepMovementId).value)
     var currGraph = allChartsRefs[visualizationType + "_" + gasNameId]
     var firstLabelValue = currGraph.data.labels[0]
-    console.log(currStepValue)
     var newDataToDisplay = getNewPointsDivisionInterval(
         gasNameId,
         visualizationType,
@@ -230,7 +223,6 @@ function moveForward(arrId) {
     var currStepValue = document.getElementById(stepMovementId).value
     var currGraph = allChartsRefs[visualizationType + "_" + gasNameId]
     var firstLabelValue = currGraph.data.labels[0]
-    console.log(currStepValue)
     var newDataToDisplay = getNewPointsDivisionInterval(
         gasNameId,
         visualizationType,
@@ -549,7 +541,10 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
 }
 // iteration for rendering the selected filtered substances
 function loadDashboardData() {
-    console.log('starting loading dashboard data')
+    // initializing dashboard parameters 
+    allTimeDivisionPoints = {}
+    setCanvasPoints = []
+    allChartsRefs = {}
     var allGasesToRetrieve = getGasesToDisplay()
     // reset of all attributes data to manage 
     $('#dashboardContent').empty()
@@ -561,7 +556,6 @@ function loadDashboardData() {
             contentType: "application/json",
             dataType: 'json',
             success: function(data) {
-                console.log(data)
                 // somthing wrong in the call
                 if(data['status'].startsWith("ok_") == false) {
                     console.log("nothing to display")
@@ -585,7 +579,6 @@ function loadDashboardData() {
                     gasNameSessionId = splittedDataSessions[i]['gasName'] + "_" + splittedDataSessions[i]['gasId'] + '_session' + splittedDataSessions[i]['sessionID']
                     gasNameSessionIds.push(gasNameSessionId)
                     var currHtmlRender = createBodyGraphsCurrSession(splittedDataSessions[i], gasNameSessionId)
-                    console.log(currHtmlRender)
                     allDisplayedChartSessions.push(currHtmlRender)
                 }
                 // create html canvas and carousel and render it 
@@ -612,11 +605,9 @@ function prepareCarouselHtml(htmlContentArray) {
         if(i == 0) {
             currHtmlElement = '<div class="carousel-item active">' + htmlContentArray[i] + '</div>'
             allHtmlContentCarousel += currHtmlElement
-            console.log(currHtmlElement)
             continue
         }
         currHtmlElement = '<div class="carousel-item">' + htmlContentArray[i] + '</div>'
-        console.log(currHtmlElement)
         allHtmlContentCarousel += currHtmlElement
     }
     
