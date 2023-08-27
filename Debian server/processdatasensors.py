@@ -249,17 +249,18 @@ def beginProcessSensorsData(csvdata, csvHeader):
         # initializing the session
         if(idx == 1): 
             currSession = checkSessionDB(sensorData)
+            print(sensorData[sessionCol])
+            idx = idx + 1
         # processing sensor data row
         processSensorsDataRow(sensorData, csvHeader, currSession)
 
 def checkSessionDB(sensorData):
     global currSession
-    if(currSession != None):
-        return currSession
     dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
     currSessionDatestamp = sensorData[sessionCol]
     currSessionDate = datetime.strptime(currSessionDatestamp, dateStampFormat)
     currSessionName = 'session started in ' + currSessionDatestamp
+    print(currSessionName)
     currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
     if(currSessionObj == None):
         databaseServer.addNewSessionValue(currSessionName, currSessionDate)
