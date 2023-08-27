@@ -1,10 +1,12 @@
 // global variables of all the data to manage 
 var allTimeDivisionPoints = {}
+var setCanvasPoints = []
 var allChartsRefs = {}
+var carouselSessionsInit = false
 // getting the gasNameId from the selector id 
-function getGasNameIdFromSelectorId(selId) {
+function getGasNameSessionIdFromSelectorId(selId) {
     var currIdParts = selId.split("_")
-    var gasNameId = currIdParts[2] + "_" + currIdParts[3]
+    var gasNameId = currIdParts[2] + "_" + currIdParts[3] + "_" + currIdParts[4]
     return gasNameId
 }
 // getting curr time range from selector id 
@@ -28,7 +30,7 @@ function getGasNameFromGraphId(graphId) {
 // getting gasnameid from backward / forward move buttons 
 function getGasNameIdFromBtnMovementsId(movId) {
     var currIdParts = movId.split("_")
-    var currGasNameId = currIdParts[2] + "_" + currIdParts[3]
+    var currGasNameId = currIdParts[2] + "_" + currIdParts[3] + "_" + currIdParts[4]
     return currGasNameId
 }
 // getting visualization type from backward / forward move buttons 
@@ -40,38 +42,38 @@ function getTimeGraphFromBtnMovementsId(movId) {
 // changing the visualization because of new inverval selection 
 function setNewIntervalGraph(sel) {
     // getting curr gasNameId and time interval 
-    var gasNameId = getGasNameIdFromSelectorId(sel.id)
+    var gasNameSessionId = getGasNameSessionIdFromSelectorId(sel.id)
     var timeRange = getCurrTimeRangeFromSelectorId(sel.id)
     var currSelectedTime = document.getElementById(sel.id).value
-    var selTimeInterval = 'intervalDashboardSel_' + currSelectedTime + "_" + gasNameId
+    var selTimeInterval = 'intervalDashboardSel_' + currSelectedTime + "_" + gasNameSessionId
     console.log(timeRange)
     console.log(selTimeInterval)
     // resetting the selection for the current visualized graph
     document.getElementById(sel.id).value = timeRange
 
     // creation of the selectors for the changing context 
-    var oldRowVisualization = timeRange + "_"  + gasNameId + "_row"
-    var newRowVisualization = currSelectedTime + "_" + gasNameId +  "_row"
+    var oldRowVisualization = timeRange + "_"  + gasNameSessionId + "_row"
+    var newRowVisualization = currSelectedTime + "_" + gasNameSessionId +  "_row"
     $("#" + oldRowVisualization).hide()
     $("#" + newRowVisualization).show()
 }
 // changing the visualization because of new points selection 
 function setNewPointNumberGraph(sel) {
     // getting curr gasNameId and time interval 
-    var gasNameId = getGasNameIdFromSelectorId(sel.id)
+    var gasNameSessionId = getGasNameSessionIdFromSelectorId(sel.id)
     var timeRange = getCurrTimeRangeFromSelectorId(sel.id)
     var currSelectionVal = parseInt(document.getElementById(sel.id).value)
-    var contextArrowsMenuId = "moveButtons_"+ timeRange + "_" + gasNameId
+    var contextArrowsMenuId = "moveButtons_"+ timeRange + "_" + gasNameSessionId
     console.log(currSelectionVal)
     // visualization of the curr context menu 
-    if(currSelectionVal < allTimeDivisionPoints[timeRange + "_" + gasNameId]["data"].length) {
+    if(currSelectionVal < allTimeDivisionPoints[timeRange + "_" + gasNameSessionId]["data"].length) {
         $("#" + contextArrowsMenuId).show() 
     }
     else {
         $("#" + contextArrowsMenuId).hide() 
     }
     // changing the visualization of points on curve 
-    var gasVisualizationType = timeRange + "_" + gasNameId
+    var gasVisualizationType = timeRange + "_" + gasNameSessionId
     // retrieving the line chart 
     var currGraphUpdate = allChartsRefs[gasVisualizationType]
     console.log(currGraphUpdate)
@@ -89,26 +91,26 @@ function setNewPointNumberGraph(sel) {
     var currentDataInterval = currentCurve['data'].slice(-currSelectionVal)
     var currGasName = getGasNameFromGraphId(gasVisualizationType)
     allChartsRefs[gasVisualizationType] = renderVisualizationPointsOnGraph(gasVisualizationType, currGasName, currentTimeInterval, currentDataInterval)
-    checkArrowMovementsConsistency({"labels": currentTimeInterval, "data": currentDataInterval}, currentCurve, gasNameId, timeRange)
+    checkArrowMovementsConsistency({"labels": currentTimeInterval, "data": currentDataInterval}, currentCurve, gasNameSessionId, timeRange)
 }
 // deciding how many selections for time visualizations add to curve  
-function decideTimeIntervalSelection(gasNameId, visualizationType, allPointsNum) {
-    var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameId
+function decideTimeIntervalSelection(gasNameSessionId, visualizationType, allPointsNum) {
+    var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameSessionId
     var selStartHtml = '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraph(this);">'
     + '<option value="mmm">mmm</option>'
-    if(allPointsNum['ss_' + gasNameId]["data"].length == 0) {
+    if(allPointsNum['ss_' + gasNameSessionId]["data"].length == 0) {
         selStartHtml += '</select>'
         return selStartHtml
     }
     // adding the second selection choice 
     selStartHtml += '<option value="ss">ss</option>'
-    if(allPointsNum['mm_' + gasNameId]["data"].length == 0) {
+    if(allPointsNum['mm_' + gasNameSessionId]["data"].length == 0) {
         selStartHtml += '</select>'
         return selStartHtml
     }
     // adding the minutes selection choice 
     selStartHtml += '<option value="mm">mm</option>'
-    if(allPointsNum['hh_' + gasNameId]["data"].length == 0) {
+    if(allPointsNum['hh_' + gasNameSessionId]["data"].length == 0) {
         selStartHtml += '</select>'
         return selStartHtml
     } 
@@ -119,12 +121,12 @@ function decideTimeIntervalSelection(gasNameId, visualizationType, allPointsNum)
     return selStartHtml
 } 
 // deciding how many selections for points to display on curve 
-function decidePointsIntervalSelection(gasNameId, visualizationType, currVisualizationNum) {
+function decidePointsIntervalSelection(gasNameSessionId, visualizationType, currVisualizationNum) {
     // if num of points less than 5 the menu will not be created 
     if(currVisualizationNum < 5) {
         return ''
     }
-    var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameId
+    var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameSessionId
     var selStartHtml = '<select class="select" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);">'
     + '<option value="5">5</option>'
     if(currVisualizationNum < 10) {
@@ -182,6 +184,7 @@ function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNa
         $("#" + backwardMovementInputId).show()
     }
 }
+// moving backward on rendered graph
 function moveBackward(arrId) {
     // getting the gas name id and visualization type 
     var gasNameId = getGasNameIdFromBtnMovementsId(arrId.id)
@@ -217,6 +220,7 @@ function moveBackward(arrId) {
     currGraph.data.datasets[0].data = newDataToDisplay["data"]
     currGraph.update()
 }
+// moving forward on rendered graph
 function moveForward(arrId) {
     // getting the gas name id 
     var gasNameId = getGasNameIdFromBtnMovementsId(arrId.id)
@@ -273,6 +277,7 @@ function checkIfFitstPointInSet(currSet, allInterval) {
     }
     return false
 }
+// getting the new point set on mevement through the graph
 function getNewPointsDivisionInterval(gasNameId, visualizationType, numStep, direction, startIntervalPoint) {
     // getting the current gas curve points 
     var currIntervalsOnTime = allTimeDivisionPoints[visualizationType + "_" + gasNameId]
@@ -355,23 +360,24 @@ function getMovingButtonsHtml(gasNameId, visualizationType) {
     return renderHtml
 }
 // html for rendering single canvas gas visualizer
-function createGasCanvas(gasName, gasNameId, visualizationType, selIntervalHtml, selPointsHtml) {
+function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationType, selIntervalHtml, selPointsHtml) {
     // rendered html 
-    var rowIdGasVisualization = visualizationType + "_" + gasNameId + "_row"
-    var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameId
-    var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameId
-    var gasVisualizationType = visualizationType + "_" + gasNameId 
-    var htmlCanvas ='<div class="row" style="margin-top: 15px;" id="' + rowIdGasVisualization + '">' +  
+    var rowIdGasVisualization = visualizationType + "_" + gasNameSessionId + "_row"
+    var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameSessionId
+    var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameSessionId
+    var gasVisualizationType = visualizationType + "_" + gasNameSessionId 
+    var htmlCanvas ='<div class="row" id="' + rowIdGasVisualization + '">' +  
                         '<div class="col-sm-24 col-xl-10 mx-auto">' + 
                             '<div class="bg-secondary text-center rounded p-4">' +
                                 '<div>' +
-                                    '<h6 class="mb-0" style="float:left">' + gasName + '</h6>' +
+                                    '<h6 class="mb-0" style="float:left">' + gasName + ' - ' + gasSession + '</h6>' +
                                     selIntervalHtml + 
                                     selPointsHtml + 
                                 '</div>' +
-                                getMovingButtonsHtml(gasNameId, visualizationType) + 
+                                getMovingButtonsHtml(gasNameSessionId, visualizationType) + 
                                 '<canvas id="' + gasVisualizationType + '"></canvas>' +
                             '</div>' +
+                        '</div>' + 
                         '</div>'
                     '</div>'
     return htmlCanvas
@@ -439,17 +445,111 @@ function makeDefaultSelectionTimeCurve(gasNameId, defaultTimeSelection, defaultP
     } 
     for(var currDisplayTime in allTimeSelections) {
         var currIdGasVisualization = currDisplayTime + "_row"
-        if(currIdGasVisualization == rowIdGasVisualization) {
+        if(currIdGasVisualization.startsWith(defaultTimeSelection)) {
             $("#" + currIdGasVisualization).show()
             continue
         }
         $("#" + currIdGasVisualization).hide()
     }
 }
+// making the sets different from a session to another 
+function getSplittedSessionsData(rawData) {
+    var orderedSessionsData = []
+    var currSession = ''
+    var currSessionID = 0
+    var currSessionObj = {}
+    for(var i in rawData['gasData']) {
+        // initilization 
+        if(currSession == '') {
+            currSession = rawData['gasData'][i][2]
+            currSessionID = rawData['gasData'][i][3]
+            currSessionObj = {}
+            currSessionObj['status'] = rawData['status']
+            currSessionObj['gasName'] = rawData['gasName']
+            currSessionObj['gasId'] = rawData['gasId']
+            currSessionObj['gasData'] = []
+            currSessionObj['gasData'].push(rawData['gasData'][i])
+            // adding the overall session info 
+            currSessionObj['session'] = currSession
+            currSessionObj['sessionID'] = currSessionID
+            continue
+        }
+        if(currSession != rawData['gasData'][i][2]) {
+            currSession = rawData['gasData'][i][2]
+            currSessionID = rawData['gasData'][i][3]
+            orderedSessionsData.push(currSessionObj)
+            currSessionObj = {}
+            currSessionObj['status'] = rawData['status']
+            currSessionObj['gasName'] = rawData['gasName']
+            currSessionObj['gasId'] = rawData['gasId']
+            currSessionObj['gasData'] = []
+            currSessionObj['gasData'].push(rawData['gasData'][i])
+            // adding the overall session info
+            currSessionObj['session'] = currSession
+            currSessionObj['sessionID'] = currSessionID
+            continue
+        }
+        currSessionObj['gasData'].push(rawData['gasData'][i])
+    }
+    // pushing last element of sesssion 
+    orderedSessionsData.push(currSessionObj)
+    return orderedSessionsData
+}
+// return the overall container to be inserted in the carousel 
+function getOverallCarouselContainerOfGas(htmlGas) {
+    return '<div>' + htmlGas + '</div>'
+}
+// creating the main body of graphs for the specific session 
+function createBodyGraphsCurrSession(data, gasNameSessionId) {
+    // getting data for default visualization
+    var dataDisplayMMM = getDataToDisplayMMM(data)
+    var dataDisplayS = getDataToDisplaySS(data)
+    var dataDisplayM = getDataToDisplayMM(data)
+    var dataDisplayH = getDataToDisplayHH(data)
+    // no data to display for the basic case 
+    if(dataDisplayMMM['data'].length == 0) {
+        console.log("nothing to display")
+        return ''
+    }
+    allTimeDivisionPoints["mmm_" + gasNameSessionId] = dataDisplayMMM 
+    allTimeDivisionPoints["ss_" + gasNameSessionId] = dataDisplayS
+    allTimeDivisionPoints["mm_" + gasNameSessionId] = dataDisplayM 
+    allTimeDivisionPoints["hh_" + gasNameSessionId] = dataDisplayH
+    // preparing the data for the milliseconds selections 
+    // selections intervals
+    var selIntervalsHtml = decideTimeIntervalSelection(gasNameSessionId, "mmm", allTimeDivisionPoints)
+    var selPointsHtml = decidePointsIntervalSelection(gasNameSessionId, "mmm", allTimeDivisionPoints["mmm_" + gasNameSessionId]["data"].length)
+    // canvas html creation
+    var htmlCanvasAppend = createGasCanvas(data['gasName'], data['session'], gasNameSessionId, "mmm", selIntervalsHtml, selPointsHtml)
+    setCanvasPoints.push({ "canvasId": "mmm_" + gasNameSessionId, "gasName": data['gasName'], "currSet": dataDisplayMMM })
+    // creation of the visualization for the ss points 
+    if(allTimeDivisionPoints["ss_" + gasNameSessionId]["data"].length > 0) {
+        selIntervalsHtml = decideTimeIntervalSelection(gasNameSessionId, "ss", allTimeDivisionPoints)
+        selPointsHtml = decidePointsIntervalSelection(gasNameSessionId, "ss", allTimeDivisionPoints["ss_" + gasNameSessionId]["data"].length)
+        htmlCanvasAppend += createGasCanvas(data['gasName'], data['session'], gasNameSessionId, "ss", selIntervalsHtml, selPointsHtml)
+        setCanvasPoints.push({ "canvasId": "ss_" + gasNameSessionId, "gasName": data['gasName'], "currSet": dataDisplayS })
+    }
+    // creation of the visualization for the mm points 
+    if(allTimeDivisionPoints["mm_" + gasNameSessionId]["data"].length > 0) {
+        selIntervalsHtml = decideTimeIntervalSelection(gasNameSessionId, "mm", allTimeDivisionPoints)
+        selPointsHtml = decidePointsIntervalSelection(gasNameSessionId, "mm", allTimeDivisionPoints["mm_" + gasNameSessionId]["data"].length)
+        htmlCanvasAppend += createGasCanvas(data['gasName'], data['session'], gasNameSessionId, "mm", selIntervalsHtml, selPointsHtml)
+        setCanvasPoints.push({ "canvasId": "mm_" + gasNameSessionId, "gasName": data['gasName'], "currSet": dataDisplayM })
+    }
+    // creation of the visualization for the hh points 
+    if(allTimeDivisionPoints["hh_" + gasNameSessionId]["data"].length > 0) {
+        selIntervalsHtml = decideTimeIntervalSelection(gasNameSessionId, "hh", allTimeDivisionPoints)
+        selPointsHtml = decidePointsIntervalSelection(gasNameSessionId, "hh", allTimeDivisionPoints["hh_" + gasNameSessionId]["data"].length)
+        htmlCanvasAppend += createGasCanvas(data['gasName'], data['session'], gasNameSessionId, "hh", selIntervalsHtml, selPointsHtml)
+        setCanvasPoints.push({ "canvasId": "hh_" + gasNameSessionId, "gasName": data['gasName'], "currSet": dataDisplayH })
+    }
+    // creation of the overall container to be inserted in the carousel 
+    var overallHtmlCarousel = getOverallCarouselContainerOfGas(htmlCanvasAppend)
+    return overallHtmlCarousel
+}
 // iteration for rendering the selected filtered substances
 function loadDashboardData() {
     console.log('starting loading dashboard data')
-    var gasTest = {"gasId": 3, "gasName": "CH4"}
     var allGasesToRetrieve = getGasesToDisplay()
     // reset of all attributes data to manage 
     $('#dashboardContent').empty()
@@ -461,74 +561,40 @@ function loadDashboardData() {
             contentType: "application/json",
             dataType: 'json',
             success: function(data) {
+                console.log(data)
+                // somthing wrong in the call
                 if(data['status'].startsWith("ok_") == false) {
                     console.log("nothing to display")
                     return 
                 }
-                // preparation of the canvas for the current substance 
-                var gasNameId = data['gasName'] + "_" + data['gasId']
-                // getting data for default visualization
-                console.log(data)
-                var dataDisplayMMM = getDataToDisplayMMM(data)
-                console.log(dataDisplayMMM)
-                var dataDisplayS = getDataToDisplaySS(data)
-                console.log(dataDisplayS)
-                var dataDisplayM = getDataToDisplayMM(data)
-                console.log(dataDisplayM)
-                var dataDisplayH = getDataToDisplayHH(data)
-                console.log(dataDisplayH)
-                // no data to display for the basic case 
-                if(dataDisplayMMM['data'].length == 0) {
+                // no data to display ù
+                if(data['gasData'].length == 0) {
                     console.log("nothing to display")
                     return 
                 }
-                // creation of time intervals object 
-                var currIntervalNumValues = {}
-                currIntervalNumValues["mmm_" + gasNameId] = dataDisplayMMM 
-                currIntervalNumValues["ss_" + gasNameId] = dataDisplayS
-                currIntervalNumValues["mm_" + gasNameId] = dataDisplayM 
-                currIntervalNumValues["hh_" + gasNameId] = dataDisplayH
-                allTimeDivisionPoints["mmm_" + gasNameId] = dataDisplayMMM 
-                allTimeDivisionPoints["ss_" + gasNameId] = dataDisplayS
-                allTimeDivisionPoints["mm_" + gasNameId] = dataDisplayM 
-                allTimeDivisionPoints["hh_" + gasNameId] = dataDisplayH
-                // creation of the overall visualization of interval (valid for all the selections)
-                var selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "mmm", currIntervalNumValues)
-                // creation for the visualization of mmm points 
-                var selPointsHtml = decidePointsIntervalSelection(gasNameId, "mmm", currIntervalNumValues["mmm_" + gasNameId]["data"].length)
-                var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "mmm", selIntervalsHtml, selPointsHtml)
-                $('#dashboardContent').append(htmlCanvasAppend)
-                var currChartMMM = renderVisualizationPointsOnGraph("mmm_" + gasNameId, data['gasName'], dataDisplayMMM['labels'], dataDisplayMMM['data'])
-                allChartsRefs["mmm_" + gasNameId] = currChartMMM
-                // creation of the visualization for the ss points 
-                if(currIntervalNumValues["ss_" + gasNameId]["data"].length > 0) {
-                    selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "ss", currIntervalNumValues)
-                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "ss", currIntervalNumValues["ss_" + gasNameId]["data"].length)
-                    var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "ss", selIntervalsHtml, selPointsHtml)
-                    $('#dashboardContent').append(htmlCanvasAppend)
-                    var curChartSS = renderVisualizationPointsOnGraph("ss_" + gasNameId, data['gasName'], dataDisplayS['labels'], dataDisplayS['data'])
-                    allChartsRefs["ss_" + gasNameId] = curChartSS
+                setCanvasPoints = []
+                // gas identification ids
+                var gasNameId = data['gasName'] + "_" + data['gasId']
+                var gasNameSessionIds = []
+                // getting the splitted data on sessions 
+                var splittedDataSessions = getSplittedSessionsData(data)
+                // variable for all displayed chart of the carousel 
+                var allDisplayedChartSessions = []
+                // init the html container for each of the data of the retrieved sessions 
+                for(var i in splittedDataSessions) {
+                    gasNameSessionId = splittedDataSessions[i]['gasName'] + "_" + splittedDataSessions[i]['gasId'] + '_session' + splittedDataSessions[i]['sessionID']
+                    gasNameSessionIds.push(gasNameSessionId)
+                    var currHtmlRender = createBodyGraphsCurrSession(splittedDataSessions[i], gasNameSessionId)
+                    console.log(currHtmlRender)
+                    allDisplayedChartSessions.push(currHtmlRender)
                 }
-                // creation of the visualization for the mm points 
-                if(currIntervalNumValues["mm_" + gasNameId]["data"].length > 0) {
-                    selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "mm", currIntervalNumValues)
-                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "mm", currIntervalNumValues["mm_" + gasNameId]["data"].length)
-                    var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "mm", selIntervalsHtml, selPointsHtml)
-                    $('#dashboardContent').append(htmlCanvasAppend)
-                    var currChartMM = renderVisualizationPointsOnGraph("mm_" + gasNameId, data['gasName'], dataDisplayM['labels'], dataDisplayM['data'])
-                    allChartsRefs["mm_" + gasNameId] = currChartMM
-                }
-                // creation of the visualization for the hh points 
-                if(currIntervalNumValues["hh_" + gasNameId]["data"].length > 0) {
-                    selIntervalsHtml = decideTimeIntervalSelection(gasNameId, "hh", currIntervalNumValues)
-                    selPointsHtml = decidePointsIntervalSelection(gasNameId, "hh", currIntervalNumValues["hh_" + gasNameId]["data"].length)
-                    var htmlCanvasAppend = createGasCanvas(data['gasName'], gasNameId, "hh", selIntervalsHtml, selPointsHtml)
-                    $('#dashboardContent').append(htmlCanvasAppend)
-                    var currChartHH = renderVisualizationPointsOnGraph("hh_" + gasNameId, data['gasName'], dataDisplayH['labels'], dataDisplayH['data'])
-                    allChartsRefs["hh_" + gasNameId] = currChartHH
-                }
+                // create html canvas and carousel and render it 
+                initSessionsCarousel(allDisplayedChartSessions, gasNameId, setCanvasPoints)
                 // default selections for current graph curve 
-                makeDefaultSelectionTimeCurve(gasNameId, "mmm", "all", currIntervalNumValues)
+                for(var i in gasNameSessionIds) {
+                    makeDefaultSelectionTimeCurve(gasNameSessionIds[i], "mmm", "all", allTimeDivisionPoints)
+                }
+                
             },
             error: function(err) {
                 alert('During saving filters an error occur')
@@ -536,4 +602,70 @@ function loadDashboardData() {
             }
           });
     }
+}
+// preparation of the carousel elements 
+function prepareCarouselHtml(htmlContentArray) {
+    var allHtmlContentCarousel = ''
+    for(var i in htmlContentArray) {
+        var currHtmlElement = ''
+        // the first element will be the active one 
+        if(i == 0) {
+            currHtmlElement = '<div class="carousel-item active">' + htmlContentArray[i] + '</div>'
+            allHtmlContentCarousel += currHtmlElement
+            console.log(currHtmlElement)
+            continue
+        }
+        currHtmlElement = '<div class="carousel-item">' + htmlContentArray[i] + '</div>'
+        console.log(currHtmlElement)
+        allHtmlContentCarousel += currHtmlElement
+    }
+    
+    return allHtmlContentCarousel
+}
+// render the canvas for the selected gas 
+function renderGasCanvas(currCanvasDataArr) {
+    for(var i in currCanvasDataArr) {
+        currChart = renderVisualizationPointsOnGraph(
+            currCanvasDataArr[i].canvasId, 
+            currCanvasDataArr[i].gasName,
+            currCanvasDataArr[i].currSet.labels,
+            currCanvasDataArr[i].currSet.data
+            )
+        allChartsRefs[currCanvasDataArr[i].canvasId] = currChart
+    }
+}
+// creation of the main carousel if more of one sessions are selected 
+function initSessionsCarousel(htmlContentArray, gasNameId, canvasPointsObj) {
+    var htmlContentCarousel = prepareCarouselHtml(htmlContentArray)
+    // init session carousel 
+    var gasCarouselId = 'gasCarousel_' + gasNameId
+    // creating and appending the overall carousel
+    var carouselHtml = getCarouselMainHtml(htmlContentCarousel, gasCarouselId)
+    $('#dashboardContent').append(carouselHtml)
+    // rendering the canvas for all the data of the current gas 
+    renderGasCanvas(canvasPointsObj)
+    // TODO: understand if necessary jquery ....
+    if(document.getElementById('carouselExampleControls') == null) {
+        $('#' + gasCarouselId).carousel({
+            interval: false
+          })
+    }
+}
+// getting the html for the principal carousel 
+function getCarouselMainHtml(htmlContentArray, carouselId) {
+    var carouselHtml = 
+    '<div id="' + carouselId + '" class="row carousel slide carousel-fade" data-bs-ride="carousel" style="margin-top:25px">'
+    +'<div class="carousel-inner">'
+    +  htmlContentArray
+    +'</div>'
+    +'<button class="carousel-control-prev" style="width:5%" type="button" data-bs-target="#' + carouselId + '" data-bs-slide="prev">'
+    +  '<span class="carousel-control-prev-icon" aria-hidden="true"></span>'
+    +  '<span class="visually-hidden">Previous</span>'
+    +'</button>'
+    +'<button class="carousel-control-next" style="width:5%" type="button" data-bs-target="#' + carouselId + '" data-bs-slide="next">'
+    +  '<span class="carousel-control-next-icon" aria-hidden="true"></span>'
+    +  '<span class="visually-hidden">Next</span>'
+    +'</button>'
+    +'</div>'
+    return carouselHtml
 }

@@ -409,13 +409,15 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
         SELECT 
         processed_sensors_data.date
         ,processed_sensors_data.detected_substance_value
+        ,sessions.name
+        , sessions.id
         FROM processed_sensors_data
+        JOIN sessions on processed_sensors_data.session_ref = sessions.id
         WHERE processed_sensors_data.detected_substance_ref = ?
         AND processed_sensors_data.session_ref in (SELECT 
-        filter_value FROM options_data_filters WHERE filter_context='Sessions')
-        ORDER BY processed_sensors_data.date 
+        filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
+        ORDER BY sessions.id,processed_sensors_data.date 
 """
-        print(gasId)
         # modification of the query for the selected data case TODO: implementation 
         if(dateSelectionType == 'This week'):
             sqlite_dataselection_statement = 'to implement'
@@ -433,6 +435,8 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
             currDataObj = {}
             currDataObj['date'] = filterRecord[0]
             currDataObj['value'] = float(filterRecord[1])
+            currDataObj['session'] = str(filterRecord[2])
+            currDataObj['sessionID'] = int(filterRecord[3])
             returnedData.append(currDataObj)
         
         con.close()
