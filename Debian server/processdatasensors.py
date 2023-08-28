@@ -65,7 +65,7 @@ def dataSensorsElaborateThread(serverDataObj):
                 # checking if need to add initial or extra sensors to current analysis 
                 initSensorsData = checkIfNewSensorsToAdd(csvheader, initSensorsData, initGasesData)
                 # prepare and store current data values
-                beginProcessSensorsData(csvdata, csvheader)
+                beginProcessSensorsData(csvdata, csvheader, sessionCol)
                 print('file sensors rows has been added to DB')
             # deletion of file
             orderedFilesToProcess.remove(orderedFilesToProcess[0])
@@ -93,7 +93,6 @@ def dataSnesorsElaborateThreadTEST(refCSVPath):
         print('\n')
         sessionCol = initSessionColIndex(csvheader)
         print('STEP3: session col index')
-        print(sessionCol)
         # checking if need to add initial or extra gases to current analysis 
         print('\n')
         initGasesData = checkIfNewGasesToAdd(csvheader, initGasesData)
@@ -202,7 +201,7 @@ def initSessionColIndex(rowHeader):
             continue
         sessionColHeader = idx
         idx = idx + 1
-    return idx
+    return idx - 1
 
 def checkIfNewGasesToAdd(rowHeader, prevStoredGases):
     # data still not initiliazed with previous info
@@ -239,7 +238,7 @@ def checkIfNewSensorsToAdd(rowHeader, prevStoredSensors, checkedStoredGases):
         prevStoredSensors = databaseServer.getSensorsDefinitions()
     return prevStoredSensors
  
-def beginProcessSensorsData(csvdata, csvHeader):
+def beginProcessSensorsData(csvdata, csvHeader, sessionCol):
     idx = 0
     for sensorData in csvdata:
         # data of the already analyzed header
@@ -248,23 +247,29 @@ def beginProcessSensorsData(csvdata, csvHeader):
             continue
         # initializing the session
         if(idx == 1): 
-            currSession = checkSessionDB(sensorData)
-            print(sensorData[sessionCol])
+            currSession = checkSessionDB(sensorData, sessionCol)
             idx = idx + 1
         # processing sensor data row
         processSensorsDataRow(sensorData, csvHeader, currSession)
 
-def checkSessionDB(sensorData):
+def checkSessionDB(sensorData, sessionCol):
     global currSession
+    print('curr session header col = ' + str(sessionCol))
     dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
-    currSessionDatestamp = sensorData[sessionCol]
+    currSessionDatestamp = sensorData[sessionCol] + '.000'
+    print(sensorData)
+    print(sessionCol)
+    print(currSessionDatestamp)
     currSessionDate = datetime.strptime(currSessionDatestamp, dateStampFormat)
     currSessionName = 'session started in ' + currSessionDatestamp
-    print(currSessionName)
     currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
+    print(currSessionObj)
     if(currSessionObj == None):
         databaseServer.addNewSessionValue(currSessionName, currSessionDate)
         currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
+        print('session added')
+        
+    print(currSessionObj)
     currSession = currSessionObj
     return currSession
 

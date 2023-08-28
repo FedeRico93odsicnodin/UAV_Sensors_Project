@@ -236,14 +236,15 @@ def getSensorCurrSession(sessionName):
             currSession = dbmodels.SessionObj()
             currSession.id = int(sessionRecord[0])
             currSession.name = str(sessionRecord[1])
-            datetime1 = sessionRecord[2][:-3]
-            currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S.%f')
+            datetime1 = sessionRecord[2]
+            currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S')
             if(sessionRecord[3] != None):
-                datetime2 = sessionRecord[3][:-3]
-                currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S.%f')
+                datetime2 = sessionRecord[3]
+                currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S')
             con.close()
             return currSession
         except:
+            print('error DB')
             con.close()
             return None
     return None
