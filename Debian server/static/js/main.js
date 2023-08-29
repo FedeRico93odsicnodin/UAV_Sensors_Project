@@ -91,49 +91,32 @@
     })
     $("#saveBtn").click(function() {
         var newJSONFilters = setNewSessionStorageFilters()
-        $.ajax({
-            type: "POST",
-            url: "/filters/allstored",
-            data: newJSONFilters,
-            contentType: "application/json",
-            dataType: 'json',
-            success: function(data) {
+        isLoadingPhase = false
+        saveFiltersConfig(newJSONFilters, 
+            function(data) {
                 alert('Filters are successfully saved')
-                initLoadedFiltersMatrix()
-                initAllFilters()
-                backToDashboardContext()
+                initAllFilters(backToDashboardReload)
                 isFilterContext = false
             },
-            error: function(err) {
+            function(err) {
                 alert('During saving filters an error occur')
                 console.log('error saving filters\n' + err)
                 backToDashboardContext()
                 isFilterContext = false
-            }
-          });
+            })
     })
     $(document).ready(function() {
         // at the beginning i'm visualizing data 
         isFilterContext = false
+        // loading phase
+        isLoadingPhase = true
         backToDashboardContext()
-        $.ajax({
-            url: "/filters/allstored"
-            , success: function(data) 
-            { 
-                // resetting loaded filters markers 
-                initLoadedFiltersMatrix()
-                // storing the string of session parameters 
-                sessionStorage.setItem("filterOptions", data);
-                // initializing all the filters visualizations
-                initAllFilters()
-                // calling data reload 
-                startUpdaterScript()
+        getInitialData(
+            initAllDataAndFilters,
+            function(err) {
+                console.log('error verified in loading initial data')
             }
-            , error: function(err) {
-                console.log(err)
-            }
-        })
-
+        )
     })
     
 })(jQuery);

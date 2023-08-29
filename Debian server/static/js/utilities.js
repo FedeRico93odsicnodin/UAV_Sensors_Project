@@ -214,3 +214,8 @@ function checkIfFitstPointInSet(currSet, allInterval) {
     }
     return false
 }
+// reloading data and back to dashboard context 
+function backToDashboardReload() {
+    loadDashboardData()
+    backToDashboardContext()
+}

@@ -103,6 +103,7 @@ def get_all_stored_filters():
             filtersToInsert.append(filtersJSON[f])
         databaseServer.insertFilterOptions(filtersToInsert)
         return json.dumps({'status': 'ok'})
+    print("GETTING FILTERS PHASE")
     allFilters = databaseServer.getExistingFilters()
     objFilters = {}
     for f in allFilters:
@@ -112,6 +113,7 @@ def get_all_stored_filters():
             continue
         objFilters[allFilters[f].filter_name] = allFilters[f].filterObj()
     res = json.dumps(objFilters)
+    print(res)
     return res
 
 @app.route('/gasdata', methods=['POST'])

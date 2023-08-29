@@ -6,10 +6,10 @@ var OverallSessions = []
 // loaded filters matrix 
 var loadedFiltersParams = {}
 // Initiazation for the date selections filters 
-function initDateFilters(showView) {
+function initDateFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/date"
-        , success: function(data) {
+        , success: function(data, callBackFilters) {
             var datesObj = JSON.parse(data)
             // getting the already stored filters 
             var filtersObj = getSessionStorageFilters()
@@ -106,7 +106,7 @@ function initDateFilters(showView) {
                 return
             }
             if(checkIfLoadedFilters('DateFilters'))
-                loadDashboardData()
+                callBackFilters()
         }
         , error: function(err) {
             console.log('an error occur retrieving range dates info:\n' + err)
@@ -114,7 +114,7 @@ function initDateFilters(showView) {
     })
 }
 // Initialization for the sensors selection filters 
-function initSensorsFilters(showView) {
+function initSensorsFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/sensors"
         , success: function(data) {
@@ -153,7 +153,7 @@ function initSensorsFilters(showView) {
                 return
             }
             if(checkIfLoadedFilters('SensorsFilters'))
-                loadDashboardData()
+                callBackFilters()
         }
         , error: function(err) {
             console.log('an error occur retrieving sensors info:\n' + err)
@@ -161,7 +161,7 @@ function initSensorsFilters(showView) {
     })
 }
 // Initializations for the gases selection filters 
-function initGasesFilters(showView) {
+function initGasesFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/gases"
         , success: function(data) {
@@ -195,7 +195,7 @@ function initGasesFilters(showView) {
                 return
             }
             if(checkIfLoadedFilters('GasesFilters'))
-                loadDashboardData()
+                callBackFilters()
         }
         , error: function(err) {
             console.log('an error occur retrieving gases info:\n' + err)
@@ -203,7 +203,7 @@ function initGasesFilters(showView) {
     })
 }
 // Initialization for the sessions selection filters 
-function initSessionsFilters(showView) {
+function initSessionsFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/sessions"
         , success: function(data) {
@@ -237,7 +237,7 @@ function initSessionsFilters(showView) {
                 return
             }
             if(checkIfLoadedFilters('SessionsFilters'))
-                loadDashboardData()
+                callBackFilters()
         }
         , error: function(err) {
             console.log('an error occur retrieving gases info:\n' + err)
@@ -245,7 +245,7 @@ function initSessionsFilters(showView) {
     })
 }
 // Initialization for the general options filters 
-function initOptionsFilters(showView) {
+function initOptionsFilters(showView, callBackFilters) {
     var sessionFilters = getSessionStorageFilters()
     if("visualizationType" in sessionFilters) {
         if(sessionFilters["visualizationType"]["selected"] == "0") {
@@ -300,7 +300,7 @@ function initOptionsFilters(showView) {
         return
     }
     if(checkIfLoadedFilters('OptionsFilters'))
-        loadDashboardData()
+        callBackFilters()
 }
 // Matrix of all the filters to be loaded
 function initLoadedFiltersMatrix() {
@@ -320,10 +320,12 @@ function checkIfLoadedFilters(currLoaded) {
     return true
 }
 // load all the filtes without refreshing the view
-function initAllFilters() {
-    initDateFilters(false)
-    initSensorsFilters(false)
-    initGasesFilters(false)
-    initSessionsFilters(false)
-    initOptionsFilters(false)
+function initAllFilters(callBackFilters) {
+    // resetting filter matrix before call 
+    initLoadedFiltersMatrix()
+    initDateFilters(false, callBackFilters)
+    initSensorsFilters(false, callBackFilters)
+    initGasesFilters(false, callBackFilters)
+    initSessionsFilters(false, callBackFilters)
+    initOptionsFilters(false, callBackFilters)
 }

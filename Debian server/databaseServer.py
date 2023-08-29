@@ -205,15 +205,17 @@ def getAllSessions():
                 currSession = dbmodels.SessionObj()
                 currSession.id = int(sessionRecord[0])
                 currSession.name = str(sessionRecord[1])
-                datetime1 = sessionRecord[2][:-3]
+                datetime1 = str(sessionRecord[2]) + ".000"
+                print(datetime1)
                 currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S.%f')
                 if(sessionRecord[3] != None):
-                    datetime2 = sessionRecord[3][:-3]
+                    datetime2 = str(sessionRecord[3]) + ".000"
                     currSession.end_date =  datetime.strptime(datetime2, '%Y-%m-%d %H:%M:%S.%f')
                 returnedSessions[currSession.name] = currSession
             con.close()
             return returnedSessions
         except:
+            print('session error')
             con.close()
             return None
     return None
