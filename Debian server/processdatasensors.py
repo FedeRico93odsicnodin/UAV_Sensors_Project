@@ -34,25 +34,21 @@ def dataSensorsElaborateThread(serverDataObj):
     global initGasesData
     global initSensorsData
     global currSession
-    print('thread analyzer start')
     while(True):
         currSession = None
         orderedFilesToProcess = []
         pendingCSVFiles = os.listdir(outputCSVFolder)
-        print(pendingCSVFiles)
         if(len(pendingCSVFiles) == 0):
             print('waiting for files')
             time.sleep(waitingProcessTime)
         for fileCSV in pendingCSVFiles:
             currFileDate = getFileDate(fileCSV)
-            print(currFileDate)
             orderedFilesToProcess = addFileRefToDictionary(fileCSV, currFileDate, orderedFilesToProcess)
         while(len(orderedFilesToProcess) > 0):
             fileName = orderedFilesToProcess[0]["fileName"]
             print('processing file ' + fileName)
             filePath = os.path.join(outputCSVFolder, fileName)
             with open(filePath, 'r') as f:
-                print(filePath)
                 csvdata = csv.reader(f)
                 # getting the first header definition on the first csv row 
                 csvheader = initGasesAndSensors(csvdata)
@@ -109,30 +105,21 @@ def dataSnesorsElaborateThreadTEST(refCSVPath):
 def getFileDate(filePath):
     fileNameParts = filePath.split("_")
     fileYear = int(fileNameParts[0])
-    print(fileNameParts[0])
     fileMonth = int(fileNameParts[1])
-    print(fileNameParts[1])
     fileDay = int(fileNameParts[2])
-    print(fileNameParts[2])
     fileHour = int(fileNameParts[3])
-    print(fileNameParts[3])
     fileMinutes = int(fileNameParts[4])
-    print(fileNameParts[4])
     fileSeconds = int(fileNameParts[5])
-    print(fileNameParts[5])
     fileMillisicends = int(fileNameParts[6])
-    print(fileNameParts[6])
     fileDateTime = datetime(fileYear, fileMonth, fileDay, fileHour, fileMinutes, fileSeconds, fileMillisicends)
     return fileDateTime
 
 def addFileRefToDictionary(currFilePath, currFileDate, orderedFilesToUpload):
     if(len(orderedFilesToUpload) == 0):
         orderedFilesToUpload.append({ "fileName": currFilePath, "filedate": currFileDate})
-        print(orderedFilesToUpload)
         return orderedFilesToUpload
     inserted = False
     for indFile, listFilePath in enumerate(orderedFilesToUpload):
-        print(len(orderedFilesToUpload))
         if(listFilePath["filedate"] > currFileDate):
             orderedFilesToUpload.insert(indFile, { "fileName": currFilePath, "filedate": currFileDate})
             inserted = True
@@ -140,7 +127,6 @@ def addFileRefToDictionary(currFilePath, currFileDate, orderedFilesToUpload):
             
     if(inserted == False):
         orderedFilesToUpload.append({ "fileName": currFilePath, "filedate": currFileDate})
-    print(orderedFilesToUpload)
     return orderedFilesToUpload
 
 def initGasesAndSensors(rowHeader):
@@ -254,24 +240,29 @@ def beginProcessSensorsData(csvdata, csvHeader, sessionCol):
 
 def checkSessionDB(sensorData, sessionCol):
     global currSession
-    print('curr session header col = ' + str(sessionCol))
     dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
     currSessionDatestamp = sensorData[sessionCol] + '.000'
-    print(sensorData)
-    print(sessionCol)
-    print(currSessionDatestamp)
     currSessionDate = datetime.strptime(currSessionDatestamp, dateStampFormat)
     currSessionName = 'session started in ' + currSessionDatestamp
     currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
-    print(currSessionObj)
     if(currSessionObj == None):
         databaseServer.addNewSessionValue(currSessionName, currSessionDate)
         currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
+        insertSessionFilterAsSelected(currSessionObj)
         print('session added')
-        
-    print(currSessionObj)
     currSession = currSessionObj
     return currSession
+
+def insertSessionFilterAsSelected(currSessionObj):
+    filterObj = {}
+    filterObj['filter_context'] = 'Sessions'
+    filterObj['filter_name'] = currSessionObj.name
+    filterObj['filter_value'] = currSessionObj.id
+    filterObj['selected'] = 1
+    filterObjs = []
+    filterObjs.append(filterObj)
+    databaseServer.insertFilterOptions(filterObjs, False)
+    print("filter inserted")
 
 def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
     # date formats 

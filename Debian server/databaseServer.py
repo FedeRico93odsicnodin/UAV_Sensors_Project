@@ -273,7 +273,7 @@ def getRangeDate():
             return None
     return None     
 
-def insertFilterOptions(selectedFilters):
+def insertFilterOptions(selectedFilters, delete = True):
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
@@ -281,8 +281,10 @@ def insertFilterOptions(selectedFilters):
         """
         # deletion of old values for the filters 
         cur = con.cursor()
-        cur.execute(sqlite_del_oldfilters_statement)
-        time.sleep(0.1)
+        if(delete == True):
+            cur.execute(sqlite_del_oldfilters_statement)
+            time.sleep(0.1)
+        
         # creation of the new filters 
         sqllite_insertdata_statement = """INSERT INTO options_data_filters 
         (id, 
@@ -443,8 +445,8 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
             returnedData.append(currDataObj)
         
         con.close()
-        return dataRecords
-
+    return dataRecords
+# getting session data on reload 
 def getAllDataSensorsToDisplayReload(
         gasId, 
         dateUpLimit,
@@ -488,6 +490,5 @@ def getAllDataSensorsToDisplayReload(
             currDataObj['session'] = str(filterRecord[2])
             currDataObj['sessionID'] = int(filterRecord[3])
             returnedData.append(currDataObj)
-        
          con.close()
-         return dataRecords
+    return dataRecords

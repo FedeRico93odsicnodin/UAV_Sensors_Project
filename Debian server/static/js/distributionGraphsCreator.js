@@ -2,6 +2,7 @@
 var allTimeDivisionPoints = {}
 var setCanvasPoints = []
 var allChartsRefs = {}
+var allSessionsId = {}
 // getting the gasNameId from the selector id 
 function getGasNameSessionIdFromSelectorId(selId) {
     var currIdParts = selId.split("_")
@@ -477,12 +478,20 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
     var overallHtmlCarousel = getOverallCarouselContainerOfGas(htmlCanvasAppend)
     return overallHtmlCarousel
 }
+// insertion of new session id 
+function insertNewSessionId(loadedSessionId) {
+    if(loadedSessionId in allSessionsId) {
+        return
+    }
+    allSessionsId[loadedSessionId] = true
+}
 // iteration for rendering the selected filtered substances
 function loadDashboardData() {
     // initializing dashboard parameters 
     allTimeDivisionPoints = {}
     setCanvasPoints = []
     allChartsRefs = {}
+    allSessionsId = {}
     var allGasesToRetrieve = getGasesToDisplay()
     // reset of all attributes data to manage 
     $('#dashboardContent').empty()
@@ -515,6 +524,8 @@ function loadDashboardData() {
                 // init the html container for each of the data of the retrieved sessions 
                 for(var i in splittedDataSessions) {
                     gasNameSessionId = splittedDataSessions[i]['gasName'] + "_" + splittedDataSessions[i]['gasId'] + '_session' + splittedDataSessions[i]['sessionID']
+                    // mapping the current session id 
+                    insertNewSessionId(splittedDataSessions[i]['sessionID'])
                     gasNameSessionIds.push(gasNameSessionId)
                     var currHtmlRender = createBodyGraphsCurrSession(splittedDataSessions[i], gasNameSessionId)
                     allDisplayedChartSessions.push(currHtmlRender)

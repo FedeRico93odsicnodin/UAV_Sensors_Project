@@ -41,7 +41,7 @@ function initAllDataAndFilters(data) {
     // initial set of all filters
     initAllFilters(loadDashboardData)
     // calling data reload 
-    // startUpdaterScript()
+    startUpdaterScript()
 }
 
 function filterCallbackMainLoad() {
