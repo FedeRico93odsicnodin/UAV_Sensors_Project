@@ -9,7 +9,7 @@ var loadedFiltersParams = {}
 function initDateFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/date"
-        , success: function(data, callBackFilters) {
+        , success: function(data) {
             var datesObj = JSON.parse(data)
             // getting the already stored filters 
             var filtersObj = getSessionStorageFilters()
@@ -320,12 +320,12 @@ function checkIfLoadedFilters(currLoaded) {
     return true
 }
 // load all the filtes without refreshing the view
-function initAllFilters(callBackFilters) {
+function initAllFilters(callBackFunction) {
     // resetting filter matrix before call 
     initLoadedFiltersMatrix()
-    initDateFilters(false, callBackFilters)
-    initSensorsFilters(false, callBackFilters)
-    initGasesFilters(false, callBackFilters)
-    initSessionsFilters(false, callBackFilters)
-    initOptionsFilters(false, callBackFilters)
+    initDateFilters(false, callBackFunction)
+    initSensorsFilters(false, callBackFunction)
+    initGasesFilters(false, callBackFunction)
+    initSessionsFilters(false, callBackFunction)
+    initOptionsFilters(false, callBackFunction)
 }

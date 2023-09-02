@@ -5,6 +5,8 @@
  */
 // object gas matrix: checking if curve is to update or not 
 var currGasUpdatingCurveMatrix = {}
+// object gas matrix with new reference ids to be added to the curve 
+var currGasNewPointsCurveMatrix = {}
 // retrieving the gas id from current selector 
 function getGasIdFromSelector(selector) {
     var selectorParts = selector.split("_")
@@ -58,6 +60,10 @@ function checkIfLastPointsOnCurveVisualized(gasNameSessionId, visualizationType)
         setCheckLastPointControlPassed(gasNameSessionId, visualizationType)
     }
 }
+// updating current graph definition 
+function updateLastVisualizedPointsOnGraph(graphId) {
+
+}
 // updating check if last point visualized on curve 
 function setCheckLastPointControlPassed(gasNameSessionId, visualizationType) {
     currGasUpdatingCurveMatrix[visualizationType + "_" + gasNameSessionId].lastSetCurve = true
@@ -65,6 +71,16 @@ function setCheckLastPointControlPassed(gasNameSessionId, visualizationType) {
 // updating check new points for the matrix 
 function setCheckPointControlPassed(gasNameSessionId, visualizationType) {
     currGasUpdatingCurveMatrix[visualizationType + "_" + gasNameSessionId].newPoints = true
+}
+// checking if current graph is to update or not
+function checkIfCurrGraphToUpdate(graphId) {
+    if(currGasUpdatingCurveMatrix[graphId].lastSetCurve == false) {
+        return false
+    }
+    if(currGasUpdatingCurveMatrix[graphId].newPoints == false) {
+        return false
+    }
+    return true
 }
 // adding current gas to refresh matrix 
 function addCurrGasRefForUpdateGraph(gasNameSessionId) {
@@ -74,24 +90,34 @@ function addCurrGasRefForUpdateGraph(gasNameSessionId) {
     currGasUpdatingCurveMatrix["mm_" + gasNameSessionId] = {"newPoints": false, "lastSetCurve": false }
     currGasUpdatingCurveMatrix["hh_" + gasNameSessionId] = {"newPoints": false, "lastSetCurve": false }
 }
-// creating new visualization for a new session id 
-function addNewSessionToSet(dataToAdd, gasNameSessionId) {
-    // TODO: implementation 
-    console.log('new session id')
+function addCurrGasRefForNewGraph(gasNameSessionId, visualizationType) {
+    // for inserting the new graph: new points available and last set on curve is visualized 
+    // NB: all points have to be added on curve by default 
+    currGasNewPointsCurveMatrix[visualizationType + "_" + gasNameSessionId] = {"newPoints": true, "lastSetCurve": true }
+}
+// update last points visualized ib graph
+function insertNewPointsOnGraphVisualization(gasNameSessionId) {
+    // getting the selection id for the current num points of movement and corresponding number of points  
+    var selPointsInterval = 'pointsIntervalSel_' + gasNameSessionId
+    // TODO: continuing the addition of new points to existing graphs here 
+    // var numPointsOfSel = document.getElementById(selPointsInterval).value 
+    // console.log(numPointsOfSel)
 }
 // preparing and distinguishing current data (already present session id)
-function addCurrentDataToSet(dataToAdd, gasNameSessionId) {
-    // adding current gas reference for update to matrix 
-    addCurrGasRefForUpdateGraph(gasNameSessionId)
+function addCurrentDataToExistingSet(dataToAdd, gasNameSessionId) {
+    
     // getting data for default visualization
     var dataDisplayMMM = getDataToDisplayMMM(dataToAdd)
+    // no data to display for the basic case 
+    if(dataDisplayMMM['data'].length == 0) {
+        console.log('no data for the ref ' + gasNameSessionId)
+        return
+    }
+    // adding current gas reference for update to matrix 
+    addCurrGasRefForUpdateGraph(gasNameSessionId)
     var dataDisplayS = getDataToDisplaySS(dataToAdd)
     var dataDisplayM = getDataToDisplayMM(dataToAdd)
     var dataDisplayH = getDataToDisplayHH(dataToAdd)
-    // no data to display for the basic case 
-    if(dataDisplayMMM['data'].length == 0) {
-        return
-    }
     // adding the points for current gas (milliseconds)
     checkIfLastPointsOnCurveVisualized(gasNameSessionId, "mmm")
     allTimeDivisionPoints["mmm_" + gasNameSessionId]['labels'] = allTimeDivisionPoints["mmm_" + gasNameSessionId]['labels'].concat(dataDisplayMMM['labels']) 
@@ -121,6 +147,17 @@ function addCurrentDataToSet(dataToAdd, gasNameSessionId) {
     allTimeDivisionPoints["hh_" + gasNameSessionId]['labels'] = allTimeDivisionPoints["hh_" + gasNameSessionId]['labels'].concat(dataDisplayH['labels']) 
     allTimeDivisionPoints["hh_" + gasNameSessionId]['data'] = allTimeDivisionPoints["hh_" + gasNameSessionId]['data'].concat(dataDisplayH['data']) 
     setCheckPointControlPassed(gasNameSessionId, "hh")
+   
+}
+// updating the graph on bases on collected checks on graph selection 
+function updateGraphsCurrentSelections() {
+    for(var currGraphIdRef in currGasUpdatingCurveMatrix) {
+        if(checkIfCurrGraphToUpdate(currGraphIdRef) == false) {
+            continue
+        }
+        console.log('updating graph of id ' + currGraphIdRef)
+        insertNewPointsOnGraphVisualization(currGraphIdRef)
+    }
 }
 // checking if the retrieved session id is already visualized in the selected set 
 function checkSessionIdDataVisualized(retrievedSessionId) {
@@ -140,6 +177,10 @@ function reloadData() {
     currGasUpdatingCurveMatrix = {}
     // getting current up times for the displayed gases 
     var currGasNewSelectionsObj = getUpTimesObjGases()
+    // checking if data is returned, on contrary invoking refresh 
+    if(Object.keys(currGasNewSelectionsObj).length === 0) {
+        document.location.reload();
+    }
     // invoking post request for getting gas data 
     for(var currGas in currGasNewSelectionsObj) {
         $.ajax({
@@ -153,23 +194,32 @@ function reloadData() {
                     console.log('no new data to display')
                     return 
                 }
-                console.log(data)
                 // getting datas splitted by session 
                 var splittedDataSessions = getSplittedSessionsData(data)
                 // adding the points for the current session 
                 gasNameSessionIds = []
+                // forcing page reload with a new session 
+                var pageReload = false
                 for(var i in splittedDataSessions) {
                     gasNameSessionId = splittedDataSessions[i]['gasName'] + "_" + splittedDataSessions[i]['gasId'] + '_session' + splittedDataSessions[i]['sessionID']
                     gasNameSessionIds.push(gasNameSessionId)
                     if(checkSessionIdDataVisualized(splittedDataSessions[i]['sessionID'])) {
-                        addCurrentDataToSet(splittedDataSessions[i], gasNameSessionId)
-                        return 
+                        addCurrentDataToExistingSet(splittedDataSessions[i], gasNameSessionId)
+                        
+                        continue 
                     }
-                    // building the new data for the new session id visualization 
-                    addNewSessionToSet(splittedDataSessions[i], gasNameSessionId)
+                    // forcing the relaod of the browser including the points of the added session
+                    pageReload = true
                 }
-                // TODO: adding the points to the already present points 
-                // TODO (2): on basis of the visualization of all the points on graph, refreshing them 
+                // new session will be loaded 
+                if(pageReload) {
+                    document.location.reload();
+                }
+                // updating the points of the added session 
+                else {
+                    console.log('no reload')
+                    updateGraphsCurrentSelections()
+                }
             },
             error: function(err) {
                 console.log('error saving filters\n' + err)
