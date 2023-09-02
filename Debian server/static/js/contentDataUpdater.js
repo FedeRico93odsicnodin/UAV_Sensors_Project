@@ -21,6 +21,18 @@ function getGasNameFromSelector(selector) {
     var currGasName = selectorParts[1]
     return currGasName
 }
+// retrieving current time interval visualization from graph selector id 
+function getCurrVisualizationTimeIntervalFromGraphId(selector) {
+    var selectorParts = selector.split("_")
+    var currTimeInterval = selectorParts[0]
+    return currTimeInterval
+}
+// retrieving current gasnameselector id from graph selector id 
+function getGasNameSelectorIdFromGraphId(selector) {
+    var selectorParts = selector.split("_")
+    var currGasName = selectorParts[1] + "_" + selectorParts[2] + "_" + selectorParts[3]
+    return currGasName
+}
 // getting the input for the POST for retrieving new data 
 function getUpTimesObjGases() {
     var currInputsPost = {}
@@ -105,21 +117,36 @@ function getNoOverlappedDataVisualization(newPointsToAdd, lastElementInSet) {
     return cleanedPointsToAdd
 }
 // adding points on graph strategy 
-function updateGraphWithNewPoints(gasNameSessionId, currVisualization) {
+function updateGraphWithNewPoints(gasNameSessionId, currVisualizationNum) {
     // getting current graph reference for point addition 
     var currGraphRef = allChartsRefs[gasNameSessionId]
     // getting points difference for labels and data 
     var newPointsToAdd = currSetPointsDifference[gasNameSessionId]
-    switch(currVisualization) {
+    switch(currVisualizationNum) {
         // in case of all points have to add all new entries to the set 
         case "all": {
-            for(var i in newPointsToAdd["labels"]) {
-                currGraphRef.data.labels = allTimeDivisionPoints[gasNameSessionId]["labels"]
-            }
-            for(var j in newPointsToAdd["data"]) {
-                currGraphRef.data.datasets[0].data = allTimeDivisionPoints[gasNameSessionId]["data"]
-            }
+            currGraphRef.data.labels = allTimeDivisionPoints[gasNameSessionId]["labels"]
+            currGraphRef.data.datasets[0].data = allTimeDivisionPoints[gasNameSessionId]["data"]
             currGraphRef.update()
+            // update of all the other graphs 
+            
+            break
+        }
+        default: {
+            // TODO: eventaul understand if it is possible to update the graph on basis of the current selection 
+            // mmm_CO_4_session55
+            var timeInterval = getCurrVisualizationTimeIntervalFromGraphId(gasNameSessionId)
+            var visualStep = parseInt(currVisualizationNum)
+            // var gasSelectorId = getGasNameSelectorIdFromGraphId(gasNameSessionId)
+            // var isLastPointVisualized = checkIfLastPointsOnCurveVisualized(gasSelectorId, timeInterval)
+            var currentTimeInterval = allTimeDivisionPoints[gasNameSessionId]["labels"].slice(-visualStep) 
+            var currentDataInterval = allTimeDivisionPoints[gasNameSessionId]["data"].slice(-visualStep)
+            currGraphRef.data.labels = currentTimeInterval
+            currGraphRef.data.datasets[0].data = currentDataInterval
+            currGraphRef.update()
+            // TODO: implementing arrows checking for this case 
+            // checkArrowMovementsConsistency({"labels": currentTimeInterval, "data": currentDataInterval}, currGraphRef, gasNameSessionId, timeInterval)
+            
         }
     }
 }
