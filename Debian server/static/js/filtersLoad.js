@@ -5,11 +5,20 @@ var OverallGases = []
 var OverallSessions = []
 // loaded filters matrix 
 var loadedFiltersParams = {}
+var isEmptyDatabase = false
 // Initiazation for the date selections filters 
 function initDateFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/date"
         , success: function(data) {
+            if(data == "null") {
+                console.log('no data')
+                isEmptyDatabase = true
+                if(checkIfLoadedFilters('DateFilters')) {
+                    setTimeout(function() {document.location.reload()}, 3000)
+                }
+                return
+            }
             var datesObj = JSON.parse(data)
             // getting the already stored filters 
             var filtersObj = getSessionStorageFilters()
@@ -118,6 +127,14 @@ function initSensorsFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/sensors"
         , success: function(data) {
+            if(data == "[]") {
+                console.log('no data')
+                isEmptyDatabase = true
+                if(checkIfLoadedFilters('SensorsFilters')) {
+                    setTimeout(function() {document.location.reload()}, 3000)
+                }
+                return
+            }
             OverallSensors = []
             var sensObj = JSON.parse(data)
             var sessionFilters = getSessionStorageFilters()
@@ -165,6 +182,14 @@ function initGasesFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/gases"
         , success: function(data) {
+            if(data == "[]") {
+                console.log('no data')
+                isEmptyDatabase = true
+                if(checkIfLoadedFilters('GasesFilters')) {
+                    setTimeout(function() {document.location.reload()}, 3000)
+                }
+                return
+            }
             var gasesObj = JSON.parse(data)
             var sessionFilters = getSessionStorageFilters()
             $("#gasesTable").empty()
@@ -207,6 +232,14 @@ function initSessionsFilters(showView, callBackFilters) {
     $.ajax({
         url: "/filters/sessions"
         , success: function(data) {
+            if(data == "[]") {
+                console.log('no data')
+                isEmptyDatabase = true
+                if(checkIfLoadedFilters('SessionsFilters')) {
+                    setTimeout(function() {document.location.reload()}, 3000)
+                }
+                return
+            }
             var sessionObj = JSON.parse(data)
             var sessionFilters = getSessionStorageFilters()
             OverallSessions = []
@@ -295,12 +328,18 @@ function initOptionsFilters(showView, callBackFilters) {
             document.getElementById("ppms_humidity_graph_check").checked = true
         }
     }
+    
     if(showView == true) {
         showOptionsFiltersView()
         return
     }
-    if(checkIfLoadedFilters('OptionsFilters'))
+    if(checkIfLoadedFilters('OptionsFilters')) {
         callBackFilters()
+    }
+    if(isEmptyDatabase) {
+        setTimeout(function() {document.location.reload()}, 3000)
+        return
+    } 
 }
 // Matrix of all the filters to be loaded
 function initLoadedFiltersMatrix() {
@@ -323,6 +362,7 @@ function checkIfLoadedFilters(currLoaded) {
 function initAllFilters(callBackFunction) {
     // resetting filter matrix before call 
     initLoadedFiltersMatrix()
+    isEmptyDatabase = false
     initDateFilters(false, callBackFunction)
     initSensorsFilters(false, callBackFunction)
     initGasesFilters(false, callBackFunction)

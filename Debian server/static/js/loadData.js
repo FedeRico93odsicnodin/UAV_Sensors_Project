@@ -30,17 +30,14 @@ function saveFiltersConfig(newJSONFilters, callBackLoad, errLoad) {
 function initAllDataAndFilters(data) {
     // storing all the filters and then load all the data
     if(data == "{}") {
-        // initial set of all filters
-        initAllFilters(filterCallbackMainLoad)
-        return
+        console.log('filters to load')
+        sessionStorage.setItem("filterOptions", data)
     }
+    // initial set of all filters
+    initAllFilters(filterCallbackMainLoad)
     // initial load completed 
     isLoadingPhase = false
-    // storing the string of session parameters 
-    sessionStorage.setItem("filterOptions", data)
-    // initial set of all filters
-    initAllFilters(loadDashboardData)
-    // calling data reload 
+    // starting the update phase script 
     startUpdaterScript()
 }
 
@@ -56,12 +53,7 @@ function filterCallbackMainLoad() {
 function reloadAllData(data) {
     if(data.status != 'ok') {
         console.log('error verified in first save of filters')
-        return 
+       
     }
-    getInitialData(
-        initAllDataAndFilters,
-        function(err) {
-            console.log('error verified in loading initial data')
-        }
-    )
+    backToDashboardReload()
 }
