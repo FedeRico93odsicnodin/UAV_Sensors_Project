@@ -6,6 +6,7 @@ import json
 import configurator
 import databaseServer
 import processdatasensors
+import MQCalib
 
 fileUploadPath = ''
 
@@ -25,6 +26,9 @@ def initServer():
     databasePath = os.path.join(databaseLocation, serverDataObj.getDatabaseName())
     # database creation (if does not exist)
     databaseServer.createDatabase(databasePath)
+    # MQ data calibration 
+    mqCalibPath = os.path.join(currDir, serverDataObj.getRefDocsFolder(), "MQCalib.csv")
+    MQCalib.loadCalib(mqCalibPath)
     # start thread for monitoring incoming uploads 
     uploadDetectionProcess = Process(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj, ))
     uploadDetectionProcess.start()
