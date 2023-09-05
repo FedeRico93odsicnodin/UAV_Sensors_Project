@@ -47,13 +47,16 @@ class CalibRL():
         # approximation of the returned value at the temperature point 
         finalValue = RLVal()
         finalValue.temperature = currT
-        # TODO: eventual test 
-        #print('MIN')
-        #print(nearestMin.RLVal)
-        #print('MAX')
-        #print(nearestMax.RLVal)
-        finalValue.RLVal = (nearestMax.RLVal + nearestMin.RLVal) / 2
-        return finalValue
+        if(nearestMax != None and nearestMin != None):
+            finalValue.RLVal = (nearestMax.RLVal + nearestMin.RLVal) / 2
+            return finalValue
+        # TODO: eventually handling approximations for the different temperatures and extremes
+        if(nearestMin != None):
+            finalValue.RLVal = nearestMin.RLVal
+            return finalValue
+        if(nearestMax != None):
+            finalValue.RLVal = nearestMax.RLVal
+
 
 class CalcPPM():
     def __init__(self):
@@ -199,15 +202,16 @@ def getCurrRLVal(sensor, T, RH):
     global calibObj
     # initial conversion Kelvin
     TK = getKTemperature(T)
+    # getting the value for RH33 + proportion on humidity
+    valRH33 = calibObj[sensor]['RH33'].getNearestValue(TK)
+    RL33 = proportionateRLOnRH(RH, 33, valRH33.RLVal)
+    # getting the value for RH85 + proportion on humidity 
+    valRH85 = calibObj[sensor]['RH85'].getNearestValue(TK)
+    RL85 = proportionateRLOnRH(RH, 85, valRH85.RLVal)
     # standard case: having a range for the RH value 
     if(RH >= 33 and RH <= 85):
-        # getting the value for RH33 + proportion on humidity
-        valRH33 = calibObj[sensor]['RH33'].getNearestValue(TK)
-        RL33 = proportionateRLOnRH(RH, 33, valRH33.RLVal)
-        # getting the value for RH85 + proportion on humidity 
-        valRH85 = calibObj[sensor]['RH85'].getNearestValue(TK)
-        RL85 = proportionateRLOnRH(RH, 85, valRH85.RLVal)
         # median on the obtained RH values 
         RLApprox = (RL33 + RL85) / 2
         return RLApprox
-    # TODO: eventual calculation for lesser and upper values 
+    # TODO: completing for the hypothesis on RH values and MQ2 real values too
+
