@@ -9,34 +9,105 @@
 #
 # reading calibration data from the calib file in the ref docs folder
 import csv
+import math 
 # classes for the calibration process 
 class RLVal():
     def __init__(self):
         self.temperature = 0
         self.RLVal = 0
+    
 class CalibRL():
     def __init__(self):
-        self.humidity = ''
+        self.humidity = 0
         self.RLVals = []
+    def getNearestValue(self, currT):
+        finalValue = None
+        nearestMin = None
+        nearestMax = None
+        for v in self.RLVals:
+            print(v.temperature)
+            print(v.RLVal)
+            if(v.temperature == currT):
+                finalValue = v
+                break
+            if v.temperature < currT:
+                if(nearestMin == None): nearestMin = v 
+                else: 
+                    if(nearestMin.temperature < v.temperature):
+                        nearestMin = v 
+                continue
+            if(v.temperature > currT):
+                if(nearestMax == None): nearestMax = v
+                else:
+                    if(nearestMax.temperature > v.temperature):
+                        nearestMax = v
+                continue
+        # obtaining the real value for the current RL at given RH and temperature
+        if(finalValue != None): return finalValue
+        # approximation of the returned value at the temperature point 
+        finalValue = RLVal()
+        finalValue.temperature = currT
+        # TODO: eventual test 
+        #print('MIN')
+        #print(nearestMin.RLVal)
+        #print('MAX')
+        #print(nearestMax.RLVal)
+        finalValue.RLVal = (nearestMax.RLVal + nearestMin.RLVal) / 2
+        return finalValue
+
 class CalcPPM():
     def __init__(self):
         self.PPM1 = 0
         self.PPM2 = 0
         self.RL1 = 0
         self.RL2 = 0
-
+        # additional points for the final calculus PPM
+        self.logPPM1 = 0
+        self.logRL1 = 0
+    def getCurveCoeff(self):
+        pointPPM1 = self.PPM1
+        pointPPM2 = self.PPM2
+        pointRL1 = self.RL1
+        pointRL2 = self.RL2
+        # following the curve definition
+        if(self.PPM1 > self.PPM2):
+            pointPPM1 = self.PPM2
+            pointPPM2 = self.PPM1
+            pointRL1 = self.RL2
+            pointRL2 = self.RL1
+        # calculating the logaritmic values 
+        self.logPPM1 = math.log(pointPPM1)
+        self.logRL1 = math.log(pointRL1)
+        logPPM2 = math.log(pointPPM2)
+        logRL2 = math.log(pointRL2)
+        diffRL = logRL2 - self.logRL1
+        diffPPM = logPPM2 - self.logPPM1
+        finalCoeff = diffRL / diffPPM
+        return finalCoeff
 # row of all the headers reference 
 rowHeader = {}
 # calibration object 
 calibObj = {}
+# converting kelvin temperature
+def getKTemperature(currT):
+    currK = currT + 273.15
+    return currK
+# proportionating the value for the obtained RL(T) wrt RH 
+def proportionateRLOnRH(currRH, refRH, RLK):
+    product1 = RLK * currRH
+    propRL = product1 / refRH
+    return propRL
 def loadCalib(refCalibFilePath):
     global calibObj
     with open(refCalibFilePath, 'r') as f:
         csvCalib = csv.reader(f)
         readCalibFileHeader(csvCalib)
         readCalibrationValues(csvCalib)
-        print(calibObj)
-
+        # TODO: eventual test 
+        #currVal = calibObj['MQ4']['RH33'].getNearestValue(getKTemperature(33))
+        #print(currVal.RLVal)
+        #print(currVal.temperature)
+# creation of the initial header dictionary for the MQ Calib file 
 def readCalibFileHeader(csvCalibData):
     global rowHeader
     for rowCalib in csvCalibData:
@@ -46,6 +117,8 @@ def readCalibFileHeader(csvCalibData):
             idxHeader = idxHeader + 1
         break
 
+
+# creation of all the objects used for the calibration 
 def readCalibrationValues(csvCalibData):
     global calibObj
     global rowHeader
@@ -55,7 +128,6 @@ def readCalibrationValues(csvCalibData):
     preprocessDataRH33 = {}
     preprocessDataRH85 = {}
     for rowCalib in csvCalibData:
-        #print(rowCalib)
         MQSensName = rowCalib[rowHeader['MQSensor']]
         MQPropName = rowCalib[rowHeader['PropName']]
         currValue = rowCalib[rowHeader['PropValue']]
@@ -81,18 +153,13 @@ def readCalibrationValues(csvCalibData):
         #if(currHumidity != ''):
         #    preprocessDataRH[currPropSensor + "_" + currHumidity] = {'PropValue': currValue, 'T': currTemperature }
     # STEP2: iterating the pre created calib obj (key = MQ Sensor)
-    #print(preprocessData)
-    print(preprocessDataRH85)
     for sensName in calibObj:
         # creation of the calc obj
         calcObj = createCalculationObj(sensName, preprocessData)
         calibObj[sensName]['calc'] = calcObj
         # creation of the RLVal obj
-        calibObj[sensName]['RH33'] = createRHObj(sensName, preprocessDataRH33)
-        calibObj[sensName]['RH85'] = createRHObj(sensName, preprocessDataRH85)
-
-
-
+        calibObj[sensName]['RH33'] = createRHObj(sensName, preprocessDataRH33, 33)
+        calibObj[sensName]['RH85'] = createRHObj(sensName, preprocessDataRH85, 85)
 # creation of the calculus object 
 def createCalculationObj(sensorName, preprocessData):
     ppm1Prop = sensorName + "_PPM1"
@@ -113,11 +180,34 @@ def createCalculationObj(sensorName, preprocessData):
         return None
     
 # creation of the RH specific obj
-def createRHObj(sensorName, preprocessDataRH):
+def createRHObj(sensorName, preprocessDataRH, RHVal):
     currRHObj = []
     for currObj in preprocessDataRH[sensorName]:
         currRLObj = RLVal()
-        currRLObj.temperature = int(currObj['T'])
+        currRLObj.temperature = getKTemperature(float(currObj['T']))
         currRLObj.RLVal = float(currObj['val'])
-        currRHObj.append(currRHObj)
-    return currRHObj
+        currRHObj.append(currRLObj)
+    finalObjRH = CalibRL()
+    finalObjRH.humidity = RHVal
+    finalObjRH.RLVals = currRHObj
+    return finalObjRH
+# obtaining corresponding ppm value for the voltage intensity read 
+def getPPMValue(intensity, sensorName, temperature, humidity):
+    print("to be implemented")
+# obtaining the current approximated value for RL
+def getCurrRLVal(sensor, T, RH):
+    global calibObj
+    # initial conversion Kelvin
+    TK = getKTemperature(T)
+    # standard case: having a range for the RH value 
+    if(RH >= 33 and RH <= 85):
+        # getting the value for RH33 + proportion on humidity
+        valRH33 = calibObj[sensor]['RH33'].getNearestValue(TK)
+        RL33 = proportionateRLOnRH(RH, 33, valRH33.RLVal)
+        # getting the value for RH85 + proportion on humidity 
+        valRH85 = calibObj[sensor]['RH85'].getNearestValue(TK)
+        RL85 = proportionateRLOnRH(RH, 85, valRH85.RLVal)
+        # median on the obtained RH values 
+        RLApprox = (RL33 + RL85) / 2
+        return RLApprox
+    # TODO: eventual calculation for lesser and upper values 
