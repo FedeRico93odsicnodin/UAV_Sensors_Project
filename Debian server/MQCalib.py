@@ -15,7 +15,7 @@ class RLVal():
     def __init__(self):
         self.temperature = 0
         self.RLVal = 0
-    
+# helper class for obtaining the value of current RL dependant on environment RH and temperature
 class CalibRL():
     def __init__(self):
         self.humidity = 0
@@ -56,8 +56,7 @@ class CalibRL():
             return finalValue
         if(nearestMax != None):
             finalValue.RLVal = nearestMax.RLVal
-
-
+# obj for the selected points of PPM1, PPM2, RL1 and RL2 on curve 
 class CalcPPM():
     def __init__(self):
         self.PPM1 = 0
@@ -91,6 +90,8 @@ class CalcPPM():
 rowHeader = {}
 # calibration object 
 calibObj = {}
+# list of sensors which have RH60 curve values 
+RH60_sensors = ['MQ4']
 # converting kelvin temperature
 def getKTemperature(currT):
     currK = currT + 273.15
@@ -107,7 +108,7 @@ def loadCalib(refCalibFilePath):
         readCalibFileHeader(csvCalib)
         readCalibrationValues(csvCalib)
         # TODO: eventual test 
-        currVal = calibObj['MQ4']['RH0_hyp']
+        currVal = calibObj['MQ4']['RH0_hyp'].RLVals[0].RLVal
         print(currVal)
         
         #print(currVal.RLVal)
@@ -228,7 +229,31 @@ def createRHObj(sensorName, preprocessDataRH, RHVal):
     return finalObjRH
 # obtaining corresponding ppm value for the voltage intensity read 
 def getPPMValue(intensity, sensorName, temperature, humidity):
-    print("to be implemented")
+    global calibObj
+    # getting the current value for the RL resistor depending on RH and T(K) factors
+    currRL = getCurrRLVal(sensorName, temperature, humidity)
+    # getting the log for the current RL
+    currRLLog = math.log(currRL)
+    # retrieving the values on curve 
+    curvCoeff = calibObj[sensorName]['calc'].getCurveCoeff()
+    ppm1Log = calibObj[sensorName]['calc'].logPPM1
+    RL1Log = calibObj[sensorName]['calc'].logRL1
+    # getting the value of RS from intensity 
+    RS = getCurrentRSFromIntensity(intensity)
+    # getting the current value for R0 (using experimental RL)
+    # calculation of first term 
+    eqFirstTerm = (1 / curvCoeff) * (currRLLog - RL1Log)
+    # calculation second term 
+    eqSecondTerm = (1 / curvCoeff) * ppm1Log
+    # logarithm for the PPM concentration 
+    logPPMx = eqFirstTerm + eqSecondTerm
+    PPMx = pow(10, logPPMx)
+    return PPMx
+# getting the corresponding voltage for the current read
+def getCurrentRSFromIntensity(intensity):
+    v_0 = intensity * 5 / 1023
+    RS = (5 - v_0) * 1000 / v_0
+    return RS
 # obtaining the current approximated value for RL
 def getCurrRLVal(sensor, T, RH):
     global calibObj
@@ -240,10 +265,34 @@ def getCurrRLVal(sensor, T, RH):
     # getting the value for RH85 + proportion on humidity 
     valRH85 = calibObj[sensor]['RH85'].getNearestValue(TK)
     RL85 = proportionateRLOnRH(RH, 85, valRH85.RLVal)
+    # getting the value for RH60 (for the moment MQ4 only)
+    RL60 = None 
+    if(sensor in RH60_sensors):
+        valRH60 = calibObj[sensor]['RH60'].getNearestValue(TK)
+        RL60 = proportionateRLOnRH(RH, 60, valRH60.RLVal)
+    # getting the value for the hypothesis 
+    valRH0Hyp = calibObj[sensor]['RH0_hyp'].getNearestValue(TK)
+    # for the 0 approximation using RH = 1
+    RL0Hyp = proportionateRLOnRH(RH, 1, valRH0Hyp.RLVal)
+    valRH137Hyp = calibObj[sensor]['RH137_hyp'].getNearestValue(TK)
+    RL137Hyp = proportionateRLOnRH(RH, 137, valRH0Hyp.RLVal)
     # standard case: having a range for the RH value 
+    if(sensor in RH60_sensors):
+        if(RH >= 33 and RH <= 60 and RL60 != None):
+            RLApprox = (RL33 + RL60) / 2
+            return RLApprox
+        if(RH > 60 and RH <= 85 and RL60 != None):
+            RLApprox = (RL60 + RL85) / 2
+            return RLApprox
     if(RH >= 33 and RH <= 85):
         # median on the obtained RH values 
         RLApprox = (RL33 + RL85) / 2
         return RLApprox
-    # TODO: completing for the hypothesis on RH values and MQ2 real values too
+    if(RH > 85):
+        RLApprox = (RL85 + RL137Hyp) / 2
+        return RLApprox
+    if(RH < 33):
+        RLApprox = (RL33 + RL0Hyp) / 2
+        return RLApprox
+    
 
