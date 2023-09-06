@@ -107,7 +107,9 @@ def loadCalib(refCalibFilePath):
         readCalibFileHeader(csvCalib)
         readCalibrationValues(csvCalib)
         # TODO: eventual test 
-        #currVal = calibObj['MQ4']['RH33'].getNearestValue(getKTemperature(33))
+        currVal = calibObj['MQ4']['RH0_hyp']
+        print(currVal)
+        
         #print(currVal.RLVal)
         #print(currVal.temperature)
 # creation of the initial header dictionary for the MQ Calib file 
@@ -130,6 +132,12 @@ def readCalibrationValues(csvCalibData):
     preprocessData = {}
     preprocessDataRH33 = {}
     preprocessDataRH85 = {}
+    # this obj used only by MQ2 
+    preprocessDataRH60 = {}
+    # this objects for hypothetical values at extremes of pressure
+    preprocessDataRH0_hyp = {}
+    preprocessDataRH137_hyp = {}
+    # preprocess data for hypothetical values 
     for rowCalib in csvCalibData:
         MQSensName = rowCalib[rowHeader['MQSensor']]
         MQPropName = rowCalib[rowHeader['PropName']]
@@ -139,17 +147,33 @@ def readCalibrationValues(csvCalibData):
         if(rowCalib[rowHeader['RH']] != ''):
             currHumidity = int(rowCalib[rowHeader['RH']])
         currPropSensor = MQSensName + "_" + MQPropName
+        # populating pre process data for RH = 33 (common to all sensors)
         if(MQPropName == 'RL' and currHumidity == 33):
             if((MQSensName in preprocessDataRH33) == False):
                 preprocessDataRH33[MQSensName] = []
             preprocessDataRH33[MQSensName].append({'T': currTemperature, 'val': currValue})
             continue
-
+        # populating pre process data for RH = 85 (common to all sensors)
         if(MQPropName == 'RL' and currHumidity == 85):
             if((MQSensName in preprocessDataRH85) == False):
                 preprocessDataRH85[MQSensName] = []
             preprocessDataRH85[MQSensName].append({'T': currTemperature, 'val': currValue})
             continue
+        # populating pre process data for RH = 60 (only for MQ 2)
+        if(MQPropName == 'RL' and currHumidity == 60):
+            if((MQSensName in preprocessDataRH60) == False):
+                preprocessDataRH60[MQSensName] = []
+            preprocessDataRH60[MQSensName].append({'T': currTemperature, 'val': currValue})
+            continue
+        if(MQPropName == 'RL_hyp' and currHumidity == 0):
+            if((MQSensName in preprocessDataRH0_hyp) == False):
+                preprocessDataRH0_hyp[MQSensName] = []
+            preprocessDataRH0_hyp[MQSensName].append({'T': currTemperature, 'val': currValue})
+            continue
+        if(MQPropName == 'RL_hyp' and currHumidity == 137):
+            if((MQSensName in preprocessDataRH137_hyp) == False):
+                preprocessDataRH137_hyp[MQSensName] = []
+            preprocessDataRH137_hyp[MQSensName].append({'T': currTemperature, 'val': currValue})
         # starting creation of the current sensor calib obj
         calibObj[rowCalib[rowHeader['MQSensor']]] = {}
         preprocessData[currPropSensor] = {'PropValue': currValue, 'T': currTemperature, 'RH': currHumidity }
@@ -163,6 +187,14 @@ def readCalibrationValues(csvCalibData):
         # creation of the RLVal obj
         calibObj[sensName]['RH33'] = createRHObj(sensName, preprocessDataRH33, 33)
         calibObj[sensName]['RH85'] = createRHObj(sensName, preprocessDataRH85, 85)
+        # creation of the RH 60 values for the sensor if they exist
+        if(sensName in preprocessDataRH60):
+            print('creating obj 60 for sensor ' + sensName)
+            calibObj[sensName]['RH60'] = createRHObj(sensName, preprocessDataRH60, 60)
+        # creation of the hypothetical values in case of extremes
+        calibObj[sensName]['RH0_hyp'] = createRHObj(sensName, preprocessDataRH0_hyp, 0)
+        calibObj[sensName]['RH137_hyp'] = createRHObj(sensName, preprocessDataRH137_hyp, 137)
+
 # creation of the calculus object 
 def createCalculationObj(sensorName, preprocessData):
     ppm1Prop = sensorName + "_PPM1"
