@@ -78,10 +78,10 @@ class CalcPPM():
             pointRL1 = self.RL2
             pointRL2 = self.RL1
         # calculating the logaritmic values 
-        self.logPPM1 = math.log(pointPPM1)
-        self.logRL1 = math.log(pointRL1)
-        logPPM2 = math.log(pointPPM2)
-        logRL2 = math.log(pointRL2)
+        self.logPPM1 = math.log10(pointPPM1)
+        self.logRL1 = math.log10(pointRL1)
+        logPPM2 = math.log10(pointPPM2)
+        logRL2 = math.log10(pointRL2)
         diffRL = logRL2 - self.logRL1
         diffPPM = logPPM2 - self.logPPM1
         finalCoeff = diffRL / diffPPM
@@ -92,6 +92,8 @@ rowHeader = {}
 calibObj = {}
 # list of sensors which have RH60 curve values 
 RH60_sensors = ['MQ4']
+# all values of R0s for the sensors (retrieved or calibrated realtime)
+R0_values = {}
 # converting kelvin temperature
 def getKTemperature(currT):
     currK = currT + 273.15
@@ -214,7 +216,6 @@ def createCalculationObj(sensorName, preprocessData):
         return currCalcObj
     else: 
         return None
-    
 # creation of the RH specific obj
 def createRHObj(sensorName, preprocessDataRH, RHVal):
     currRHObj = []
@@ -232,22 +233,33 @@ def getPPMValue(intensity, sensorName, temperature, humidity):
     global calibObj
     # getting the current value for the RL resistor depending on RH and T(K) factors
     currRL = getCurrRLVal(sensorName, temperature, humidity)
-    # getting the log for the current RL
-    currRLLog = math.log(currRL)
     # retrieving the values on curve 
     curvCoeff = calibObj[sensorName]['calc'].getCurveCoeff()
     ppm1Log = calibObj[sensorName]['calc'].logPPM1
     RL1Log = calibObj[sensorName]['calc'].logRL1
     # getting the value of RS from intensity 
     RS = getCurrentRSFromIntensity(intensity)
-    # getting the current value for R0 (using experimental RL)
+    # getting the current value for R0 (using experimental RL) 
+    currR0 = RS / currRL
+    # in case first value this is the used value for the calculus
+    firstR0 = False
+    if((sensorName in R0_values) == False):
+        R0_values[sensorName] = currR0
+        firstR0 = True
+    # calculation of used values for 
+    usedR0 = R0_values[sensorName]
+    usedRL = RS / usedR0
+    logRL = math.log10(usedRL)
     # calculation of first term 
-    eqFirstTerm = (1 / curvCoeff) * (currRLLog - RL1Log)
+    eqFirstTerm = (1 / curvCoeff) * (logRL - RL1Log)
     # calculation second term 
     eqSecondTerm = (1 / curvCoeff) * ppm1Log
     # logarithm for the PPM concentration 
     logPPMx = eqFirstTerm + eqSecondTerm
     PPMx = pow(10, logPPMx)
+    # updating the R0 value mediating the collected one 
+    if(firstR0 == False):
+        R0_values[sensorName] = (R0_values[sensorName] + currR0) / 2
     return PPMx
 # getting the corresponding voltage for the current read
 def getCurrentRSFromIntensity(intensity):

@@ -12,6 +12,7 @@ import csv
 # custom modules 
 import dbmodels
 import databaseServer
+import MQCalib
 
 # runtime analysis parameters
 # indexed list of all header data 
@@ -295,7 +296,9 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
             idxCsv = idxCsv + 1
             continue
         # sensed value 
-        sensedValue = processSensorData(csvContent, sensorDataRow[idxCsv])
+        # getting the values of T and RH of current row for calib
+        objCalib = getCurrentParamsForCalib(sensorDataRow)
+        sensedValue = processSensorData(csvContent, sensorDataRow[idxCsv], objCalib)
         sensorRefId = initSensorsData[csvContent['sensor']].id
         gasRefId = initGasesData[csvContent['gas']].id
         sessionRefId = currSession.id
@@ -313,8 +316,17 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
         idxCsv = idxCsv + 1
     # insert values to db 
     databaseServer.insertDataSensor(toInsertValues)
-        
-
+# getting the current RH and T values for the sensed row
+def getCurrentParamsForCalib(sensorDataRow):
+    global scdParams
+    T_idx = scdParams['temperature_colindex']
+    RH_idx = scdParams['RH_colindex']
+    TVal = float(sensorDataRow[T_idx])
+    RHVal = float(sensorDataRow[RH_idx])
+    calibObj = { 'TVal': TVal, 'RHVal': RHVal}
+    print(calibObj)
+    return calibObj
+# getting if the sensor is managed by Arduino
 def isArduinoSensor(sensorName):
     isMQ = False
     if(sensorName == 'MQ4'):
@@ -342,46 +354,48 @@ def trackNotAnalyzedColumn(colDefinition):
          return True
      return False
         
-def processSensorData(sensorDefinition, sensorValue):
+def processSensorData(sensorDefinition, sensorValue, calibObj):
     sensedValue = 0
     if(sensorValue != ''):
         sensedValue = float(sensorValue)
+    currT = calibObj['TVal']
+    currRH = calibObj['RHVal']
     # calibration for the MQ sensors 
     if(sensorDefinition['sensor'] == 'MQ4'):
-        sensedValue = calibrateMQ4Sensor(sensorValue)
+        sensedValue = calibrateMQ4Sensor(sensorValue, currT, currRH)
     if(sensorDefinition['sensor'] == 'MQ7'):
-        sensedValue = calibrateMQ7Sensor(sensorValue)
+        sensedValue = calibrateMQ7Sensor(sensorValue, currT, currRH)
     if(sensorDefinition['sensor'] == 'MQ5'):
-        sensedValue = calibrateMQ5Sensor(sensorValue)
+        sensedValue = calibrateMQ5Sensor(sensorValue, currT, currRH)
     if(sensorDefinition['sensor'] == 'MQ3'):
-        sensedValue = calibrateMQ3Sensor(sensorValue)
+        sensedValue = calibrateMQ3Sensor(sensorValue, currT, currRH)
     if(sensorDefinition['sensor'] == 'MQ135'):
-        sensorValue = calibrateMQ135Sensor(sensorValue)
+        sensorValue = calibrateMQ135Sensor(sensorValue, currT, currRH)
     if(sensorDefinition['sensor'] == 'MQ2'):
-        sensorValue = calibrateMQ2Sensor(sensorValue)
+        sensorValue = calibrateMQ2Sensor(sensorValue, currT, currRH)
     return sensorValue
     
 
-def calibrateMQ4Sensor(sensorValue):
-    # TODO: implementation for the MQ4 calibration process
+def calibrateMQ4Sensor(sensorValue, currT, currRH):
+    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ4', currT, currRH)
+    return sensedPPM
+
+def calibrateMQ7Sensor(sensorValue, currT, currRH):
+    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ7', currT, currRH)
     return sensorValue
 
-def calibrateMQ7Sensor(sensorValue):
-    # TODO: implementation for the MQ7 calibration process
+def calibrateMQ5Sensor(sensorValue, currT, currRH):
+    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ5', currT, currRH)
     return sensorValue
 
-def calibrateMQ5Sensor(sensorValue):
-    # TODO: implementation for the MQ5 calibration process 
-    return sensorValue
-
-def calibrateMQ3Sensor(sensorValue):
-    # TODO: implementation for the MQ3 calibration process 
+def calibrateMQ3Sensor(sensorValue, currT, currRH):
+    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ3', currT, currRH)
     return sensorValue 
 
-def calibrateMQ135Sensor(sensorValue):
-    # TODO: implementation for the MQ135 calibration process 
+def calibrateMQ135Sensor(sensorValue, currT, currRH):
+    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ135', currT, currRH)
     return sensorValue 
 
-def calibrateMQ2Sensor(sensorValue):
-    # TODO: implementation for the MQ2 calibration process 
+def calibrateMQ2Sensor(sensorValue, currT, currRH):
+    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ2', currT, currRH) 
     return sensorValue
