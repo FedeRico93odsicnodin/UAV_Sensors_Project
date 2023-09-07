@@ -368,7 +368,6 @@ def processSensorData(sensorDefinition, sensorValue, calibObj):
     # calibration for the MQ sensors 
     if(sensorDefinition['sensor'] == 'MQ4'):
         sensedValue = calibrateMQ4Sensor(sensorValue, currT, currRH)
-        print(sensedValue)
     if(sensorDefinition['sensor'] == 'MQ7'):
         sensedValue = calibrateMQ7Sensor(sensorValue, currT, currRH)
     if(sensorDefinition['sensor'] == 'MQ5'):
@@ -388,20 +387,20 @@ def calibrateMQ4Sensor(sensorValue, currT, currRH):
 
 def calibrateMQ7Sensor(sensorValue, currT, currRH):
     sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ7', currT, currRH)
-    return sensorValue
+    return sensedPPM
 
 def calibrateMQ5Sensor(sensorValue, currT, currRH):
     sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ5', currT, currRH)
-    return sensorValue
+    return sensedPPM
 
 def calibrateMQ3Sensor(sensorValue, currT, currRH):
     sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ3', currT, currRH)
-    return sensorValue 
+    return sensedPPM 
 
 def calibrateMQ135Sensor(sensorValue, currT, currRH):
     sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ135', currT, currRH)
-    return sensorValue 
+    return sensedPPM 
 
 def calibrateMQ2Sensor(sensorValue, currT, currRH):
     sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ2', currT, currRH) 
-    return sensorValue
+    return sensedPPM

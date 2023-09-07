@@ -256,16 +256,16 @@ def getPPMValue(intensity, sensorName, temperature, humidity):
     logRL = math.log10(usedRL)
     # calculation of first term 
     eqFirstTerm = (1 / curvCoeff) * (logRL - RL1Log)
-    # calculation second term 
-    eqSecondTerm = (1 / curvCoeff) * ppm1Log
-    # logarithm for the PPM concentration 
-    logPPMx = eqFirstTerm + eqSecondTerm
+    # calculation second term : coeff just not present
+    eqSecondTerm =  - 1 * ppm1Log
+    # logarithm for the PPM concentration: NB sign
+    logPPMx = eqFirstTerm - eqSecondTerm
     PPMx = pow(10, logPPMx)
     # updating the R0 value mediating the collected one 
     if(firstR0 == False):
         R0_values[sensorName] = (R0_values[sensorName] + currR0) / 2
     # printing all the values for calculation 
-    if(debug_calculation):
+    '''if(debug_calculation):
         print(
             "sensor: " + sensorName
             + ", intensity: " + str(intensity) 
@@ -275,8 +275,32 @@ def getPPMValue(intensity, sensorName, temperature, humidity):
             + ", ppm1Log: " + str(ppm1Log) 
             + ", RL1Log: " + str(RL1Log) 
             + ", RS: " + str(RS)
+            + ", currRL: " + str(currRL)
+            + ", currR0: " + str(currR0)
+            + ", usedR0: " + str(usedR0)
             + ", UsedRL: " + str(usedRL)
-            + ", PPMx: " + str(PPMx))
+            + ", PPMx: " + str(PPMx))'''
+    '''if(sensorName == 'MQ4'):
+        print(
+            "RL: " + str(usedRL) 
+            + " RLLog: " + str(logRL) 
+            + " RL1Log: " + str(RL1Log) 
+            + " ppm1Log: " + str(ppm1Log) 
+            + " coeff: " + str(curvCoeff)
+            + " term1: " + str(eqFirstTerm) 
+            + " term2: " + str(eqSecondTerm) 
+            + " logppmX: " + str(logPPMx) 
+            + " PPMx: " + str(PPMx))'''
+    print(
+            "RL: " + str(usedRL) 
+            + " RLLog: " + str(logRL) 
+            + " RL1Log: " + str(RL1Log) 
+            + " ppm1Log: " + str(ppm1Log) 
+            + " coeff: " + str(curvCoeff)
+            + " term1: " + str(eqFirstTerm) 
+            + " term2: " + str(eqSecondTerm) 
+            + " logppmX: " + str(logPPMx) 
+            + " PPMx: " + str(PPMx))
     
     return PPMx
 # getting the corresponding voltage for the current read
