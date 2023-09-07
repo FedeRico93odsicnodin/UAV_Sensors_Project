@@ -1,4 +1,5 @@
 MQSensor,PropName,PropValue,T,RH
+Start,Start,Start,30.5,86
 MQ4,PPM1,1000,,
 MQ4,PPM2,5000,,
 MQ4,RL1,1,,

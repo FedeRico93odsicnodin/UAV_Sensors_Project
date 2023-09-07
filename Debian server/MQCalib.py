@@ -25,8 +25,6 @@ class CalibRL():
         nearestMin = None
         nearestMax = None
         for v in self.RLVals:
-            print(v.temperature)
-            print(v.RLVal)
             if(v.temperature == currT):
                 finalValue = v
                 break
@@ -56,6 +54,7 @@ class CalibRL():
             return finalValue
         if(nearestMax != None):
             finalValue.RLVal = nearestMax.RLVal
+            return finalValue
 # obj for the selected points of PPM1, PPM2, RL1 and RL2 on curve 
 class CalcPPM():
     def __init__(self):
@@ -91,9 +90,13 @@ rowHeader = {}
 # calibration object 
 calibObj = {}
 # list of sensors which have RH60 curve values 
-RH60_sensors = ['MQ4']
+RH60_sensors = ['MQ2']
 # all values of R0s for the sensors (retrieved or calibrated realtime)
 R0_values = {}
+# staring params before SCD sensor startup 
+Calib_start_params = {}
+# debugging the current lines of calculus in console 
+debug_calculation = True
 # converting kelvin temperature
 def getKTemperature(currT):
     currK = currT + 273.15
@@ -109,12 +112,6 @@ def loadCalib(refCalibFilePath):
         csvCalib = csv.reader(f)
         readCalibFileHeader(csvCalib)
         readCalibrationValues(csvCalib)
-        # TODO: eventual test 
-        currVal = calibObj['MQ4']['RH0_hyp'].RLVals[0].RLVal
-        print(currVal)
-        
-        #print(currVal.RLVal)
-        #print(currVal.temperature)
 # creation of the initial header dictionary for the MQ Calib file 
 def readCalibFileHeader(csvCalibData):
     global rowHeader
@@ -130,6 +127,7 @@ def readCalibFileHeader(csvCalibData):
 def readCalibrationValues(csvCalibData):
     global calibObj
     global rowHeader
+    global Calib_start_params
     rowIdx = 0
     # STEP1: adding the single properties for each sensor 
     preprocessData = {}
@@ -147,6 +145,11 @@ def readCalibrationValues(csvCalibData):
         currValue = rowCalib[rowHeader['PropValue']]
         currTemperature = rowCalib[rowHeader['T']]
         currHumidity = 0
+        # starting values for the current calibration 
+        if(rowCalib[rowHeader['PropName']] == 'Start'):
+            Calib_start_params['TVal'] = float(rowCalib[rowHeader['T']])
+            Calib_start_params['RHVal'] = float(rowCalib[rowHeader['RH']])
+            continue
         if(rowCalib[rowHeader['RH']] != ''):
             currHumidity = int(rowCalib[rowHeader['RH']])
         currPropSensor = MQSensName + "_" + MQPropName
@@ -192,8 +195,9 @@ def readCalibrationValues(csvCalibData):
         calibObj[sensName]['RH85'] = createRHObj(sensName, preprocessDataRH85, 85)
         # creation of the RH 60 values for the sensor if they exist
         if(sensName in preprocessDataRH60):
-            print('creating obj 60 for sensor ' + sensName)
             calibObj[sensName]['RH60'] = createRHObj(sensName, preprocessDataRH60, 60)
+            print(sensName)
+            print(calibObj[sensName]['RH60'])
         # creation of the hypothetical values in case of extremes
         calibObj[sensName]['RH0_hyp'] = createRHObj(sensName, preprocessDataRH0_hyp, 0)
         calibObj[sensName]['RH137_hyp'] = createRHObj(sensName, preprocessDataRH137_hyp, 137)
@@ -260,15 +264,30 @@ def getPPMValue(intensity, sensorName, temperature, humidity):
     # updating the R0 value mediating the collected one 
     if(firstR0 == False):
         R0_values[sensorName] = (R0_values[sensorName] + currR0) / 2
+    # printing all the values for calculation 
+    if(debug_calculation):
+        print(
+            "sensor: " + sensorName
+            + ", intensity: " + str(intensity) 
+            + ", temperature: " + str(temperature)
+            + ", humidity: " + str(humidity)
+            + ", curvCoeff: " + str(curvCoeff)  
+            + ", ppm1Log: " + str(ppm1Log) 
+            + ", RL1Log: " + str(RL1Log) 
+            + ", RS: " + str(RS)
+            + ", UsedRL: " + str(usedRL)
+            + ", PPMx: " + str(PPMx))
+    
     return PPMx
 # getting the corresponding voltage for the current read
 def getCurrentRSFromIntensity(intensity):
-    v_0 = intensity * 5 / 1023
+    v_0 = (float(intensity) * 5) / 1023
     RS = (5 - v_0) * 1000 / v_0
     return RS
 # obtaining the current approximated value for RL
 def getCurrRLVal(sensor, T, RH):
     global calibObj
+    global RH60_sensors
     # initial conversion Kelvin
     TK = getKTemperature(T)
     # getting the value for RH33 + proportion on humidity

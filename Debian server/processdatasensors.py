@@ -35,6 +35,7 @@ def dataSensorsElaborateThread(serverDataObj):
     global initGasesData
     global initSensorsData
     global currSession
+    global scdParams
     while(True):
         currSession = None
         orderedFilesToProcess = []
@@ -319,12 +320,16 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
 # getting the current RH and T values for the sensed row
 def getCurrentParamsForCalib(sensorDataRow):
     global scdParams
+    # getting the start values for the Temperature and RH factor 
+    TVal = MQCalib.Calib_start_params['TVal']
+    RHVal = MQCalib.Calib_start_params['RHVal']
     T_idx = scdParams['temperature_colindex']
     RH_idx = scdParams['RH_colindex']
-    TVal = float(sensorDataRow[T_idx])
-    RHVal = float(sensorDataRow[RH_idx])
+    if(sensorDataRow[T_idx] != ''):
+        TVal = float(sensorDataRow[T_idx])
+    if(sensorDataRow[RH_idx] != ''):
+        RHVal = float(sensorDataRow[RH_idx])
     calibObj = { 'TVal': TVal, 'RHVal': RHVal}
-    print(calibObj)
     return calibObj
 # getting if the sensor is managed by Arduino
 def isArduinoSensor(sensorName):
@@ -363,6 +368,7 @@ def processSensorData(sensorDefinition, sensorValue, calibObj):
     # calibration for the MQ sensors 
     if(sensorDefinition['sensor'] == 'MQ4'):
         sensedValue = calibrateMQ4Sensor(sensorValue, currT, currRH)
+        print(sensedValue)
     if(sensorDefinition['sensor'] == 'MQ7'):
         sensedValue = calibrateMQ7Sensor(sensorValue, currT, currRH)
     if(sensorDefinition['sensor'] == 'MQ5'):
