@@ -7,6 +7,7 @@ import configurator
 import databaseServer
 import processdatasensors
 import MQCalib
+from flask import send_from_directory
 
 fileUploadPath = ''
 
@@ -163,3 +164,9 @@ def get_gasdata_selected_reload():
     print(len(finalResult['gasData']))
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
+
+@app.route('/download_file', methods=['GET'])
+def download_data_file():
+    print('trying to download file data')
+    return send_from_directory("templates", "MQCalib.csv"
+    , as_attachment=True)
