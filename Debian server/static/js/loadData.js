@@ -31,8 +31,9 @@ function initAllDataAndFilters(data) {
     // storing all the filters and then load all the data
     if(data == "{}") {
         console.log('filters to load')
-        sessionStorage.setItem("filterOptions", data)
     }
+    // setting initial data 
+    sessionStorage.setItem("filterOptions", data)
     // initial set of all filters
     initAllFilters(filterCallbackMainLoad)
     // initial load completed 

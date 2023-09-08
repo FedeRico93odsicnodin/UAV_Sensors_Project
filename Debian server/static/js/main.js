@@ -105,6 +105,10 @@
                 isFilterContext = false
             })
     })
+    $("#downloadModule").click(function() {
+        var sessionFilters = JSON.parse(sessionStorage.getItem('filterOptions'))
+        console.log(sessionFilters)
+    })
     $(document).ready(function() {
         // at the beginning i'm visualizing data 
         isFilterContext = false
