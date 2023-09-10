@@ -21,6 +21,8 @@ def scdSensorDetectionThread(sensorsObj):
             scd41 = Scd4xI2cDevice(i2c_connection)
             scd41.start_periodic_measurement()
             while(True):
+                # resetting for the new row line if multiple data inserted before
+                sensorContent = []
                 time.sleep(int(sensorsObj.scdMeasureTime))
                 co2, temperature, humidity = scd41.read_measurement()
                 sensorContent.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
