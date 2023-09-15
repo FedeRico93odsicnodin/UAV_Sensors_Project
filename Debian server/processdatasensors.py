@@ -305,8 +305,9 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
         sessionRefId = currSession.id
         # obj creation 
         currSensorObj = dbmodels.SensorDataObj()
+        # NB: application of the same timestamp for data coherence
         if(isArduinoSensor(csvContent['sensor'])):
-            currSensorObj.date = arduinoTimestamp
+            currSensorObj.date = raspberryTimestamp
         else:
             currSensorObj.date = raspberryTimestamp
         currSensorObj.detected_substance_id = gasRefId
