@@ -492,3 +492,41 @@ def getAllDataSensorsToDisplayReload(
             returnedData.append(currDataObj)
          con.close()
     return dataRecords
+
+def getDataSensorsToDownload():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        # v1: selection of all the available data 
+        sqlite_dataselection_statement = """
+        SELECT 
+        processed_sensors_data.date
+		, detected_substances.name
+        ,processed_sensors_data.detected_substance_value
+		, sensors.name
+		, sessions.name
+        FROM processed_sensors_data
+        JOIN sessions on processed_sensors_data.session_ref = sessions.id
+		JOIN detected_substances on processed_sensors_data.detected_substance_ref = detected_substances.id
+		JOIN sensors on processed_sensors_data.sensor_ref = sensors.id
+        WHERE 
+		processed_sensors_data.session_ref in (SELECT 
+        filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
+        ORDER BY processed_sensors_data.date,sessions.id
+"""
+        cur = con.execute(sqlite_dataselection_statement)
+        dataRecords = cur.fetchall()
+        returnedData = []
+        for filterRecord in dataRecords:
+            currDataObj = {}
+            currDataObj['date'] = filterRecord[0]
+            currDataObj['substance'] = str(filterRecord[1])
+            if(str(filterRecord[2]) == ''):
+                currDataObj['value'] = None
+            else:
+                currDataObj['value'] = float(filterRecord[2])
+            currDataObj['sensor'] = str(filterRecord[3])
+            currDataObj['session'] = str(filterRecord[4])
+            returnedData.append(currDataObj)
+        con.close()
+    return returnedData
