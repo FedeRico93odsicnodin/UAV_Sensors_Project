@@ -20,6 +20,7 @@ class RLVal():
 class CalibRL():
     def __init__(self):
         self.humidity = 0
+        self.ppm_ref = 0
         self.RLVals = []
     def getNearestValue(self, currT):
         finalValue = None
@@ -104,6 +105,8 @@ application_mode = ''
 ppm_debug_mode = False
 # object of R0 resistances to be used in the ANALYSIS
 RZero_resistances = {}
+# object with the starting values of ppm concentrations for resistance calculus 
+ppm_concentration_starts = {}
 # converting kelvin temperature
 def getKTemperature(currT):
     currK = currT + 273.15
@@ -166,6 +169,7 @@ def readCalibrationValues(csvCalibData):
     global calibObj
     global rowHeader
     global Calib_start_params
+    global ppm_concentration_starts
     rowIdx = 0
     # STEP1: adding the single properties for each sensor 
     preprocessData = {}
@@ -191,6 +195,10 @@ def readCalibrationValues(csvCalibData):
         if(rowCalib[rowHeader['RH']] != ''):
             currHumidity = int(rowCalib[rowHeader['RH']])
         currPropSensor = MQSensName + "_" + MQPropName
+        # populating the initial ppm values that will be used for starting the rl calculus 
+        if(MQPropName == 'ppm_med'):
+            ppm_concentration_starts[MQSensName] = float(MQPropName)
+            continue
         # populating pre process data for RH = 33 (common to all sensors)
         if(MQPropName == 'RL' and currHumidity == 33):
             if((MQSensName in preprocessDataRH33) == False):
