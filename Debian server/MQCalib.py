@@ -100,6 +100,8 @@ Calib_start_params = {}
 debug_calculation = True
 # application mode: CALIBRATION OR ANALYSIS
 application_mode = ''
+# object of R0 resistances to be used in the ANALYSIS
+RZero_resistances = {}
 # converting kelvin temperature
 def getKTemperature(currT):
     currK = currT + 273.15
@@ -112,6 +114,7 @@ def proportionateRLOnRH(currRH, refRH, RLK):
 def loadCalib(refCalibFilePath, app_mode):
     global application_mode
     global calibObj
+    global RZero_resistances
     application_mode = app_mode
     # CALIBRATION: have to load the values from the calibration sheet 
     if(app_mode == 'CALIB'):
@@ -119,8 +122,29 @@ def loadCalib(refCalibFilePath, app_mode):
             csvCalib = csv.reader(f)
             readCalibFileHeader(csvCalib)
             readCalibrationValues(csvCalib)
-        return 
-    
+        return True
+    # ANALYSIS: all the resistance should be initialized 
+    currResistancesObj = databaseServer.get_rzero_values()
+    # checking of all resistances are present for the real analysis 
+    checkResistanceObj = checkAllResistancePresence(currResistancesObj)
+    if(checkResistanceObj):
+        RZero_resistances = currResistancesObj
+    return checkResistanceObj
+
+def checkAllResistancePresence(objResistances):
+    if(('MQ4' in objResistances) == False):
+        return False
+    if(('MQ7' in objResistances) == False):
+        return False
+    if(('MQ5' in objResistances) == False):
+        return False
+    if(('MQ3' in objResistances) == False):
+        return False
+    if(('MQ135' in objResistances) == False):
+        return False
+    if(('MQ2' in objResistances) == False):
+        return False
+    return True
         
 # creation of the initial header dictionary for the MQ Calib file 
 def readCalibFileHeader(csvCalibData):
@@ -246,16 +270,12 @@ def createRHObj(sensorName, preprocessDataRH, RHVal):
 def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
     global calibObj
     global application_mode
-    # calibration mode: have to calculate the R0 values to be used in an eventual analysis 
+    # getting corresponding value of RS given the intensity 
+    RS = getCurrentRSFromIntensity(intensity)
+    # CALIBRATION: have to calculate the R0 values to be used in an eventual analysis 
     if(application_mode == 'CALIB'):
         # getting the current value for the RL resistor depending on RH and T(K) factors
         currRL = getCurrRLVal(sensorName, temperature, humidity)
-        # retrieving the values on curve 
-        curvCoeff = calibObj[sensorName]['calc'].getCurveCoeff()
-        ppm1Log = calibObj[sensorName]['calc'].logPPM1
-        RL1Log = calibObj[sensorName]['calc'].logRL1
-        # getting the value of RS from intensity 
-        RS = getCurrentRSFromIntensity(intensity)
         # getting the current value for R0 (using experimental RL) 
         currR0 = RS / currRL
         # in case first value this is the used value for the calculus
@@ -265,61 +285,44 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
             firstR0 = True
         # calculation of used values for 
         usedR0 = R0_values[sensorName]
-        usedRL = RS / usedR0
-        logRL = math.log10(usedRL)
-        # calculation of first term 
-        eqFirstTerm = (1 / curvCoeff) * (logRL - RL1Log)
-        # calculation second term : coeff just not present
-        eqSecondTerm =  - 1 * ppm1Log
-        # logarithm for the PPM concentration: NB sign
-        logPPMx = eqFirstTerm - eqSecondTerm
-        PPMx = pow(10, logPPMx)
         # updating the R0 value mediating the collected one 
         if(firstR0 == False):
             R0_values[sensorName] = (R0_values[sensorName] + currR0) / 2
         # inseting the value of newest r0 to db 
         databaseServer.update_rzero_value(sensorId, R0_values[sensorName])
-        # TODO: undertand if print those values in an extra file: also this file should be downloadable 
-        # printing all the values for calculation 
-        '''if(debug_calculation):
-            print(
-                "sensor: " + sensorName
-                + ", intensity: " + str(intensity) 
-                + ", temperature: " + str(temperature)
-                + ", humidity: " + str(humidity)
-                + ", curvCoeff: " + str(curvCoeff)  
-                + ", ppm1Log: " + str(ppm1Log) 
-                + ", RL1Log: " + str(RL1Log) 
-                + ", RS: " + str(RS)
-                + ", currRL: " + str(currRL)
-                + ", currR0: " + str(currR0)
-                + ", usedR0: " + str(usedR0)
-                + ", UsedRL: " + str(usedRL)
-                + ", PPMx: " + str(PPMx))'''
-        '''if(sensorName == 'MQ4'):
-            print(
-                "RL: " + str(usedRL) 
-                + " RLLog: " + str(logRL) 
-                + " RL1Log: " + str(RL1Log) 
-                + " ppm1Log: " + str(ppm1Log) 
-                + " coeff: " + str(curvCoeff)
-                + " term1: " + str(eqFirstTerm) 
-                + " term2: " + str(eqSecondTerm) 
-                + " logppmX: " + str(logPPMx) 
-                + " PPMx: " + str(PPMx))'''
-        print(
-                "RL: " + str(usedRL) 
-                + " RLLog: " + str(logRL) 
-                + " RL1Log: " + str(RL1Log) 
-                + " ppm1Log: " + str(ppm1Log) 
-                + " coeff: " + str(curvCoeff)
-                + " term1: " + str(eqFirstTerm) 
-                + " term2: " + str(eqSecondTerm) 
-                + " logppmX: " + str(logPPMx) 
-                + " PPMx: " + str(PPMx))
-        return PPMx
-    # here the use of the value of the real analysis 
-    # TODO: implementation 
+        # getting the ppm to display 
+        ppmX = calculateCurrentPPM(RS, usedR0, sensorName)
+        
+    # REAL ANALYSIS: using the already calibrated values of R0
+    usedR0 = RZero_resistances[sensorName].resValue
+    ppmX = calculateCurrentPPM(RS, usedR0, sensorName)
+    return(ppmX)
+
+# calculation of the current PPM given the retrieved value of RL 
+def calculateCurrentPPM(RS, usedR0, sensorName):
+    # STEP1: retrieving the values on curve for the current gas 
+    curvCoeff = calibObj[sensorName]['calc'].getCurveCoeff()
+    ppm1Log = calibObj[sensorName]['calc'].logPPM1
+    RL1Log = calibObj[sensorName]['calc'].logRL1
+
+    # STEP2: calculate the used RL value depending on the R0 choice 
+    usedRL = RS / usedR0
+    logRL = math.log10(usedRL)
+
+    # STEP4: calculation of the first term equation
+    eqFirstTerm = (1 / curvCoeff) * (logRL - RL1Log)
+
+    # STEP5: calculation of the second term equation 
+    eqSecondTerm =  - 1 * ppm1Log
+
+    # STEP6: calculus of the PPM (log and then pow)
+    logPPMx = eqFirstTerm - eqSecondTerm
+    PPMx = pow(10, logPPMx)
+
+    # TODO: print of the overall terms of calculus 
+
+    return PPMx
+    
 # getting the corresponding voltage for the current read
 def getCurrentRSFromIntensity(intensity):
     v_0 = (float(intensity) * 5) / 1023

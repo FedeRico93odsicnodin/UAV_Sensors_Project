@@ -31,7 +31,10 @@ def initServer():
     # MQ data calibration 
     app_mode = serverDataObj.getCurrRunMode()
     mqCalibPath = os.path.join(currDir, serverDataObj.getRefDocsFolder(), "MQCalib.csv")
-    MQCalib.loadCalib(mqCalibPath, app_mode)
+    calibLoaded = MQCalib.loadCalib(mqCalibPath, app_mode)
+    if(calibLoaded == False):
+        print("no data has been loaded for the calibration, select CALIB as configuration for load those data")
+        return
     # start thread for monitoring incoming uploads 
     uploadDetectionProcess = Process(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj, ))
     uploadDetectionProcess.start()

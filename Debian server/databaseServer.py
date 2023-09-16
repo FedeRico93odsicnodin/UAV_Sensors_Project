@@ -568,4 +568,29 @@ def update_rzero_value(sensorId, resistanceValue):
 """
         cur = con.execute(sqlite_update_rzero_statement, (resistanceValue, sensorId))
         con.close()
+# selecting the current resistances r0 to be used in the calibration process 
+def get_rzero_values():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_sel_resistances = """
+            SELECT 
+            rzero_resistors.id, 
+            rzero_resistors.sensor_ref, 
+            sensors.name,
+            rzero_resistors.rzero_value 
+            FROM rzero_resistors JOIN sensors ON rzero_resistors.sensor_ref = sensors.id 
+"""
+        cur = con.execute(sqlite_sel_resistances)
+        resistanceRecords = cur.fetchall()
+        allRZeroObjects = {}
+        for resRecord in resistanceRecords:
+            currRZeroObj = dbmodels.RZeroResistance()
+            currRZeroObj.id = int(resRecord[0])
+            currRZeroObj.sensor_ref = int(resRecord[1])
+            currRZeroObj.sensor_name = str(resRecord[2])
+            currRZeroObj.resValue = float(resRecord[3])
+            allRZeroObjects[currRZeroObj.sensor_name] = currRZeroObj
+    return allRZeroObjects
+
 

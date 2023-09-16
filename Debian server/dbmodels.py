@@ -50,3 +50,10 @@ class SensorDataObj:
           self.sensor_id = 0
           self.session_ref = 0
 
+class RZeroResistance:
+     def __init__(self):
+          self.id = 0
+          self.sensor_ref = 0
+          self.sensor_name = ''
+          self.resValue = 0
+
