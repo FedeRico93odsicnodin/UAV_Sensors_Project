@@ -267,6 +267,7 @@ def insertSessionFilterAsSelected(currSessionObj):
     print("filter inserted")
 
 def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
+    global initSensorsData
     # date formats 
     dateStampFormat = '%Y-%m-%d %H:%M:%S.%f'
     # analysis start from the retrieved CSV header 
@@ -298,9 +299,9 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
             continue
         # sensed value 
         # getting the values of T and RH of current row for calib
-        objCalib = getCurrentParamsForCalib(sensorDataRow)
-        sensedValue = processSensorData(csvContent, sensorDataRow[idxCsv], objCalib)
         sensorRefId = initSensorsData[csvContent['sensor']].id
+        objCalib = getCurrentParamsForCalib(sensorDataRow)
+        sensedValue = processSensorData(sensorRefId, csvContent, sensorDataRow[idxCsv], objCalib)
         gasRefId = initGasesData[csvContent['gas']].id
         sessionRefId = currSession.id
         # obj creation 
@@ -360,48 +361,26 @@ def trackNotAnalyzedColumn(colDefinition):
          return True
      return False
         
-def processSensorData(sensorDefinition, sensorValue, calibObj):
+def processSensorData(sensorId, sensorDefinition, sensorValue, calibObj):
+    # application mode: for the eventual calibration of MQ sensor and the current phase
+    global application_mode
     sensedValue = 0
     if(sensorValue != ''):
         sensedValue = float(sensorValue)
     currT = calibObj['TVal']
     currRH = calibObj['RHVal']
     # calibration for the MQ sensors 
-    if(sensorDefinition['sensor'] == 'MQ4'):
-        sensedValue = calibrateMQ4Sensor(sensorValue, currT, currRH)
-    if(sensorDefinition['sensor'] == 'MQ7'):
-        sensedValue = calibrateMQ7Sensor(sensorValue, currT, currRH)
-    if(sensorDefinition['sensor'] == 'MQ5'):
-        sensedValue = calibrateMQ5Sensor(sensorValue, currT, currRH)
-    if(sensorDefinition['sensor'] == 'MQ3'):
-        sensedValue = calibrateMQ3Sensor(sensorValue, currT, currRH)
-    if(sensorDefinition['sensor'] == 'MQ135'):
-        sensorValue = calibrateMQ135Sensor(sensorValue, currT, currRH)
-    if(sensorDefinition['sensor'] == 'MQ2'):
-        sensorValue = calibrateMQ2Sensor(sensorValue, currT, currRH)
+    if(sensorDefinition['sensor'] == 'MQ4'
+       or sensorDefinition['sensor'] == 'MQ7'
+       or sensorDefinition['sensor'] == 'MQ5'
+       or sensorDefinition['sensor'] == 'MQ3'
+       or sensorDefinition['sensor'] == 'MQ135'
+       or sensorDefinition['sensor'] == 'MQ2'):
+        sensedValue = MQCalib.getPPMValue(
+            sensorValue, 
+            sensorId, 
+            sensorDefinition['sensor'], 
+            currT, 
+            currRH)
     return sensorValue
     
-
-def calibrateMQ4Sensor(sensorValue, currT, currRH):
-    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ4', currT, currRH)
-    return sensedPPM
-
-def calibrateMQ7Sensor(sensorValue, currT, currRH):
-    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ7', currT, currRH)
-    return sensedPPM
-
-def calibrateMQ5Sensor(sensorValue, currT, currRH):
-    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ5', currT, currRH)
-    return sensedPPM
-
-def calibrateMQ3Sensor(sensorValue, currT, currRH):
-    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ3', currT, currRH)
-    return sensedPPM 
-
-def calibrateMQ135Sensor(sensorValue, currT, currRH):
-    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ135', currT, currRH)
-    return sensedPPM 
-
-def calibrateMQ2Sensor(sensorValue, currT, currRH):
-    sensedPPM = MQCalib.getPPMValue(sensorValue, 'MQ2', currT, currRH) 
-    return sensedPPM

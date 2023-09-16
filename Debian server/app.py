@@ -29,8 +29,9 @@ def initServer():
     # database creation (if does not exist)
     databaseServer.createDatabase(databasePath)
     # MQ data calibration 
+    app_mode = serverDataObj.getCurrRunMode()
     mqCalibPath = os.path.join(currDir, serverDataObj.getRefDocsFolder(), "MQCalib.csv")
-    MQCalib.loadCalib(mqCalibPath)
+    MQCalib.loadCalib(mqCalibPath, app_mode)
     # start thread for monitoring incoming uploads 
     uploadDetectionProcess = Process(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj, ))
     uploadDetectionProcess.start()

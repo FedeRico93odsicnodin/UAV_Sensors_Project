@@ -77,6 +77,16 @@ def createDatabase(databaseLocation):
     filter_value text
     )
 """
+    # creation of the RL persistance table 
+    sqlite_r0resistors_table = """
+    CREATE TABLE 
+    rzero_resistors(
+    id integer PRIMARY KEY AUTOINCREMENT,
+    sensor_ref integer,
+    rzero_value real, 
+    FOREIGN KEY (sensor_ref) REFERENCES sensors (id)
+    )
+"""
     cur = con.cursor()
     cur.execute(sqlite_detectedsubstances_table)
     time.sleep(0.1)
@@ -87,6 +97,8 @@ def createDatabase(databaseLocation):
     cur.execute(sqllite_sensorsdata_table)
     time.sleep(0.1)
     cur.execute(sqllite_optionsfilters_table)
+    time.sleep(0.1)
+    cur.execute(sqlite_r0resistors_table)
     con.close()
     DatabaseLocation = databaseLocation
     print('DB LOCATION ' + DatabaseLocation)
@@ -530,3 +542,30 @@ def getDataSensorsToDownload():
             returnedData.append(currDataObj)
         con.close()
     return returnedData
+# inserting or updating the current r0 value used for calibrating 
+def update_rzero_value(sensorId, resistanceValue):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        # checking the presence of an entry for the sensor and the current value of r0
+        sqlite_check_statement = "SELECT COUNT(*) FROM rzero_resistors WHERE sensor_ref = ?"
+        cur = con.execute(sqlite_check_statement, sensorId)
+        valuePresence = cur.fetchone()
+        if(valuePresence[0] == 0):
+            # inserting the first value in the table 
+            sqlite_insert_rzero_statement = """
+            INSERT INTO rzero_resistors 
+                    (id, 
+                    sensor_ref, 
+                    rzero_value) VALUES 
+                    (?, ?, ?);
+"""
+            cur = con.execute(sqlite_insert_rzero_statement, (None, sensorId, resistanceValue))
+            con.close()
+            return
+        sqlite_update_rzero_statement = """
+        UPDATE rzero_resistors SET rzero_value = ? WHERE sensor_ref = ?
+"""
+        cur = con.execute(sqlite_update_rzero_statement, (resistanceValue, sensorId))
+        con.close()
+

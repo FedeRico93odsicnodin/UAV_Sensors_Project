@@ -19,6 +19,6 @@
     <!-- TEST: the name of the CSV reference used for the test cases -->
     <config name="csv_test_ref">2023_07_31_08_48_00_058_sensorsAnalysis.csv</config>
 
-    <!-- MQ SENSORS CALIB VALUES -->
-    
+    <!-- SETTING CURRENT MODE: CALIB: of R0 for MQ or ANALYSIS: analysis -->
+    <config name="run_mode">CALIB</config>
 </data>

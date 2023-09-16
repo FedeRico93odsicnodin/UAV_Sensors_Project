@@ -19,6 +19,8 @@ class ServerDataConfig:
         self.curr_test_case = ''
         self.ref_csv_path = ''
         self.ref_docs_folder = ''
+        # curr mode of the runtime application
+        self.run_mode = 'CALIB'
 
     def setUploadCSVFolder(self, folderUpload):
         self.uploadCSVFolder = folderUpload 
@@ -50,6 +52,12 @@ class ServerDataConfig:
         self.ref_docs_folder = ref_docs_folder
     def getRefDocsFolder(self):
         return self.ref_docs_folder
+    
+    # curr mode for the application
+    def setCurrRunMode(self, runMode):
+        self.run_mode = runMode
+    def getCurrRunMode(self):
+        return self.run_mode
         
 
 # read configuration method
@@ -72,4 +80,6 @@ def readConfiguration(configFile):
             ServerDataObj.setCurrCsvRefName(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "ref_docs_folder"):
             ServerDataObj.setRefDocsFolder(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "run_mode"):
+            ServerDataObj.setCurrRunMode(str(configuration.firstChild.data))
     return ServerDataObj
