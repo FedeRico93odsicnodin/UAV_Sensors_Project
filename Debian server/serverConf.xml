@@ -20,5 +20,7 @@
     <config name="csv_test_ref">2023_07_31_08_48_00_058_sensorsAnalysis.csv</config>
 
     <!-- SETTING CURRENT MODE: CALIB: of R0 for MQ or ANALYSIS: analysis -->
-    <config name="run_mode">ANALYSIS</config>
+    <config name="run_mode">CALIB</config>
+    <!-- DEBUG PPM CALCULUS: with this configuration the creation of additional sheet of PPM calculus -->
+    <config name="debug_ppm_calculus">True</config>
 </data>

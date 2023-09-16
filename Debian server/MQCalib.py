@@ -100,6 +100,8 @@ Calib_start_params = {}
 debug_calculation = True
 # application mode: CALIBRATION OR ANALYSIS
 application_mode = ''
+# debug mode for the ppm calculus
+ppm_debug_mode = False
 # object of R0 resistances to be used in the ANALYSIS
 RZero_resistances = {}
 # converting kelvin temperature
@@ -111,11 +113,13 @@ def proportionateRLOnRH(currRH, refRH, RLK):
     product1 = RLK * currRH
     propRL = product1 / refRH
     return propRL
-def loadCalib(refCalibFilePath, app_mode):
+def loadCalib(refCalibFilePath, app_mode, ppm_debug):
     global application_mode
     global calibObj
     global RZero_resistances
+    global ppm_debug_mode
     application_mode = app_mode
+    ppm_debug_mode = ppm_debug
     # CALIBRATION: have to load the values from the calibration sheet 
     if(app_mode == 'CALIB'):
         with open(refCalibFilePath, 'r') as f:
@@ -268,7 +272,6 @@ def createRHObj(sensorName, preprocessDataRH, RHVal):
     return finalObjRH
 # obtaining corresponding ppm value for the voltage intensity read 
 def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
-    global calibObj
     global application_mode
     # getting corresponding value of RS given the intensity 
     RS = getCurrentRSFromIntensity(intensity)
@@ -300,29 +303,40 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
 
 # calculation of the current PPM given the retrieved value of RL 
 def calculateCurrentPPM(RS, usedR0, sensorName):
+    global calibObj
+    global ppm_debug_mode
+    calculusObj = {}
+    calculusObj['RS'] = RS
+    calculusObj['usedR0'] = usedR0
+    calculusObj['sensorName'] = sensorName
     # STEP1: retrieving the values on curve for the current gas 
-    curvCoeff = calibObj[sensorName]['calc'].getCurveCoeff()
-    ppm1Log = calibObj[sensorName]['calc'].logPPM1
-    RL1Log = calibObj[sensorName]['calc'].logRL1
+    calculusObj['curvCoeff'] = calibObj[sensorName]['calc'].getCurveCoeff()
+    calculusObj['ppm1Log'] = calibObj[sensorName]['calc'].logPPM1
+    calculusObj['RL1Log'] = calibObj[sensorName]['calc'].logRL1
 
     # STEP2: calculate the used RL value depending on the R0 choice 
-    usedRL = RS / usedR0
-    logRL = math.log10(usedRL)
+    calculusObj['usedRL'] = RS / usedR0
+    calculusObj['logRL'] = math.log10(calculusObj['usedRL'])
 
     # STEP4: calculation of the first term equation
-    eqFirstTerm = (1 / curvCoeff) * (logRL - RL1Log)
+    calculusObj['eqFirstTerm'] = (1 / calculusObj['curvCoeff']) * (calculusObj['logRL'] - calculusObj['RL1Log'])
 
     # STEP5: calculation of the second term equation 
-    eqSecondTerm =  - 1 * ppm1Log
+    calculusObj['eqSecondTerm'] =  - 1 * calculusObj['ppm1Log']
 
     # STEP6: calculus of the PPM (log and then pow)
-    logPPMx = eqFirstTerm - eqSecondTerm
+    logPPMx = calculusObj['eqFirstTerm'] - calculusObj['eqSecondTerm']
     PPMx = pow(10, logPPMx)
 
-    # TODO: print of the overall terms of calculus 
+    # STEP7: eventual write of all the values 
+    if(ppm_debug_mode): 
+        writePPMDebugValues(calculusObj)
 
     return PPMx
-    
+# printing the current value of the obj calculation on an additional excel
+def writePPMDebugValues(calculusObj):
+    print('implementation of the creation of the file')
+    # TODO: implementation of the object calculation 
 # getting the corresponding voltage for the current read
 def getCurrentRSFromIntensity(intensity):
     v_0 = (float(intensity) * 5) / 1023

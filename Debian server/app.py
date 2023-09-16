@@ -30,8 +30,9 @@ def initServer():
     databaseServer.createDatabase(databasePath)
     # MQ data calibration 
     app_mode = serverDataObj.getCurrRunMode()
+    debug_ppm = serverDataObj.getDebugPPMCalculus()
     mqCalibPath = os.path.join(currDir, serverDataObj.getRefDocsFolder(), "MQCalib.csv")
-    calibLoaded = MQCalib.loadCalib(mqCalibPath, app_mode)
+    calibLoaded = MQCalib.loadCalib(mqCalibPath, app_mode, debug_ppm)
     if(calibLoaded == False):
         print("no data has been loaded for the calibration, select CALIB as configuration for load those data")
         return

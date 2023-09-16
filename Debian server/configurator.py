@@ -21,6 +21,7 @@ class ServerDataConfig:
         self.ref_docs_folder = ''
         # curr mode of the runtime application
         self.run_mode = 'CALIB'
+        self.debug_ppm_calculus = False
 
     def setUploadCSVFolder(self, folderUpload):
         self.uploadCSVFolder = folderUpload 
@@ -58,6 +59,10 @@ class ServerDataConfig:
         self.run_mode = runMode
     def getCurrRunMode(self):
         return self.run_mode
+    def setDebugPPMCalculus(self, ppmCalcFlag):
+        self.debug_ppm_calculus = ppmCalcFlag
+    def getDebugPPMCalculus(self):
+        return self.debug_ppm_calculus
         
 
 # read configuration method
@@ -82,4 +87,8 @@ def readConfiguration(configFile):
             ServerDataObj.setRefDocsFolder(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "run_mode"):
             ServerDataObj.setCurrRunMode(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "debug_ppm_calculus"):
+            if(str(configuration.firstChild.data) == "True"):
+                ServerDataObj.setDebugPPMCalculus(True)
+            else: ServerDataObj.setDebugPPMCalculus(False)
     return ServerDataObj
