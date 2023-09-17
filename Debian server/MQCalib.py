@@ -140,7 +140,7 @@ ppm_concentration_starts = {}
 # written file for the calib collection values 
 csv_file_calculus = ''
 # file calculus header 
-csv_calculus_header = ['timestamp', 'Sensor', 'RS', 'R0', 'RL', 'curvCoeff', 'ppm1_log', 'RL1_log', 'RL_log', 'eq_1', 'eq_2', 'logPPMx', 'PPMx']
+csv_calculus_header = ['timestamp', 'currT', 'currRH', 'currPPM', 'Sensor', 'RS', 'R0', 'RL', 'curvCoeff', 'ppm1_log', 'RL1_log', 'RL_log', 'eq_1', 'eq_2', 'logPPMx', 'PPMx']
 # converting kelvin temperature
 def getKTemperature(currT):
     currK = currT + 273.15
@@ -414,7 +414,11 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
 def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     global calibObj
     global ppm_debug_mode
+    global ppm_concentration_starts
     calculusObj = {}
+    calculusObj['currT'] = currT
+    calculusObj['currRH'] = currRH
+    calculusObj['currPPM'] = ppm_concentration_starts[sensorName]
     calculusObj['RS'] = RS
     calculusObj['usedR0'] = usedR0
     calculusObj['sensorName'] = sensorName
@@ -452,9 +456,11 @@ def writePPMDebugValues(calculusObj):
     global csv_file_calculus
     # preparing array to write 
     now = datetime.now()
-    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     objCSV = [
-        date_time
+        now
+        , calculusObj['currT']
+        , calculusObj['currRH']
+        , calculusObj['currPPM']
         , calculusObj['sensorName']
         , calculusObj['RS']
         , calculusObj['usedR0']
