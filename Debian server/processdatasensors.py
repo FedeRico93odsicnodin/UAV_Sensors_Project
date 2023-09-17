@@ -42,6 +42,8 @@ def dataSensorsElaborateThread(serverDataObj):
         pendingCSVFiles = os.listdir(outputCSVFolder)
         if(len(pendingCSVFiles) == 0):
             print('waiting for files')
+            # verify if values to update for resistances R0
+            updateR0Values()
             time.sleep(waitingProcessTime)
         for fileCSV in pendingCSVFiles:
             currFileDate = getFileDate(fileCSV)
@@ -384,3 +386,13 @@ def processSensorData(sensorId, sensorDefinition, sensorValue, calibObj):
             currRH)
     return sensorValue
     
+def updateR0Values():
+    global initSensorsData
+    num = 0
+    for currSensor in MQCalib.R0_values:
+        num = num + 1
+        sensorId = initSensorsData[currSensor].id
+        resVal = MQCalib.R0_values[currSensor]
+        databaseServer.update_rzero_value(sensorId, resVal)
+    if(num > 0):
+        print('updated ' + str(num) + ' R0s values')

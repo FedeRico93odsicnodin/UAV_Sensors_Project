@@ -165,12 +165,13 @@ def loadCalib(refCalibFilePath, app_mode, ppm_debug):
         with open(csv_file_calculus, 'a', newline='') as csvCalculus:
             writer = csv.writer(csvCalculus)
             writer.writerow(csv_calculus_header)
+    # LOADING THE CALIB FILE 
+    with open(refCalibFilePath, 'r') as f:
+        csvCalib = csv.reader(f)
+        readCalibFileHeader(csvCalib)
+        readCalibrationValues(csvCalib)
     # CALIBRATION: have to load the values from the calibration sheet 
     if(app_mode == 'CALIB'):
-        with open(refCalibFilePath, 'r') as f:
-            csvCalib = csv.reader(f)
-            readCalibFileHeader(csvCalib)
-            readCalibrationValues(csvCalib)
         return True
     # ANALYSIS: all the resistance should be initialized 
     currResistancesObj = databaseServer.get_rzero_values()
@@ -178,6 +179,7 @@ def loadCalib(refCalibFilePath, app_mode, ppm_debug):
     checkResistanceObj = checkAllResistancePresence(currResistancesObj)
     if(checkResistanceObj):
         RZero_resistances = currResistancesObj
+    print(RZero_resistances)
     return checkResistanceObj
 
 def checkAllResistancePresence(objResistances):
@@ -399,7 +401,7 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
         if(firstR0 == False):
             R0_values[sensorName] = (R0_values[sensorName] + currR0) / 2
         # inseting the value of newest r0 to db 
-        databaseServer.update_rzero_value(sensorId, R0_values[sensorName])
+        # databaseServer.update_rzero_value(sensorId, R0_values[sensorName])
         # getting the ppm to display 
         ppmX = calculateCurrentPPM(RS, usedR0, sensorName, temperature, humidity)
         # updating the ppm curr value 
@@ -407,7 +409,7 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
         return
     # REAL ANALYSIS: using the already calibrated values of R0
     usedR0 = RZero_resistances[sensorName].resValue
-    ppmX = calculateCurrentPPM(RS, usedR0, sensorName)
+    ppmX = calculateCurrentPPM(RS, usedR0, sensorName, temperature, humidity)
     return(ppmX)
 
 # calculation of the current PPM given the retrieved value of RL 

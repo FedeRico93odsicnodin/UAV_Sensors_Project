@@ -561,12 +561,14 @@ def update_rzero_value(sensorId, resistanceValue):
                     (?, ?, ?);
 """
             cur = con.execute(sqlite_insert_rzero_statement, (None, sensorId, resistanceValue))
+            con.commit()
             con.close()
             return
         sqlite_update_rzero_statement = """
         UPDATE rzero_resistors SET rzero_value = ? WHERE sensor_ref = ?
 """
         cur = con.execute(sqlite_update_rzero_statement, (resistanceValue, sensorId))
+        con.commit()
         con.close()
 # selecting the current resistances r0 to be used in the calibration process 
 def get_rzero_values():
