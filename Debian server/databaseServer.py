@@ -549,7 +549,7 @@ def update_rzero_value(sensorId, resistanceValue):
         con = sqlite3.connect(DatabaseLocation)
         # checking the presence of an entry for the sensor and the current value of r0
         sqlite_check_statement = "SELECT COUNT(*) FROM rzero_resistors WHERE sensor_ref = ?"
-        cur = con.execute(sqlite_check_statement, sensorId)
+        cur = con.execute(sqlite_check_statement, (sensorId,))
         valuePresence = cur.fetchone()
         if(valuePresence[0] == 0):
             # inserting the first value in the table 

@@ -1,4 +1,4 @@
-TS|(Arduino),TS|(Rpi),CH4,CO,Gen,Alcohol,NH3,Comb,SCD time|SCD41|description SCD41,ppm CO2|SCD41|description SCD41,C|SCD41|description SCD41,ticksC|SCD41|description SCD41,RH|SCD41|description SCD41,ticksRH|SCD41|description SCD41,Session
+TS|(Arduino),TS|(Rpi),CH4|MQ4|Description for MQ4,CO|MQ7|Description for MQ7,Gen|MQ5|Description for MQ5,Alcohol|MQ3|Description for MQ3,NH3|MQ135|Description for MQ135,Comb|MQ2|Description for MQ2,SCD time|SCD41|description SCD41,ppm CO2|SCD41|description SCD41,C|SCD41|description SCD41,ticksC|SCD41|description SCD41,RH|SCD41|description SCD41,ticksRH|SCD41|description SCD41,Session
 2023-09-10 16:36:42.329,2023-09-10 15:29:29.285,31546.75,580,339,736,495,225,,,,,,,2023-09-10 15:29:31
 2023-09-10 16:36:42.439,2023-09-10 15:29:29.395,31546.75,580,339,736,495,225,,,,,,,2023-09-10 15:29:31
 2023-09-10 16:36:42.549,2023-09-10 15:29:29.505,31546.75,580,339,736,495,225,,,,,,,2023-09-10 15:29:31

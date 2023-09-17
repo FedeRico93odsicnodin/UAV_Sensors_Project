@@ -160,7 +160,6 @@ def loadCalib(refCalibFilePath, app_mode, ppm_debug):
     application_mode = app_mode
     ppm_debug_mode = ppm_debug
     # initializing the file for the collection of calculus values 
-    print(ppm_debug)
     if(ppm_debug):
         csv_file_calculus = os.path.join("templates", "CalibCalculus.csv")
         with open(csv_file_calculus, 'a', newline='') as csvCalculus:
@@ -200,7 +199,6 @@ def checkAllResistancePresence(objResistances):
 def readCalibFileHeader(csvCalibData):
     global rowHeader
     for rowCalib in csvCalibData:
-        print(rowCalib)
         idxHeader = 0
         for colHeader in rowCalib:
             rowHeader[colHeader] = idxHeader
@@ -360,7 +358,6 @@ def createCalculationObj(sensorName, preprocessData):
         extraK = sensorName + "_extras"
         if(extraK in preprocessData):
             currCalcObj.extras = preprocessData[extraK]
-        print(currCalcObj.extras)
         return currCalcObj
     else: 
         return None
@@ -404,10 +401,10 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
         # inseting the value of newest r0 to db 
         databaseServer.update_rzero_value(sensorId, R0_values[sensorName])
         # getting the ppm to display 
-        ppmX = calculateCurrentPPM(RS, usedR0, sensorName)
+        ppmX = calculateCurrentPPM(RS, usedR0, sensorName, temperature, humidity)
         # updating the ppm curr value 
         ppm_concentration_starts[sensorName] = ppmX
-
+        return
     # REAL ANALYSIS: using the already calibrated values of R0
     usedR0 = RZero_resistances[sensorName].resValue
     ppmX = calculateCurrentPPM(RS, usedR0, sensorName)
@@ -468,7 +465,6 @@ def writePPMDebugValues(calculusObj):
         , calculusObj['logRL']
         , calculusObj['eqFirstTerm']
         , calculusObj['eqSecondTerm']
-        , calculusObj['eqSecondTerm']
         , calculusObj['ppmLog']
         , calculusObj['ppm']
     ]
@@ -478,7 +474,7 @@ def writePPMDebugValues(calculusObj):
 # getting the corresponding voltage for the current read
 def getCurrentRSFromIntensity(intensity):
     v_0 = (float(intensity) * 5) / 1023
-    RS = (5 - v_0) * 1000 / v_0
+    RS = abs((5 - v_0) * 1000 / v_0)
     return RS
 # obtaining the current approximated value for RL
 # NB: this approximation is still on given ppm on curve 
@@ -526,7 +522,7 @@ def getCurrRLVal(sensor, T, RH):
 def getResistanceProportionalToCurrPPM(sensor, resVal):
     global ppm_concentration_starts
     global calibObj
-    extraContentR0 = calibObj[sensor].calib_extras
+    extraContentR0 = calibObj[sensor]['calib_extras']
     # getting the values for the proportion 
     actualPPM = ppm_concentration_starts[sensor]
     refPPM = extraContentR0['ppmRef']
