@@ -68,8 +68,6 @@ class CalcPPM():
         # additional points for the final calculus PPM
         self.logPPM1 = 0
         self.logRL1 = 0
-        # ppm ref value for the used curves
-        self.refPPM = 0
         # eventual extra properties 
         self.extras = {}
     def getCurveCoeff(self):
@@ -92,6 +90,31 @@ class CalcPPM():
         diffPPM = logPPM2 - self.logPPM1
         finalCoeff = diffRL / diffPPM
         return finalCoeff
+    def recalibRLPoints(self, currT, currRH):
+        # recalib on temperature
+        RL1Tmp = None
+        RL2Tmp = None
+        if(self.extras['TRef'] != None):
+            currTK = getKTemperature(currT)
+            refTK = getKTemperature(self.extras['TRef'])
+            RL1Tmp = (self.RL1 * currTK) / refTK
+            RL2Tmp = (self.RL2 * currTK) / refTK
+        # recalib on RH and eventually mediating the values 
+        if(self.extras['RHRef'] != None):
+            refRH = self.extras['RHRef']
+            RL1RH = (self.RL1 * currRH) / refRH
+            RL2RH = (self.RL2 * currRH) / refRH
+            if(RL1Tmp != None):
+                RL1Tmp = (RL1Tmp + RL1RH) / 2
+            else: RL1Tmp = RL1RH
+            if(RL2Tmp != None):
+                RL2Tmp = (RL2Tmp + RL2RH) / 2
+            else: RL2Tmp = RL2RH
+        # recalibration if calculated values are not null
+        if(RL1Tmp != None and RL2Tmp != None):
+            self.RL1 = RL1Tmp
+            self.RL2 = RL2Tmp
+
 # row of all the headers reference 
 rowHeader = {}
 # calibration object 
@@ -186,12 +209,14 @@ def readCalibrationValues(csvCalibData):
     # this objects for hypothetical values at extremes of pressure
     preprocessDataRH0_hyp = {}
     preprocessDataRH137_hyp = {}
+    # extra values for calibration 
+    calibExtraValues = {}
     # preprocess data for hypothetical values 
     for rowCalib in csvCalibData:
         MQSensName = rowCalib[rowHeader['MQSensor']]
         MQPropName = rowCalib[rowHeader['PropName']]
         currValue = rowCalib[rowHeader['PropValue']]
-        currTemperature = rowCalib[rowHeader['T']]
+        currTemperature = 0
         currHumidity = 0
         
         # starting values for the current calibration 
@@ -201,6 +226,8 @@ def readCalibrationValues(csvCalibData):
             continue
         if(rowCalib[rowHeader['RH']] != ''):
             currHumidity = int(rowCalib[rowHeader['RH']])
+        if(rowCalib[rowHeader['T']] != ''):
+            currTemperature = float(rowCalib[rowHeader['T']])
         currPropSensor = MQSensName + "_" + MQPropName
         
         # populating the initial ppm values that will be used for starting the rl calculus 
@@ -217,7 +244,7 @@ def readCalibrationValues(csvCalibData):
                 preprocessDataRH33[MQSensName] = []
             preprocessDataRH33[MQSensName].append({'T': currTemperature, 'val': currValue})
             # adding extra values to use for proportionate the ppm concentration and eventually R0
-            preprocessDataRH33[MQSensName + "_extras"] = extraRefProperties
+            calibExtraValues[MQSensName] = extraRefProperties
             continue
         # populating pre process data for RH = 85 (common to all sensors)
         if(MQPropName == 'RL' and currHumidity == 85):
@@ -225,7 +252,7 @@ def readCalibrationValues(csvCalibData):
                 preprocessDataRH85[MQSensName] = []
             preprocessDataRH85[MQSensName].append({'T': currTemperature, 'val': currValue})
             # adding extra values to use for proportionate the ppm concentration and eventually R0
-            preprocessDataRH85[MQSensName + "_extras"] = extraRefProperties
+            calibExtraValues[MQSensName] = extraRefProperties
             continue
         # populating pre process data for RH = 60 (only for MQ 2)
         if(MQPropName == 'RL' and currHumidity == 60):
@@ -233,25 +260,32 @@ def readCalibrationValues(csvCalibData):
                 preprocessDataRH60[MQSensName] = []
             preprocessDataRH60[MQSensName].append({'T': currTemperature, 'val': currValue})
             # adding extra values to use for proportionate the ppm concentration and eventually R0
-            preprocessDataRH60[MQSensName + "_extras"] = extraRefProperties
+            calibExtraValues[MQSensName] = extraRefProperties
             continue
         if(MQPropName == 'RL_hyp' and currHumidity == 0):
             if((MQSensName in preprocessDataRH0_hyp) == False):
                 preprocessDataRH0_hyp[MQSensName] = []
             preprocessDataRH0_hyp[MQSensName].append({'T': currTemperature, 'val': currValue})
             # adding extra values to use for proportionate the ppm concentration and eventually R0
-            preprocessDataRH0_hyp[MQSensName + "_extras"] = extraRefProperties
+            calibExtraValues[MQSensName] = extraRefProperties
             continue
         if(MQPropName == 'RL_hyp' and currHumidity == 137):
             if((MQSensName in preprocessDataRH137_hyp) == False):
                 preprocessDataRH137_hyp[MQSensName] = []
             preprocessDataRH137_hyp[MQSensName].append({'T': currTemperature, 'val': currValue})
             # adding extra values to use for proportionate the ppm concentration and eventually R0
-            preprocessDataRH137_hyp[MQSensName + "_extras"] = extraRefProperties
+            calibExtraValues[MQSensName] = extraRefProperties
             continue
         # starting creation of the current sensor calib obj
         calibObj[rowCalib[rowHeader['MQSensor']]] = {}
         preprocessData[currPropSensor] = {'PropValue': currValue, 'T': currTemperature, 'RH': currHumidity }
+        # this is the object calculus
+        if(rowCalib[rowHeader['T']] != ''):
+            extraRefProperties['TRef'] = currTemperature
+        else: extraRefProperties['TRef'] = None
+        if(rowCalib[rowHeader['RH']] != ''):
+            extraRefProperties['RHRef'] = currHumidity
+        else: extraRefProperties['RHRef'] = None
         preprocessData[MQSensName + "_extras"] = extraRefProperties
 
     # STEP2: iterating the pre created calib obj (key = MQ Sensor)
@@ -268,14 +302,17 @@ def readCalibrationValues(csvCalibData):
         # creation of the hypothetical values in case of extremes
         calibObj[sensName]['RH0_hyp'] = createRHObj(sensName, preprocessDataRH0_hyp, 0)
         calibObj[sensName]['RH137_hyp'] = createRHObj(sensName, preprocessDataRH137_hyp, 137)
+        # assumption: the calibObj is the same for all the possible points on RH curve
+        calibObj[sensName]['calib_extras'] = calibExtraValues[sensName]
+        #print(calibObj[sensName]['calib_extras'])
 # getting the object of extra values 
 def getExtraRefValues(rowCalib, MQSensName):
     global rowHeader
     # returned value set 
     objRef = {}
-    ppmRef = 0
-    RH0Ref = 0
-    T0Ref = 0
+    ppmRef = None
+    RH0Ref = None
+    T0Ref = None
     comment = rowCalib[rowHeader['comment']]
     if(rowCalib[rowHeader['ppm_ref']] != ''):
         ppmRef = int(rowCalib[rowHeader['ppm_ref']])
@@ -284,8 +321,8 @@ def getExtraRefValues(rowCalib, MQSensName):
     if(rowCalib[rowHeader['T0_ref']] != ''):
         T0Ref = float(rowCalib[rowHeader['T0_ref']])
     objRef['ppmRef'] = ppmRef 
-    objRef['RH0Ref'] = RH0Ref
-    objRef['T0Ref'] = T0Ref
+    objRef['RHRef'] = RH0Ref
+    objRef['TRef'] = T0Ref
     objRef['comment'] = comment 
     # print(objRef)
     return objRef 
@@ -323,21 +360,20 @@ def createRHObj(sensorName, preprocessDataRH, RHVal):
     finalObjRH = CalibRL()
     finalObjRH.humidity = RHVal
     finalObjRH.RLVals = currRHObj
-    # appending extra information 
-    extraK = sensorName + "_extras"
-    if(extraK in preprocessDataRH):
-        finalObjRH.extrasInfo = preprocessDataRH[extraK]
     #print(finalObjRH.extrasInfo)
     return finalObjRH
 # obtaining corresponding ppm value for the voltage intensity read 
 def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
     global application_mode
+    global ppm_concentration_starts
     # getting corresponding value of RS given the intensity 
     RS = getCurrentRSFromIntensity(intensity)
     # CALIBRATION: have to calculate the R0 values to be used in an eventual analysis 
     if(application_mode == 'CALIB'):
         # getting the current value for the RL resistor depending on RH and T(K) factors
         currRL = getCurrRLVal(sensorName, temperature, humidity)
+        # proportionate curr RL on detected ppm
+        currRL = getResistanceProportionalToCurrPPM(sensorName, currRL)
         # getting the current value for R0 (using experimental RL) 
         currR0 = RS / currRL
         # in case first value this is the used value for the calculus
@@ -354,26 +390,31 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
         databaseServer.update_rzero_value(sensorId, R0_values[sensorName])
         # getting the ppm to display 
         ppmX = calculateCurrentPPM(RS, usedR0, sensorName)
-        
+        # updating the ppm curr value 
+        ppm_concentration_starts[sensorName] = ppmX
+
     # REAL ANALYSIS: using the already calibrated values of R0
     usedR0 = RZero_resistances[sensorName].resValue
     ppmX = calculateCurrentPPM(RS, usedR0, sensorName)
     return(ppmX)
 
 # calculation of the current PPM given the retrieved value of RL 
-def calculateCurrentPPM(RS, usedR0, sensorName):
+def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     global calibObj
     global ppm_debug_mode
     calculusObj = {}
     calculusObj['RS'] = RS
     calculusObj['usedR0'] = usedR0
     calculusObj['sensorName'] = sensorName
-    # STEP1: retrieving the values on curve for the current gas 
+    # STEP1: recalibration on basis of current temperature and RH 
+    calibObj[sensorName]['calc'].recalibRLPoints(currT, currRH)
+
+    # STEP2: retrieving the values on curve for the current gas 
     calculusObj['curvCoeff'] = calibObj[sensorName]['calc'].getCurveCoeff()
     calculusObj['ppm1Log'] = calibObj[sensorName]['calc'].logPPM1
     calculusObj['RL1Log'] = calibObj[sensorName]['calc'].logRL1
 
-    # STEP2: calculate the used RL value depending on the R0 choice 
+    # STEP3: calculate the used RL value depending on the R0 choice 
     calculusObj['usedRL'] = RS / usedR0
     calculusObj['logRL'] = math.log10(calculusObj['usedRL'])
 
@@ -402,6 +443,7 @@ def getCurrentRSFromIntensity(intensity):
     RS = (5 - v_0) * 1000 / v_0
     return RS
 # obtaining the current approximated value for RL
+# NB: this approximation is still on given ppm on curve 
 def getCurrRLVal(sensor, T, RH):
     global calibObj
     global RH60_sensors
@@ -443,4 +485,23 @@ def getCurrRLVal(sensor, T, RH):
         RLApprox = (RL33 + RL0Hyp) / 2
         return RLApprox
     
+def getResistanceProportionalToCurrPPM(sensor, resVal):
+    global ppm_concentration_starts
+    global calibObj
+    extraContentR0 = calibObj[sensor].calib_extras
+    # getting the values for the proportion 
+    actualPPM = ppm_concentration_starts[sensor]
+    refPPM = extraContentR0['ppmRef']
+    # pre requisites: both terms have to be values 
+    if(actualPPM == None):
+        return resVal
+    if(actualPPM == 0):
+        return resVal
+    if(refPPM == None):
+        return resVal
+    if(refPPM == 0):
+        return resVal
+    # proportionate the resistance 
+    resOnPPM = (resVal * actualPPM) / refPPM
+    return resOnPPM
 
