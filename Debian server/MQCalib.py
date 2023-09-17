@@ -10,6 +10,8 @@
 # reading calibration data from the calib file in the ref docs folder
 import csv
 import math 
+import os
+from datetime import datetime
 import databaseServer
 # classes for the calibration process 
 class RLVal():
@@ -135,6 +137,10 @@ ppm_debug_mode = False
 RZero_resistances = {}
 # object with the starting values of ppm concentrations for resistance calculus 
 ppm_concentration_starts = {}
+# written file for the calib collection values 
+csv_file_calculus = ''
+# file calculus header 
+csv_calculus_header = ['timestamp', 'Sensor', 'RS', 'R0', 'RL', 'curvCoeff', 'ppm1_log', 'RL1_log', 'RL_log', 'eq_1', 'eq_2', 'logPPMx', 'PPMx']
 # converting kelvin temperature
 def getKTemperature(currT):
     currK = currT + 273.15
@@ -149,8 +155,17 @@ def loadCalib(refCalibFilePath, app_mode, ppm_debug):
     global calibObj
     global RZero_resistances
     global ppm_debug_mode
+    global csv_file_calculus
+    global csv_calculus_header
     application_mode = app_mode
     ppm_debug_mode = ppm_debug
+    # initializing the file for the collection of calculus values 
+    print(ppm_debug)
+    if(ppm_debug):
+        csv_file_calculus = os.path.join("templates", "CalibCalculus.csv")
+        with open(csv_file_calculus, 'a', newline='') as csvCalculus:
+            writer = csv.writer(csvCalculus)
+            writer.writerow(csv_calculus_header)
     # CALIBRATION: have to load the values from the calibration sheet 
     if(app_mode == 'CALIB'):
         with open(refCalibFilePath, 'r') as f:
@@ -426,8 +441,10 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
 
     # STEP6: calculus of the PPM (log and then pow)
     logPPMx = calculusObj['eqFirstTerm'] - calculusObj['eqSecondTerm']
+    calculusObj['ppmLog'] = logPPMx
+    
     PPMx = pow(10, logPPMx)
-
+    calculusObj['ppm'] = PPMx
     # STEP7: eventual write of all the values 
     if(ppm_debug_mode): 
         writePPMDebugValues(calculusObj)
@@ -435,8 +452,29 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     return PPMx
 # printing the current value of the obj calculation on an additional excel
 def writePPMDebugValues(calculusObj):
-    print('implementation of the creation of the file')
-    # TODO: implementation of the object calculation 
+    global csv_file_calculus
+    # preparing array to write 
+    now = datetime.now()
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+    objCSV = [
+        date_time
+        , calculusObj['sensorName']
+        , calculusObj['RS']
+        , calculusObj['usedR0']
+        , calculusObj['usedRL']
+        , calculusObj['curvCoeff']
+        , calculusObj['ppm1Log']
+        , calculusObj['RL1Log']
+        , calculusObj['logRL']
+        , calculusObj['eqFirstTerm']
+        , calculusObj['eqSecondTerm']
+        , calculusObj['eqSecondTerm']
+        , calculusObj['ppmLog']
+        , calculusObj['ppm']
+    ]
+    with open(csv_file_calculus, 'a', newline='') as csvCalculus:
+            writer = csv.writer(csvCalculus)
+            writer.writerow(objCSV)
 # getting the corresponding voltage for the current read
 def getCurrentRSFromIntensity(intensity):
     v_0 = (float(intensity) * 5) / 1023
