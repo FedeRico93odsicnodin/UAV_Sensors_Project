@@ -439,11 +439,11 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     # STEP4: calculation of the first term equation
     calculusObj['eqFirstTerm'] = (1 / calculusObj['curvCoeff']) * (calculusObj['logRL'] - calculusObj['RL1Log'])
 
-    # STEP5: calculation of the second term equation 
-    calculusObj['eqSecondTerm'] =  - 1 * calculusObj['ppm1Log']
+    # STEP5: calculation of the second term equation # TODO: to understand
+    calculusObj['eqSecondTerm'] = calculusObj['ppm1Log'] * calculusObj['curvCoeff']
 
     # STEP6: calculus of the PPM (log and then pow)
-    logPPMx = calculusObj['eqFirstTerm'] - calculusObj['eqSecondTerm']
+    logPPMx = calculusObj['eqFirstTerm'] + calculusObj['eqSecondTerm']
     calculusObj['ppmLog'] = logPPMx
     
     PPMx = pow(10, logPPMx)
@@ -507,7 +507,7 @@ def getCurrRLVal(sensor, T, RH):
     # for the 0 approximation using RH = 1
     RL0Hyp = proportionateRLOnRH(RH, 1, valRH0Hyp.RLVal)
     valRH137Hyp = calibObj[sensor]['RH137_hyp'].getNearestValue(TK)
-    RL137Hyp = proportionateRLOnRH(RH, 137, valRH0Hyp.RLVal)
+    RL137Hyp = proportionateRLOnRH(RH, 137, valRH137Hyp.RLVal)
     # standard case: having a range for the RH value 
     if(sensor in RH60_sensors):
         if(RH >= 33 and RH <= 60 and RL60 != None):
