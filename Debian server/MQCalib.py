@@ -84,10 +84,10 @@ class CalcPPM():
             pointRL1 = self.RL2
             pointRL2 = self.RL1
         # calculating the logaritmic values 
-        self.logPPM1 = math.log10(pointPPM1)
-        self.logRL1 = math.log10(pointRL1)
-        logPPM2 = math.log10(pointPPM2)
-        logRL2 = math.log10(pointRL2)
+        self.logPPM1 = pointPPM1
+        self.logRL1 = pointRL1
+        logPPM2 = pointPPM2
+        logRL2 = pointRL2
         diffRL = logRL2 - self.logRL1
         diffPPM = logPPM2 - self.logPPM1
         finalCoeff = diffRL / diffPPM
@@ -434,7 +434,7 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
 
     # STEP3: calculate the used RL value depending on the R0 choice 
     calculusObj['usedRL'] = RS / usedR0
-    calculusObj['logRL'] = math.log10(calculusObj['usedRL'])
+    calculusObj['logRL'] = calculusObj['usedRL']
 
     # STEP4: calculation of the first term equation
     calculusObj['eqFirstTerm'] = (1 / calculusObj['curvCoeff']) * (calculusObj['logRL'] - calculusObj['RL1Log'])
@@ -445,8 +445,8 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     # STEP6: calculus of the PPM (log and then pow)
     logPPMx = calculusObj['eqFirstTerm'] + calculusObj['eqSecondTerm']
     calculusObj['ppmLog'] = logPPMx
-    
-    PPMx = pow(10, logPPMx)
+    # calculus not doing logarithm of the value 
+    PPMx = logPPMx
     calculusObj['ppm'] = PPMx
     # STEP7: eventual write of all the values 
     if(ppm_debug_mode): 

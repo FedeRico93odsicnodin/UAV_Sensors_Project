@@ -188,9 +188,9 @@ MQ2,RL_hyp,0.55,35,137,1000,65,20,hypothetical value for obtaining value > 65
 MQ2,RL_hyp,0.49,40,137,1000,65,20,hypothetical value for obtaining value > 65
 MQ2,RL_hyp,0.45,45,137,1000,65,20,hypothetical value for obtaining value > 65
 MQ2,RL_hyp,0.4,50,137,1000,65,20,hypothetical value for obtaining value > 65
-MQ4,ppm_med,1.5,,,,,initial concentration for the sensor 
-MQ7,ppm_med,10,,,,,initial concentration for the sensor 
-MQ5,ppm_med,200,,,,,initial concentration for the sensor 
-MQ3,ppm_med,300,,,,,initial concentration for the sensor 
-MQ135,ppm_med,10,,,,,initial concentration for the sensor 
-MQ2,ppm_med,100,,,,,initial concentration for the sensor 
+MQ4,ppm_med,1000,,,,,initial concentration for the sensor 
+MQ7,ppm_med,100,,,,,initial concentration for the sensor 
+MQ5,ppm_med,1000,,,,,initial concentration for the sensor 
+MQ3,ppm_med,1000,,,,,initial concentration for the sensor 
+MQ135,ppm_med,100,,,,,initial concentration for the sensor 
+MQ2,ppm_med,1000,,,,,initial concentration for the sensor 
