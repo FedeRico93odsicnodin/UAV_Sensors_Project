@@ -386,8 +386,8 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
     if(application_mode == 'CALIB'):
         # getting the current value for the RL resistor depending on RH and T(K) factors
         currRL = getCurrRLVal(sensorName, temperature, humidity)
-        # proportionate curr RL on detected ppm
-        currRL = getResistanceProportionalToCurrPPM(sensorName, currRL)
+        # proportionate curr RL on detected ppm - cutting for this approximation
+        # currRL = getResistanceProportionalToCurrPPM(sensorName, currRL)
         # getting the current value for R0 (using experimental RL) 
         currR0 = RS / currRL
         # in case first value this is the used value for the calculus
