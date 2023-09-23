@@ -65,24 +65,27 @@ class CalcPPM():
     def __init__(self):
         self.PPM1 = 0
         self.PPM2 = 0
+        # those are the fixed value of RL for the given values of ppm 
         self.RL1 = 0
         self.RL2 = 0
         # additional points for the final calculus PPM
         self.logPPM1 = 0
         self.logRL1 = 0
+        self.logRL2 = 0
         # eventual extra properties 
         self.extras = {}
     def getCurveCoeff(self):
         pointPPM1 = self.PPM1
         pointPPM2 = self.PPM2
-        pointRL1 = self.RL1
-        pointRL2 = self.RL2
+        # calibrated points 
+        pointRL1 = self.logRL1
+        pointRL2 = self.logRL2
         # following the curve definition
         if(self.PPM1 > self.PPM2):
             pointPPM1 = self.PPM2
             pointPPM2 = self.PPM1
-            pointRL1 = self.RL2
-            pointRL2 = self.RL1
+            pointRL1 = self.logRL2
+            pointRL2 = self.logRL1
         # calculating the logaritmic values 
         self.logPPM1 = pointPPM1
         self.logRL1 = pointRL1
@@ -99,11 +102,13 @@ class CalcPPM():
         if(self.extras['TRef'] != None):
             currTK = getKTemperature(currT)
             refTK = getKTemperature(self.extras['TRef'])
+            # calculation on fixed values at given RH and temperature
             RL1Tmp = (self.RL1 * currTK) / refTK
             RL2Tmp = (self.RL2 * currTK) / refTK
         # recalib on RH and eventually mediating the values 
         if(self.extras['RHRef'] != None):
             refRH = self.extras['RHRef']
+            # calculation on fixed values at given RH and temperature
             RL1RH = (self.RL1 * currRH) / refRH
             RL2RH = (self.RL2 * currRH) / refRH
             if(RL1Tmp != None):
@@ -114,8 +119,8 @@ class CalcPPM():
             else: RL2Tmp = RL2RH
         # recalibration if calculated values are not null
         if(RL1Tmp != None and RL2Tmp != None):
-            self.RL1 = RL1Tmp
-            self.RL2 = RL2Tmp
+            self.logRL1 = RL1Tmp
+            self.logRL2 = RL2Tmp
 
 # row of all the headers reference 
 rowHeader = {}
@@ -355,8 +360,14 @@ def createCalculationObj(sensorName, preprocessData):
         currCalcObj = CalcPPM()
         currCalcObj.PPM1 = float(preprocessData[ppm1Prop]['PropValue'])
         currCalcObj.PPM2 = float(preprocessData[ppm2Prop]['PropValue'])
+        # this is the fixed value at the given ppm for RL1
         currCalcObj.RL1 = float(preprocessData[RL1Prop]['PropValue'])
+        # logRL1: used for calculating the proportion wrt temperature and RH
+        currCalcObj.logRL1 = float(preprocessData[RL1Prop]['PropValue'])
+        # this is the fixed value at the given ppm for the RL2
         currCalcObj.RL2 = float(preprocessData[RL2Prop]['PropValue'])
+        # logRL2: used for calculating the proportion wrt temperature and RH
+        currCalcObj.logRL2 = float(preprocessData[RL2Prop]['PropValue'])
         extraK = sensorName + "_extras"
         if(extraK in preprocessData):
             currCalcObj.extras = preprocessData[extraK]
