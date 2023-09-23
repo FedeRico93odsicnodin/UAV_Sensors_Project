@@ -8,24 +8,25 @@ const int MQ3_Pin=3; // MQ-3 analog pin
 const int MQ135_Pin=4; // MQ-135 analog pin
 const int MQ2_Pin=5; // MQ-2 analog pin
 
-// resistance measurements: TODO: replace with a real value 
-const int MQ4_R0 = 945; // MQ4 resistance measurement 
+															
+													  
 
 // sensors outputs 
-int MQ7_Out; // MQ-7 analog output 
-int MQ5_Out; // MQ-5 analog output 
-int MQ3_Out; // MQ-3 analog output 
-int MQ135_Out; // MQ-135 analog output 
-int MQ2_Out; // MQ-2 analog output 
+float MQ4_Out;
+float MQ7_Out; // MQ-7 analog output 
+float MQ5_Out; // MQ-5 analog output 
+float MQ3_Out; // MQ-3 analog output 
+float MQ135_Out; // MQ-135 analog output 
+float MQ2_Out; // MQ-2 analog output 
 const char compile_date[] = __DATE__ " " __TIME__;
 
-float getMQ4MethanePPM() {
-  float MQ4_Out = analogRead(MQ4_Pin);  // raw reading from sensor 
-  float v_0 = MQ4_Out * 5 / 1023;       // convert reading to volts 
-  float R_S = (5-v_0) * 1000 / v_0;     // apply formula for getting RS
-  float MQ4_PPM = pow(R_S/MQ4_R0, -2.95)*1000; // apply formula for getting PPM
-  return MQ4_PPM;
-}
+						  
+																   
+																	
+																	   
+																			   
+				 
+ 
 
 // set up
 void setup() {
@@ -37,6 +38,7 @@ void setup() {
 // main LOOP
 void loop() {
   // read the analog sensors intensity from the different pins
+  MQ4_Out = analogRead(MQ4_Pin);
   MQ7_Out = analogRead(MQ7_Pin);
   MQ5_Out = analogRead(MQ5_Pin);
   MQ3_Out = analogRead(MQ3_Pin);
@@ -45,7 +47,7 @@ void loop() {
   String currLine = "Ms|";
   currLine += String(millis());
   currLine += "|0|CH4_MQ4_Description for MQ4|";
-  currLine += getMQ4MethanePPM();
+  currLine += MQ4_Out;
   currLine += "|1|CO_MQ7_Description for MQ7|";
   currLine += MQ7_Out;
   currLine += "|2|Gen_MQ5_Description for MQ5|";
