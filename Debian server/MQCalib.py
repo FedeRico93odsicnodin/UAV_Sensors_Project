@@ -439,8 +439,8 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     # STEP4: calculation of the first term equation
     calculusObj['eqFirstTerm'] = (1 / calculusObj['curvCoeff']) * (calculusObj['logRL'] - calculusObj['RL1Log'])
 
-    # STEP5: calculation of the second term equation # TODO: to understand
-    calculusObj['eqSecondTerm'] = calculusObj['ppm1Log'] * calculusObj['curvCoeff']
+    # STEP5: calculation of the second term equation: this is directly the ppm1
+    calculusObj['eqSecondTerm'] = calculusObj['ppm1Log']
 
     # STEP6: calculus of the PPM (log and then pow)
     logPPMx = calculusObj['eqFirstTerm'] + calculusObj['eqSecondTerm']
