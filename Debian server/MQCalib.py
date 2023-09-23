@@ -95,7 +95,7 @@ class CalcPPM():
         diffPPM = logPPM2 - self.logPPM1
         finalCoeff = diffRL / diffPPM
         return finalCoeff
-    def recalibRLPoints(self, currT, currRH):
+    def recalibRLPoints(self, currT, currRH, currPPM):
         # recalib on temperature
         RL1Tmp = None
         RL2Tmp = None
@@ -117,6 +117,17 @@ class CalcPPM():
             if(RL2Tmp != None):
                 RL2Tmp = (RL2Tmp + RL2RH) / 2
             else: RL2Tmp = RL2RH
+        if(self.extras['ppmRef'] != None):
+            refPPM = self.extras['ppmRef']
+            # calculation on fixed values at given ppm 
+            RL1ppm = (self.RL1 * currPPM) / refPPM
+            RL2ppm = (self.RL2 * currPPM) / refPPM
+            if(RL1Tmp != None):
+                RL1Tmp = (RL1Tmp + RL1ppm) / 2
+            else: RL1Tmp = RL1ppm
+            if(RL2ppm != None):
+                RL2ppm = (RL2ppm + RL2ppm) / 2
+            else: RL2Tmp = RL2ppm 
         # recalibration if calculated values are not null
         if(RL1Tmp != None and RL2Tmp != None):
             self.logRL1 = RL1Tmp
@@ -398,7 +409,7 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
         # getting the current value for the RL resistor depending on RH and T(K) factors
         currRL = getCurrRLVal(sensorName, temperature, humidity)
         # proportionate curr RL on detected ppm - cutting for this approximation
-        # currRL = getResistanceProportionalToCurrPPM(sensorName, currRL)
+        currRL = getResistanceProportionalToCurrPPM(sensorName, currRL)
         # getting the current value for R0 (using experimental RL) 
         currR0 = RS / currRL
         # in case first value this is the used value for the calculus
@@ -436,7 +447,7 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     calculusObj['usedR0'] = usedR0
     calculusObj['sensorName'] = sensorName
     # STEP1: recalibration on basis of current temperature and RH 
-    calibObj[sensorName]['calc'].recalibRLPoints(currT, currRH)
+    calibObj[sensorName]['calc'].recalibRLPoints(currT, currRH, calculusObj['currPPM'])
 
     # STEP2: retrieving the values on curve for the current gas 
     calculusObj['curvCoeff'] = calibObj[sensorName]['calc'].getCurveCoeff()
