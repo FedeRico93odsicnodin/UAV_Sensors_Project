@@ -428,11 +428,11 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
         ppmX = calculateCurrentPPM(RS, usedR0, sensorName, temperature, humidity)
         # updating the ppm curr value 
         ppm_concentration_starts[sensorName] = ppmX
-        return
+        return ppmX
     # REAL ANALYSIS: using the already calibrated values of R0
     usedR0 = RZero_resistances[sensorName].resValue
     ppmX = calculateCurrentPPM(RS, usedR0, sensorName, temperature, humidity)
-    return(ppmX)
+    return ppmX
 
 # calculation of the current PPM given the retrieved value of RL 
 def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
