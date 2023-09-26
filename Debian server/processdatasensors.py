@@ -304,7 +304,6 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
         sensorRefId = initSensorsData[csvContent['sensor']].id
         objCalib = getCurrentParamsForCalib(sensorDataRow)
         sensedValue = processSensorData(sensorRefId, csvContent, sensorDataRow[idxCsv], objCalib)
-        print(sensedValue)
         gasRefId = initGasesData[csvContent['gas']].id
         sessionRefId = currSession.id
         # obj creation 
@@ -385,7 +384,7 @@ def processSensorData(sensorId, sensorDefinition, sensorValue, calibObj):
             sensorDefinition['sensor'], 
             currT, 
             currRH)
-    return sensorValue
+    return sensedValue
     
 def updateR0Values():
     global initSensorsData
