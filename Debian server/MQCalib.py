@@ -409,7 +409,7 @@ def getPPMValue(intensity, sensorId, sensorName, temperature, humidity):
         # getting the current value for the RL resistor depending on RH and T(K) factors
         currRL = getCurrRLVal(sensorName, temperature, humidity)
         # proportionate curr RL on detected ppm - cutting for this approximation
-        currRL = getResistanceProportionalToCurrPPM(sensorName, currRL)
+        # currRL = getResistanceProportionalToCurrPPM(sensorName, currRL)
         # getting the current value for R0 (using experimental RL) 
         currR0 = RS / currRL
         # in case first value this is the used value for the calculus
@@ -461,8 +461,8 @@ def calculateCurrentPPM(RS, usedR0, sensorName, currT, currRH):
     # STEP4: calculation of the first term equation
     calculusObj['eqFirstTerm'] = (1 / calculusObj['curvCoeff']) * (calculusObj['logRL'] - calculusObj['RL1Log'])
 
-    # STEP5: calculation of the second term equation: this is directly the current ppm 
-    calculusObj['eqSecondTerm'] = calculusObj['currPPM']
+    # STEP5: calculation of the second term equation: this is directly the ppm1
+    calculusObj['eqSecondTerm'] = calculusObj['ppm1Log']
 
     # STEP6: calculus of the PPM (log and then pow)
     logPPMx = calculusObj['eqFirstTerm'] + calculusObj['eqSecondTerm']
