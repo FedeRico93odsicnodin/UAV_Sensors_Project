@@ -117,17 +117,17 @@ class CalcPPM():
             if(RL2Tmp != None):
                 RL2Tmp = (RL2Tmp + RL2RH) / 2
             else: RL2Tmp = RL2RH
-        if(self.extras['ppmRef'] != None):
-            refPPM = self.extras['ppmRef']
-            # calculation on fixed values at given ppm 
-            RL1ppm = (self.RL1 * currPPM) / refPPM
-            RL2ppm = (self.RL2 * currPPM) / refPPM
-            if(RL1Tmp != None):
-                RL1Tmp = (RL1Tmp + RL1ppm) / 2
-            else: RL1Tmp = RL1ppm
-            if(RL2ppm != None):
-                RL2ppm = (RL2ppm + RL2ppm) / 2
-            else: RL2Tmp = RL2ppm 
+        #if(self.extras['ppmRef'] != None):
+        #    refPPM = self.extras['ppmRef']
+        #    # calculation on fixed values at given ppm 
+        #    RL1ppm = (self.RL1 * currPPM) / refPPM
+        #    RL2ppm = (self.RL2 * currPPM) / refPPM
+        #    if(RL1Tmp != None):
+        #        RL1Tmp = (RL1Tmp + RL1ppm) / 2
+        #    else: RL1Tmp = RL1ppm
+        #    if(RL2ppm != None):
+        #        RL2ppm = (RL2ppm + RL2ppm) / 2
+        #    else: RL2Tmp = RL2ppm 
         # recalibration if calculated values are not null
         if(RL1Tmp != None and RL2Tmp != None):
             self.logRL1 = RL1Tmp
