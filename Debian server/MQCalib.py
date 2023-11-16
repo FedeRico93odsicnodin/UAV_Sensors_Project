@@ -195,7 +195,7 @@ def loadCalib(refCalibFilePath, app_mode, ppm_debug):
     checkResistanceObj = checkAllResistancePresence(currResistancesObj)
     if(checkResistanceObj):
         RZero_resistances = currResistancesObj
-    print(RZero_resistances)
+    #print(RZero_resistances)
     return checkResistanceObj
 
 def checkAllResistancePresence(objResistances):

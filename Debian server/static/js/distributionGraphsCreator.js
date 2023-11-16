@@ -359,6 +359,7 @@ function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationTyp
 // rendering the visualization for the current time interval 
 function renderVisualizationPointsOnGraph(canvasId, gasName, visualizedInterval, visualizedData) {
     // getting the ID for the canvas and applying the data 
+    console.log(canvasId);
     var canvGas = $("#" + canvasId).get(0).getContext("2d");
     var lineChart = new Chart(canvGas, {
         type: "line",
@@ -432,6 +433,7 @@ function getOverallCarouselContainerOfGas(htmlGas) {
 }
 // creating the main body of graphs for the specific session 
 function createBodyGraphsCurrSession(data, gasNameSessionId) {
+    console.log('gasSessionId ' + gasNameSessionId)
     // getting data for default visualization
     var dataDisplayMMM = getDataToDisplayMMM(data)
     var dataDisplayS = getDataToDisplaySS(data)
@@ -523,7 +525,15 @@ function loadDashboardData() {
                 var allDisplayedChartSessions = []
                 // init the html container for each of the data of the retrieved sessions 
                 for(var i in splittedDataSessions) {
+                    // eventual replace for the space strings 
+                    gasNameReplace = String(splittedDataSessions[i]['gasName']);
+                    gasIdReplace = String(splittedDataSessions[i]['gasId']);
+                    gasSessionReplace = String(splittedDataSessions[i]['sessionID']);
+                    splittedDataSessions[i]['gasName'] = gasNameReplace.replace(' ', '_');
+                    splittedDataSessions[i]['gasId'] = gasIdReplace.replace(' ', '_');
+                    splittedDataSessions[i]['sessionID'] = gasSessionReplace.replace(' ', '_');
                     gasNameSessionId = splittedDataSessions[i]['gasName'] + "_" + splittedDataSessions[i]['gasId'] + '_session' + splittedDataSessions[i]['sessionID']
+
                     // mapping the current session id 
                     insertNewSessionId(splittedDataSessions[i]['sessionID'])
                     gasNameSessionIds.push(gasNameSessionId)

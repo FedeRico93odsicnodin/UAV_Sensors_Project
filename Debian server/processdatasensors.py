@@ -41,7 +41,7 @@ def dataSensorsElaborateThread(serverDataObj):
         orderedFilesToProcess = []
         pendingCSVFiles = os.listdir(outputCSVFolder)
         if(len(pendingCSVFiles) == 0):
-            print('waiting for files')
+            #print('waiting for files')
             # verify if values to update for resistances R0
             updateR0Values()
             time.sleep(waitingProcessTime)
@@ -50,7 +50,7 @@ def dataSensorsElaborateThread(serverDataObj):
             orderedFilesToProcess = addFileRefToDictionary(fileCSV, currFileDate, orderedFilesToProcess)
         while(len(orderedFilesToProcess) > 0):
             fileName = orderedFilesToProcess[0]["fileName"]
-            print('processing file ' + fileName)
+            #print('processing file ' + fileName)
             filePath = os.path.join(outputCSVFolder, fileName)
             with open(filePath, 'r') as f:
                 csvdata = csv.reader(f)
@@ -66,7 +66,7 @@ def dataSensorsElaborateThread(serverDataObj):
                 initSensorsData = checkIfNewSensorsToAdd(csvheader, initSensorsData, initGasesData)
                 # prepare and store current data values
                 beginProcessSensorsData(csvdata, csvheader, sessionCol)
-                print('file sensors rows has been added to DB')
+                #print('file sensors rows has been added to DB')
             # deletion of file
             orderedFilesToProcess.remove(orderedFilesToProcess[0])
             os.remove(filePath)
@@ -80,7 +80,7 @@ def dataSnesorsElaborateThreadTEST(refCSVPath):
     with open(refCSVPath, 'r') as f:
         csvdata = csv.reader(f)
         # getting the first header definition on the first csv row 
-        print('\n')
+        #print('\n')
         csvheader = initGasesAndSensors(csvdata)
         print('STEP1: csv header parameter:')
         print(csvheader)
@@ -253,7 +253,7 @@ def checkSessionDB(sensorData, sessionCol):
         databaseServer.addNewSessionValue(currSessionName, currSessionDate)
         currSessionObj = databaseServer.getSensorCurrSession(currSessionName)
         insertSessionFilterAsSelected(currSessionObj)
-        print('session added')
+        #print('session added')
     currSession = currSessionObj
     return currSession
 
@@ -266,7 +266,7 @@ def insertSessionFilterAsSelected(currSessionObj):
     filterObjs = []
     filterObjs.append(filterObj)
     databaseServer.insertFilterOptions(filterObjs, False)
-    print("filter inserted")
+    #print("filter inserted")
 
 def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
     global initSensorsData
@@ -394,5 +394,5 @@ def updateR0Values():
         sensorId = initSensorsData[currSensor].id
         resVal = MQCalib.R0_values[currSensor]
         databaseServer.update_rzero_value(sensorId, resVal)
-    if(num > 0):
-        print('updated ' + str(num) + ' R0s values')
+    #if(num > 0):
+    #    print('updated ' + str(num) + ' R0s values')

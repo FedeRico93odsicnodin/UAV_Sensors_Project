@@ -101,7 +101,7 @@ def createDatabase(databaseLocation):
     cur.execute(create_r0resistors_table)
     con.close()
     DatabaseLocation = databaseLocation
-    print('DB LOCATION ' + DatabaseLocation)
+    #print('DB LOCATION ' + DatabaseLocation)
 
 def insertCompoundsData(compoundsData):
     with Lock():
@@ -218,7 +218,7 @@ def getAllSessions():
                 currSession.id = int(sessionRecord[0])
                 currSession.name = str(sessionRecord[1])
                 datetime1 = str(sessionRecord[2]) + ".000"
-                print(datetime1)
+                #print(datetime1)
                 currSession.begin_date = datetime.strptime(datetime1, '%Y-%m-%d %H:%M:%S.%f')
                 if(sessionRecord[3] != None):
                     datetime2 = str(sessionRecord[3]) + ".000"
@@ -227,7 +227,7 @@ def getAllSessions():
             con.close()
             return returnedSessions
         except:
-            print('session error')
+            #print('session error')
             con.close()
             return None
     return None
@@ -258,7 +258,7 @@ def getSensorCurrSession(sessionName):
             con.close()
             return currSession
         except:
-            print('error DB')
+            #print('error DB')
             con.close()
             return None
     return None
@@ -344,10 +344,12 @@ def getExistingFilters():
 # data selections based on filters 
 # checking if the gas is selected in filters 
 def checkFilterActivatedOnGas(gasName, gasId):
+     print('gasName: ' + str(gasName) + ' - gasId: ' + str(gasId))
      with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         check_gasfilter_query = "SELECT selected FROM options_data_filters WHERE filter_name = '" + gasName + "' AND filter_value = " + str(gasId) + " AND filter_context = 'Gases'"
+        print('QUERY CHECK: ' + check_gasfilter_query)
         cur = con.execute(check_gasfilter_query)
         gasRecord = cur.fetchone()
         try:
@@ -372,11 +374,9 @@ def checkFilterActivateOnSensor(gasName, gasId):
                 (SELECT sensors.name from sensors JOIN detected_substances
                 ON sensors.gas_detection_ref = detected_substances.id 
                 WHERE detected_substances.name = ? AND detected_substances.id = ?)
-                AND filter_value in (SELECT sensors.id from sensors JOIN detected_substances
-                ON sensors.gas_detection_ref = detected_substances.id 
-                WHERE detected_substances.name = ? AND detected_substances.id = ?)
                 """
-        cur = con.execute(check_sensorfilter_query, (gasName, gasId, gasName, gasId))
+        #print('EXECUTED QUERY FOR SENSORS:\n\n' + str(check_sensorfilter_query))
+        cur = con.execute(check_sensorfilter_query, (gasName, gasId))
         gasRecord = cur.fetchone()
         try:
             if(gasRecord[0] == 1):
@@ -451,7 +451,9 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
         for filterRecord in dataRecords:
             currDataObj = {}
             currDataObj['date'] = filterRecord[0]
-            currDataObj['value'] = float(filterRecord[1])
+            if(filterRecord[1] != ''):
+                currDataObj['value'] = float(filterRecord[1])
+            else: currDataObj['value'] = 0
             currDataObj['session'] = str(filterRecord[2])
             currDataObj['sessionID'] = int(filterRecord[3])
             returnedData.append(currDataObj)

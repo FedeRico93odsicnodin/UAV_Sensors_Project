@@ -34,7 +34,7 @@ def initServer():
     mqCalibPath = os.path.join(currDir, serverDataObj.getRefDocsFolder(), "MQCalib.csv")
     calibLoaded = MQCalib.loadCalib(mqCalibPath, app_mode, debug_ppm)
     if(calibLoaded == False):
-        print("no data has been loaded for the calibration, select CALIB as configuration for load those data")
+        #print("no data has been loaded for the calibration, select CALIB as configuration for load those data")
         return
     # start thread for monitoring incoming uploads 
     uploadDetectionProcess = Process(target=processdatasensors.dataSensorsElaborateThread, args=(serverDataObj, ))
@@ -54,7 +54,7 @@ def endpoint():
     input_json = request.get_json(force=True) 
     # force=True, above, is necessary if another developer 
     # forgot to set the MIME type to 'application/json'
-    print('data from client:', input_json)
+    #print('data from client:', input_json)
     dictToReturn = {'answer':42}
     return jsonify(dictToReturn)
 
@@ -63,11 +63,11 @@ def endpoint():
 def upload_file():
    global fileUploadPath
    if request.method == 'POST':
-      print('begin')
+      #print('begin')
       f = request.files['upload']
       fileFinalPath = os.path.join(fileUploadPath, f.filename)
       f.save(fileFinalPath)
-      print('file ' + f.name + 'has been uploaded successfully')
+      #print('file ' + f.name + 'has been uploaded successfully')
       return 'file uploaded successfully'
 
 # filters selections
@@ -114,7 +114,7 @@ def get_all_stored_filters():
             filtersToInsert.append(filtersJSON[f])
         databaseServer.insertFilterOptions(filtersToInsert)
         return json.dumps({'status': 'ok'})
-    print("GETTING FILTERS PHASE")
+    #print("GETTING FILTERS PHASE")
     allFilters = databaseServer.getExistingFilters()
     objFilters = {}
     for f in allFilters:
@@ -124,7 +124,7 @@ def get_all_stored_filters():
             continue
         objFilters[allFilters[f].filter_name] = allFilters[f].filterObj()
     res = json.dumps(objFilters)
-    print(res)
+    #print(res)
     return res
 
 @app.route('/gasdata', methods=['POST'])
@@ -135,10 +135,12 @@ def get_gasdata_selected():
     # verifying the selection as filter for the current substance 
     gasActivation = databaseServer.checkFilterActivatedOnGas(gasName, gasId)
     if(gasActivation == False):
+        print('the gas is not activated')
         return json.dumps({'status': gasName + ': gas not activated'})
     # verifying the activation of the respective sensor 
     sensorActivation = databaseServer.checkFilterActivateOnSensor(gasName, gasId)
     if(sensorActivation == False):
+       print('sensor is marked as not activated ' + str(gasName))
        return json.dumps({'status': gasName + ': sensor not activated'})
     # verifying presence of date filters 
     activeDateFilters = databaseServer.getActiveDataFilters()
@@ -167,13 +169,13 @@ def get_gasdata_selected_reload():
     # getting the data for the current gas TODO: implement date filters selection
     currGasData = databaseServer.getAllDataSensorsToDisplayReload(gasId, upTime)
     finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
-    print(len(finalResult['gasData']))
+    #print(len(finalResult['gasData']))
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 
 @app.route('/download_file', methods=['GET'])
 def download_data_file():
-    print('trying to download file data')
+    #print('trying to download file data')
     downloadModule.createXLSXFile("templates")
     return send_from_directory("templates", "SensorsData.xlsx"
     , as_attachment=True)
