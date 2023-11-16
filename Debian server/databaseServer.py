@@ -23,7 +23,7 @@ def createDatabase(databaseLocation):
     
     con = sqlite3.connect(databaseLocation)
     # tables of detected substances in the air 
-    sqlite_detectedsubstances_table = """
+    create_gases_table = """
         CREATE TABLE
         detected_substances(
         id integer PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +31,7 @@ def createDatabase(databaseLocation):
         )
 """
     # tables of all the sessions of detection done by the UAV
-    sqlite_sessions_table = """
+    create_sessions_table = """
         CREATE TABLE 
         sessions(
         id integer PRIMARY KEY AUTOINCREMENT,
@@ -41,7 +41,7 @@ def createDatabase(databaseLocation):
         )
 """
     # tables of the sensors used for the analysis
-    sqlite_sensors_table = """
+    create_sensors_table = """
         CREATE TABLE
         sensors(
         id integer PRIMARY KEY AUTOINCREMENT,
@@ -52,7 +52,7 @@ def createDatabase(databaseLocation):
         )
 """
     # all the rows which identifies the data coming from the sensors 
-    sqllite_sensorsdata_table = """
+    create_data_table = """
         CREATE TABLE 
         processed_sensors_data(
             id integer PRIMARY KEY AUTOINCREMENT, 
@@ -67,7 +67,7 @@ def createDatabase(databaseLocation):
             )
             """
     # creation of options table 
-    sqllite_optionsfilters_table = """
+    create_filters_table = """
     CREATE TABLE
     options_data_filters(
     id integer PRIMARY KEY AUTOINCREMENT,
@@ -78,7 +78,7 @@ def createDatabase(databaseLocation):
     )
 """
     # creation of the RL persistance table 
-    sqlite_r0resistors_table = """
+    create_r0resistors_table = """
     CREATE TABLE 
     rzero_resistors(
     id integer PRIMARY KEY AUTOINCREMENT,
@@ -88,17 +88,17 @@ def createDatabase(databaseLocation):
     )
 """
     cur = con.cursor()
-    cur.execute(sqlite_detectedsubstances_table)
+    cur.execute(create_gases_table)
     time.sleep(0.1)
-    cur.execute(sqlite_sessions_table)
+    cur.execute(create_sessions_table)
     time.sleep(0.1)
-    cur.execute(sqlite_sensors_table)
+    cur.execute(create_sensors_table)
     time.sleep(0.1)
-    cur.execute(sqllite_sensorsdata_table)
+    cur.execute(create_data_table)
     time.sleep(0.1)
-    cur.execute(sqllite_optionsfilters_table)
+    cur.execute(create_filters_table)
     time.sleep(0.1)
-    cur.execute(sqlite_r0resistors_table)
+    cur.execute(create_r0resistors_table)
     con.close()
     DatabaseLocation = databaseLocation
     print('DB LOCATION ' + DatabaseLocation)
@@ -108,8 +108,8 @@ def insertCompoundsData(compoundsData):
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         cur = con.cursor()
-        sqllite_insertcompounds_statement = "INSERT INTO detected_substances (id, name) VALUES (?, ?);"
-        cur.executemany(sqllite_insertcompounds_statement, compoundsData)
+        insert_compounds_query = "INSERT INTO detected_substances (id, name) VALUES (?, ?);"
+        cur.executemany(insert_compounds_query, compoundsData)
         con.commit()
         con.close()
 
@@ -118,9 +118,9 @@ def insertSensorsData(sensorsData):
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         cur = con.cursor()
-        sqllite_insertcompounds_statement = """INSERT INTO sensors 
+        insert_sensors_query = """INSERT INTO sensors 
         (id, name, description, gas_detection_ref) VALUES (?, ?, ?, ?);"""
-        cur.executemany(sqllite_insertcompounds_statement, sensorsData)
+        cur.executemany(insert_sensors_query, sensorsData)
         con.commit()
         con.close()
 
@@ -129,9 +129,9 @@ def addNewSessionValue(sessionName, sessionBeginDate):
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         cur = con.cursor()
-        sqllite_insertsession_statement = """INSERT INTO sessions
+        insert_sessions_query = """INSERT INTO sessions
         (id, name, begin_date, end_date) VALUES (?, ?, ?, ?)"""
-        cur.execute(sqllite_insertsession_statement, (None, sessionName, sessionBeginDate, None))
+        cur.execute(insert_sessions_query, (None, sessionName, sessionBeginDate, None))
         con.commit()
         con.close()
 
@@ -140,7 +140,7 @@ def insertDataSensor(dataSensedList):
         global DatabaseLocation 
         con = sqlite3.connect(DatabaseLocation)
         cur = con.cursor()
-        sqllite_insertdata_statement = """INSERT INTO processed_sensors_data 
+        insert_data_query = """INSERT INTO processed_sensors_data 
         (id, 
         date, 
         detected_substance_ref, 
@@ -150,7 +150,7 @@ def insertDataSensor(dataSensedList):
         dataToInsert = []
         for sensedData in dataSensedList:
             dataToInsert.append((None, sensedData.date, sensedData.detected_substance_id, sensedData.detected_substance_val, sensedData.sensor_id, sensedData.session_ref))
-        cur.executemany(sqllite_insertdata_statement, dataToInsert)
+        cur.executemany(insert_data_query, dataToInsert)
         con.commit()
         con.close()
 
@@ -160,8 +160,8 @@ def getCompoundsDefinitions():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqllite_selectcompounds_statement = "SELECT id, name FROM detected_substances"
-        cur = con.execute(sqllite_selectcompounds_statement)
+        sel_gases_query = "SELECT id, name FROM detected_substances"
+        cur = con.execute(sel_gases_query)
         returnedCompounds = {}
         
         compoundsRecords = cur.fetchall()
@@ -177,7 +177,7 @@ def getSensorsDefinitions():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqllite_selectsession_statement = """
+        sel_sensors_query = """
         SELECT 
             id,
             name,
@@ -185,7 +185,7 @@ def getSensorsDefinitions():
             gas_detection_ref
             FROM sensors
     """
-        cur = con.execute(sqllite_selectsession_statement)
+        cur = con.execute(sel_sensors_query)
         returnedSensors = {}
         
         sensorsRecords = cur.fetchall()
@@ -203,13 +203,13 @@ def getAllSessions():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqllite_selectallsessions_statement = """SELECT 
+        sel_sessions_query = """SELECT 
         id, 
         name, 
         begin_date,
         end_date
         FROM sessions"""
-        cur = con.execute(sqllite_selectallsessions_statement)
+        cur = con.execute(sel_sessions_query)
         returnedSessions = {}
         allSessions = cur.fetchall()
         try:
@@ -237,14 +237,14 @@ def getSensorCurrSession(sessionName):
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqllite_selectcompounds_statement = """SELECT 
+        sel_curr_session_query = """SELECT 
         id, 
         name, 
         begin_date,
         end_date
         FROM sessions
         WHERE name = """ + "'" + sessionName + "'"
-        cur = con.execute(sqllite_selectcompounds_statement)
+        cur = con.execute(sel_curr_session_query)
         sessionRecord = cur.fetchone()
         try:
             currSession = dbmodels.SessionObj()
@@ -267,13 +267,13 @@ def getRangeDate():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_daterange_statement = """
+        sel_daterange_query = """
         select min(date) from processed_sensors_data dateSelector
         union 
         select max(date) from processed_sensors_data dateSelector
         """
         try:
-            cur = con.execute(sqlite_daterange_statement)
+            cur = con.execute(sel_daterange_query)
             daterange = {}
             minMaxDates = cur.fetchall()
             daterange["minDate"] = minMaxDates[0]
@@ -289,16 +289,16 @@ def insertFilterOptions(selectedFilters, delete = True):
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_del_oldfilters_statement = """DELETE FROM options_data_filters
+        del_filters_query = """DELETE FROM options_data_filters
         """
         # deletion of old values for the filters 
         cur = con.cursor()
         if(delete == True):
-            cur.execute(sqlite_del_oldfilters_statement)
+            cur.execute(del_filters_query)
             time.sleep(0.1)
         
         # creation of the new filters 
-        sqllite_insertdata_statement = """INSERT INTO options_data_filters 
+        insert_filters_query = """INSERT INTO options_data_filters 
         (id, 
         selected, 
         filter_context, 
@@ -307,7 +307,7 @@ def insertFilterOptions(selectedFilters, delete = True):
         dataToInsert = []
         for filterOption in selectedFilters:
             dataToInsert.append((None, int(filterOption["selected"]), str(filterOption["filter_context"]), str(filterOption["filter_name"]), str(filterOption["filter_value"])))
-        cur.executemany(sqllite_insertdata_statement, dataToInsert)
+        cur.executemany(insert_filters_query, dataToInsert)
         con.commit()
         con.close()
 
@@ -315,14 +315,14 @@ def getExistingFilters():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqllite_selectallsessions_statement = """SELECT 
+        sel_filters_query = """SELECT 
         id, 
         selected, 
         filter_context,
         filter_name,
         filter_value
         FROM options_data_filters"""
-        cur = con.execute(sqllite_selectallsessions_statement)
+        cur = con.execute(sel_filters_query)
         returnedFilters = {}
         allFilters = cur.fetchall()
         try:
@@ -347,8 +347,8 @@ def checkFilterActivatedOnGas(gasName, gasId):
      with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_activefilter_statement = "SELECT selected FROM options_data_filters WHERE filter_name = '" + gasName + "' AND filter_value = " + str(gasId) + " AND filter_context = 'Gases'"
-        cur = con.execute(sqlite_activefilter_statement)
+        check_gasfilter_query = "SELECT selected FROM options_data_filters WHERE filter_name = '" + gasName + "' AND filter_value = " + str(gasId) + " AND filter_context = 'Gases'"
+        cur = con.execute(check_gasfilter_query)
         gasRecord = cur.fetchone()
         try:
             if(gasRecord[0] == 1):
@@ -366,7 +366,7 @@ def checkFilterActivateOnSensor(gasName, gasId):
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_activefilter_statement = """
+        check_sensorfilter_query = """
                 SELECT selected from options_data_filters
                 WHERE filter_name IN
                 (SELECT sensors.name from sensors JOIN detected_substances
@@ -376,7 +376,7 @@ def checkFilterActivateOnSensor(gasName, gasId):
                 ON sensors.gas_detection_ref = detected_substances.id 
                 WHERE detected_substances.name = ? AND detected_substances.id = ?)
                 """
-        cur = con.execute(sqlite_activefilter_statement, (gasName, gasId, gasName, gasId))
+        cur = con.execute(check_sensorfilter_query, (gasName, gasId, gasName, gasId))
         gasRecord = cur.fetchone()
         try:
             if(gasRecord[0] == 1):
@@ -394,12 +394,12 @@ def getActiveDataFilters():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_activefilter_statement = """
+        sel_active_data_filter_query = """
         SELECT id, selected, filter_context, filter_name, filter_value FROM options_data_filters
         WHERE filter_context = 'Date' and selected = 1
 """
         returnedFilters = {}
-        cur = con.execute(sqlite_activefilter_statement)
+        cur = con.execute(sel_active_data_filter_query)
         dateRecords = cur.fetchall()
         try:
             for filterRecord in dateRecords:
@@ -422,7 +422,7 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_dataselection_statement = """
+        sel_data_query = """
         SELECT 
         processed_sensors_data.date
         ,processed_sensors_data.detected_substance_value
@@ -437,15 +437,15 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
 """
         # modification of the query for the selected data case TODO: implementation 
         if(dateSelectionType == 'This week'):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
         if(dateSelectionType == 'This month'):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
         if(dateSelectionType == 'Today'):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
         if(dateSelectionType == 'Custom' and dateRangeMin != None and dateRangeMax != None):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
         if(dateSelectionType == 'None'):
-            cur = con.execute(sqlite_dataselection_statement, (gasId,))
+            cur = con.execute(sel_data_query, (gasId,))
         returnedData = []
         dataRecords = cur.fetchall()
         for filterRecord in dataRecords:
@@ -468,7 +468,7 @@ def getAllDataSensorsToDisplayReload(
     with Lock():
          global DatabaseLocation
          con = sqlite3.connect(DatabaseLocation)
-         sqlite_dataselection_statement = """
+         sel_data_query = """
             SELECT 
             processed_sensors_data.date
             ,processed_sensors_data.detected_substance_value
@@ -484,15 +484,15 @@ def getAllDataSensorsToDisplayReload(
     """
          # modification of the query for the selected data case TODO: implementation 
          if(dateSelectionType == 'This week'):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
          if(dateSelectionType == 'This month'):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
          if(dateSelectionType == 'Today'):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
          if(dateSelectionType == 'Custom' and dateRangeMin != None and dateRangeMax != None):
-            sqlite_dataselection_statement = 'to implement'
+            sel_data_query = 'to implement'
          if(dateSelectionType == 'None'):
-            cur = con.execute(sqlite_dataselection_statement, (gasId,dateUpLimit))
+            cur = con.execute(sel_data_query, (gasId,dateUpLimit))
          returnedData = []
          dataRecords = cur.fetchall()
          for filterRecord in dataRecords:
@@ -510,7 +510,7 @@ def getDataSensorsToDownload():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         # v1: selection of all the available data 
-        sqlite_dataselection_statement = """
+        sel_data_download_query = """
         SELECT 
         processed_sensors_data.date
 		, detected_substances.name
@@ -526,7 +526,7 @@ def getDataSensorsToDownload():
         filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
         ORDER BY processed_sensors_data.date,sessions.id
 """
-        cur = con.execute(sqlite_dataselection_statement)
+        cur = con.execute(sel_data_download_query)
         dataRecords = cur.fetchall()
         returnedData = []
         for filterRecord in dataRecords:
@@ -575,7 +575,7 @@ def get_rzero_values():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_sel_resistances = """
+        sel_resistance_query = """
             SELECT 
             rzero_resistors.id, 
             rzero_resistors.sensor_ref, 
@@ -583,7 +583,7 @@ def get_rzero_values():
             rzero_resistors.rzero_value 
             FROM rzero_resistors JOIN sensors ON rzero_resistors.sensor_ref = sensors.id 
 """
-        cur = con.execute(sqlite_sel_resistances)
+        cur = con.execute(sel_resistance_query)
         resistanceRecords = cur.fetchall()
         allRZeroObjects = {}
         for resRecord in resistanceRecords:
