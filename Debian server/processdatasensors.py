@@ -56,6 +56,7 @@ def dataSensorsElaborateThread(serverDataObj):
                 csvdata = csv.reader(f)
                 # getting the first header definition on the first csv row 
                 csvheader = initGasesAndSensors(csvdata)
+                print(csvheader)
                 # getting the SCD columns params for calibration
                 scdParams = initSCDParametersCalibration(csvheader)
                 # getting the session header column index 
@@ -144,7 +145,7 @@ def initGasesAndSensors(rowHeader):
                 colHeaderParts = colHeader.split('|')
                 tsValue = {
                     "gas": "TS",
-                    "sensor" : colHeaderParts[1],
+                    "sensor" : str(colHeaderParts[1]).replace(' ', 'e'),
                     "sensorDescr" : "nd"
                 }
                 retrievedStartInfo.append(tsValue)
@@ -154,15 +155,15 @@ def initGasesAndSensors(rowHeader):
             if(len(colHeaderParts) != 3):
                 otherVal = {
                     "gas": "other",
-                    "sensor" : colHeader,
+                    "sensor" : str(colHeader).replace(' ', 'e'),
                     "sensorDescr" : "nd"
                 }
                 retrievedStartInfo.append(otherVal)
                 continue
             
             currColValues = {
-                "gas": colHeaderParts[0]
-                , "sensor": colHeaderParts[1]
+                "gas": str(colHeaderParts[0]).replace(' ', 'e')
+                , "sensor": str(colHeaderParts[1]).replace(' ', 'e')
                 , "sensorDescr": colHeaderParts[2]}
             retrievedStartInfo.append(currColValues)
         break
@@ -203,10 +204,12 @@ def checkIfNewGasesToAdd(rowHeader, prevStoredGases):
             continue
         if sensorHeaderCol['gas'] == 'timestamp' or sensorHeaderCol['gas'] == 'other':
             continue
-        allNewCompoundsInCSV.append((None, sensorHeaderCol['gas']))
+        allNewCompoundsInCSV.append((None, str(sensorHeaderCol['gas']).replace(' ', '_')))
     if(len(allNewCompoundsInCSV) > 0):
         databaseServer.insertCompoundsData(allNewCompoundsInCSV)
         prevStoredGases = databaseServer.getCompoundsDefinitions()
+        print(prevStoredGases)
+
     return prevStoredGases
 
 def checkIfNewSensorsToAdd(rowHeader, prevStoredSensors, checkedStoredGases):
@@ -221,8 +224,9 @@ def checkIfNewSensorsToAdd(rowHeader, prevStoredSensors, checkedStoredGases):
         # getting the information to persist for current row
         sensorName = sensorHeaderCol['sensor']
         sensorDescription = sensorHeaderCol['sensorDescr']
+        print(sensorHeaderCol['gas'])
         refGasID = checkedStoredGases[sensorHeaderCol['gas']].id
-        allNewSensorsInCSV.append((None, sensorName, sensorDescription, refGasID))
+        allNewSensorsInCSV.append((None, str(sensorName).replace(' ', 'e'), sensorDescription, refGasID))
     if(len(allNewSensorsInCSV) > 0):
         databaseServer.insertSensorsData(allNewSensorsInCSV)
         prevStoredSensors = databaseServer.getSensorsDefinitions()
@@ -299,6 +303,9 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
             raspberryTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
             idxCsv = idxCsv + 1
             continue
+        if csvContent['gas'] == 'SCDetime':
+            idxCsv = idxCsv + 1
+            continue
         # sensed value 
         # getting the values of T and RH of current row for calib
         sensorRefId = initSensorsData[csvContent['sensor']].id
@@ -367,6 +374,8 @@ def processSensorData(sensorId, sensorDefinition, sensorValue, calibObj):
     # application mode: for the eventual calibration of MQ sensor and the current phase
     global application_mode
     sensedValue = 0
+    print(sensorDefinition)
+    print(sensorValue)
     if(sensorValue != ''):
         sensedValue = float(sensorValue)
     currT = calibObj['TVal']

@@ -529,9 +529,9 @@ function loadDashboardData() {
                     gasNameReplace = String(splittedDataSessions[i]['gasName']);
                     gasIdReplace = String(splittedDataSessions[i]['gasId']);
                     gasSessionReplace = String(splittedDataSessions[i]['sessionID']);
-                    splittedDataSessions[i]['gasName'] = gasNameReplace.replace(' ', '_');
-                    splittedDataSessions[i]['gasId'] = gasIdReplace.replace(' ', '_');
-                    splittedDataSessions[i]['sessionID'] = gasSessionReplace.replace(' ', '_');
+                    splittedDataSessions[i]['gasName'] = gasNameReplace.replace(' ', 'e');
+                    splittedDataSessions[i]['gasId'] = gasIdReplace.replace(' ', 'e');
+                    splittedDataSessions[i]['sessionID'] = gasSessionReplace.replace(' ', 'e');
                     gasNameSessionId = splittedDataSessions[i]['gasName'] + "_" + splittedDataSessions[i]['gasId'] + '_session' + splittedDataSessions[i]['sessionID']
 
                     // mapping the current session id 

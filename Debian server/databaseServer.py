@@ -149,7 +149,13 @@ def insertDataSensor(dataSensedList):
         session_ref) VALUES (?, ?, ?, ?, ?, ?);"""
         dataToInsert = []
         for sensedData in dataSensedList:
-            dataToInsert.append((None, sensedData.date, sensedData.detected_substance_id, sensedData.detected_substance_val, sensedData.sensor_id, sensedData.session_ref))
+            dataToInsert.append((
+                None, 
+                sensedData.date, 
+                sensedData.detected_substance_id, 
+                sensedData.detected_substance_val, 
+                sensedData.sensor_id, 
+                sensedData.session_ref))
         cur.executemany(insert_data_query, dataToInsert)
         con.commit()
         con.close()
@@ -306,7 +312,12 @@ def insertFilterOptions(selectedFilters, delete = True):
         filter_value) VALUES (?, ?, ?, ?, ?);"""
         dataToInsert = []
         for filterOption in selectedFilters:
-            dataToInsert.append((None, int(filterOption["selected"]), str(filterOption["filter_context"]), str(filterOption["filter_name"]), str(filterOption["filter_value"])))
+            dataToInsert.append((
+                None, 
+                int(filterOption["selected"]), 
+                str(filterOption["filter_context"]), 
+                str(filterOption["filter_name"]).replace(' ', 'e'), 
+                str(filterOption["filter_value"])))
         cur.executemany(insert_filters_query, dataToInsert)
         con.commit()
         con.close()
@@ -344,6 +355,7 @@ def getExistingFilters():
 # data selections based on filters 
 # checking if the gas is selected in filters 
 def checkFilterActivatedOnGas(gasName, gasId):
+     gasName = str(gasName).replace(' ', 'e')
      print('gasName: ' + str(gasName) + ' - gasId: ' + str(gasId))
      with Lock():
         global DatabaseLocation
@@ -376,7 +388,7 @@ def checkFilterActivateOnSensor(gasName, gasId):
                 WHERE detected_substances.name = ? AND detected_substances.id = ?)
                 """
         #print('EXECUTED QUERY FOR SENSORS:\n\n' + str(check_sensorfilter_query))
-        cur = con.execute(check_sensorfilter_query, (gasName, gasId))
+        cur = con.execute(check_sensorfilter_query, (str(gasName).replace(' ', 'e'), gasId))
         gasRecord = cur.fetchone()
         try:
             if(gasRecord[0] == 1):
