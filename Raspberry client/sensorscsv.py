@@ -8,6 +8,11 @@ from datetime import datetime
 from csv import writer
 import os
 ########### HEADER CREATION ############
+
+# the set of the last useful information for the Arduino board and the various MQs
+# (still string form)
+arduinoUsefulLastReadInfo = ['0', '0', '0', '0', '0', '0', '0', '0']
+
 # Creating the column header for the CSV file of analysis
 def createSensorsHeader(sensorsRawLine):
     csvHeader = []
@@ -59,21 +64,89 @@ def processMQSensorsLineContent(sensorsRawLine):
     sensorsContentLine = []
     for indCol, content in enumerate(sensorsLineParts):
         if(indCol == 1):
-            sensorsContentLine.append(content)
+            sensorsContentLine.append(str(content))
             sensorsContentLine.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
+        # 2 pos in the array of final values
         if(indCol == 4):
-            sensorsContentLine.append(content)
+            sensorsContentLine.append(str(content)) 
+        # 3 pos in the array of final values 
         if(indCol == 7):
-            sensorsContentLine.append(content)
+            sensorsContentLine.append(str(content))
+        # 4 pos in the array of final values
         if(indCol == 10):
-            sensorsContentLine.append(content)
+            sensorsContentLine.append(str(content))
+        # 5 pos in the array of final values 
         if(indCol == 13):
-            sensorsContentLine.append(content)
+            sensorsContentLine.append(str(content))
+        # 6 pos in the array of final values 
         if(indCol == 16):
-            sensorsContentLine.append(content)
+            sensorsContentLine.append(str(content))
+        # 7 pos in the array of final values 
         if(indCol == 19):
-            sensorsContentLine.append(content)
+            sensorsContentLine.append(str(content))
     return sensorsContentLine
+
+# checking the congruency of the Arduino conveted information and eventual substitution 
+# with the last useful value found for the sensor 
+# if no value was registered before, then the 0 value will be replaced 
+def checkArduinoValuesCoherence(sensorsArrayLine):
+    # array of the last useful collected information 
+    global arduinoUsefulLastReadInfo
+    # checking the value for the CH4
+    try:
+        float(sensorsArrayLine[2])
+        # replacing the last useful value 
+        arduinoUsefulLastReadInfo[2] = sensorsArrayLine[2]
+    except:
+        # substuting with the value of the last meaningful read 
+        sensorsArrayLine[2] = arduinoUsefulLastReadInfo[2]
+    
+    # checking the value for the CO
+    try:
+        float(sensorsArrayLine[3])
+        # replacing the last useful value 
+        arduinoUsefulLastReadInfo[3] = sensorsArrayLine[3]
+    except:
+        # substuting with the value of the last meaningful read 
+        sensorsArrayLine[3] = arduinoUsefulLastReadInfo[3]
+    
+    # checking the value for the Gen
+    try:
+        float(sensorsArrayLine[4])
+        # replacing the last useful value 
+        arduinoUsefulLastReadInfo[4] = sensorsArrayLine[4]
+    except:
+        # substuting with the value of the last meaningful read 
+        sensorsArrayLine[4] = arduinoUsefulLastReadInfo[4]
+
+    # checking the value for the Alcohol
+    try:
+        float(sensorsArrayLine[5])
+        # replacing the last useful value 
+        arduinoUsefulLastReadInfo[5] = sensorsArrayLine[5]
+    except:
+        # substuting with the value of the last meaningful read 
+        sensorsArrayLine[5] = arduinoUsefulLastReadInfo[5]
+
+    # checking the value for the NH3
+    try:
+        float(sensorsArrayLine[6])
+        # replacing the last useful value 
+        arduinoUsefulLastReadInfo[6] = sensorsArrayLine[6]
+    except:
+        # substuting with the value of the last meaningful read 
+        sensorsArrayLine[6] = arduinoUsefulLastReadInfo[6]
+
+    # checking the value for the Comb
+    try:
+        float(sensorsArrayLine[7])
+        # replacing the last useful value 
+        arduinoUsefulLastReadInfo[7] = sensorsArrayLine[7]
+    except:
+        # substuting with the value of the last meaningful read 
+        sensorsArrayLine[7] = arduinoUsefulLastReadInfo[7]
+    return sensorsArrayLine
+
 
 def appendExtraContentToSensorLine(csvContent, csvExtraContent):
     for contentLine in csvExtraContent:

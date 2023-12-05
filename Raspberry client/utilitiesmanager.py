@@ -4,6 +4,7 @@
 
 # standard modules 
 from datetime import timedelta
+from datetime import datetime
 
 # utilities functions for overall procedure 
 # split of the received Arduino line according 
@@ -29,8 +30,10 @@ def tryParseMillis(value):
 # of the current running system
 def replaceWithActualDate(sensorsRawLine, startingDate):
     sensorsLineParts = splitSensorDataLine(sensorsRawLine)
-    lastedMillis = tryParseMillis(sensorsLineParts[1])
-    currTimeSensors = startingDate + timedelta(milliseconds=lastedMillis)
+    print(sensorsLineParts)
+    #lastedMillis = tryParseMillis(sensorsLineParts[1])
+    # currTimeSensors = startingDate + timedelta(milliseconds=lastedMillis)
+    currTimeSensors = datetime.now()
     replaceOld = 'Ms|' + sensorsLineParts[1]
     replaceNew = 'Ms|' + currTimeSensors.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     sensorsRawLine = sensorsRawLine.replace(replaceOld, replaceNew)

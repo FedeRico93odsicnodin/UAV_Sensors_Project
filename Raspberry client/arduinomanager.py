@@ -66,12 +66,15 @@ def MQDetectionProcess(sensorsObj):
                     # STEP4: Reading infomration for the current line 
                     sensorsCurrLine = sensorscsv.processMQSensorsLineContent(sensorsRawLine)
 
-                    # STEP5: building the header of CSV File 
+                    # STEP5: cleaning the strings which are meaningless (no numeric value)
+                    sensorsCurrLine = sensorscsv.checkArduinoValuesCoherence(sensorsCurrLine)
+                    
+                    # STEP6: building the header of CSV File 
                     if(len(csvHeader) == 0):
                         csvHeader = sensorscsv.createSensorsHeader(sensorsRawLine)
                         sensorsObj.setHeader(csvHeader)
                     
-                    # STEP8: enqueuing the line content 
+                    # STEP7: enqueuing the line content 
                     sensorsObj.sensorDataQueue().put(sensorsCurrLine)
                     lastUsefulLine = line
                     #print("correct")
@@ -93,7 +96,16 @@ def MQDetectionProcess(sensorsObj):
 
                     # STEP4: Reading infomration for the current line 
                     sensorsCurrLine = sensorscsv.processMQSensorsLineContent(sensorsRawLine)
+
+                    # STEP5: cleaning the strings which are meaningless (no numeric value)
+                    sensorsCurrLine = sensorscsv.checkArduinoValuesCoherence(sensorsCurrLine)
                     
+                    # STEP6: building the header of CSV File 
+                    if(len(csvHeader) == 0):
+                        csvHeader = sensorscsv.createSensorsHeader(sensorsRawLine)
+                        sensorsObj.setHeader(csvHeader)
+
+                    # STEP7: enquequing the line 
                     sensorsObj.sensorDataQueue().put(sensorsCurrLine)
                 lastException = False
         # adding a default line for the Arduino read and waiting until the signal shows up
