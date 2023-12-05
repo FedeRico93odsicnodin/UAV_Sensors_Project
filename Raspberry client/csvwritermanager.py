@@ -22,8 +22,8 @@ def CSVFileWriterProcess(sensorsObj):
     csvDownloadPath = os.path.join(downloadDataPath, csvFileName)
     sessionDateTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     sensorMQLine = ["", "", "", "", "", ""]
-    print(csvOutputPath)
-    print(csvDownloadPath)
+    #print(csvOutputPath)
+    #print(csvDownloadPath)
     # upload to server thread 
     uploadingToServerThread = threading.Thread(target=postcontenttoserver.CSVPostToServer, args=(sensorsObj,))
     uploadingToServerThread.start()
@@ -32,7 +32,7 @@ def CSVFileWriterProcess(sensorsObj):
         sensorDLine = sensorsObj.sensorDataQueue().get()
         lineIncrement = lineIncrement + 1
         if(csvHeaderInit == False):
-            print(sensorsObj.getHeader())
+            #print(sensorsObj.getHeader())
             sensorscsv.writeCSVLine(sensorsObj.getHeader(), csvOutputPath)
             csvHeaderInit = True
         
@@ -43,7 +43,7 @@ def CSVFileWriterProcess(sensorsObj):
             sensorDLine = sensorscsv.appendExtraContentToSensorLine(sensorDLine, sensorMQLine)
         sensorDLine.append(sessionDateTime)
         sensorscsv.writeCSVLine(sensorDLine, csvOutputPath)
-        print(sensorDLine)
+        #print(sensorDLine)
         # management of the new file creation 
         if(lineIncrement == sensorsObj.getMaxLineNum()):
             csvHeaderInit = False

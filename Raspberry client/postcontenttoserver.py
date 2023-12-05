@@ -28,17 +28,18 @@ def CSVPostToServer(sensorsObj):
                     postAddress = serverAddress +  "/CSV/upload"
                     r = requests.post(postAddress, files = {'upload': f})
                     if(r.status_code == 200 and r.text == 'file uploaded successfully' and r.reason == 'OK'):
-                        print("upload success")
+                        #print("upload success")
                         downloadSuccess = True
                 except:
-                    print("server unavailable")
+                    #print("server unavailable")
+                    time.sleep(1)
             if(downloadSuccess):
                 orderedFilesToUpload.remove(orderedFilesToUpload[0])
                 os.remove(filePath)
                 time.sleep(0.25)
             else: 
                 interruption = True
-                break
+                #break
         if(interruption):
             time.sleep(errorWaitingTime)
         else:

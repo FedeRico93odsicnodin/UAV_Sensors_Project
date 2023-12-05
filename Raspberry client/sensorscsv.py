@@ -90,6 +90,6 @@ def writeCSVLine(csvNewLine, csvFilePath):
         csvFile.close()
 
 def moveCSVToDownloadFolder(csvPathOrigin, csvPathDestination):
-    print("moving file")
+    #print("moving file")
     os.rename(csvPathOrigin, csvPathDestination)
      
