@@ -70,7 +70,7 @@ def dataSensorsElaborateThread(serverDataObj):
                 print('file sensors rows has been added to DB')
             # deletion of file
             orderedFilesToProcess.remove(orderedFilesToProcess[0])
-            os.remove(filePath)
+            # os.remove(filePath)
             time.sleep(0.25)
 
 def dataSnesorsElaborateThreadTEST(refCSVPath):

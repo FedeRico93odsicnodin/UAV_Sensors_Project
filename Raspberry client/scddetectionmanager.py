@@ -39,7 +39,7 @@ def scdSensorDetectionThread(sensorsObj):
                             except:
                                 sensorContent = []
                                 time.sleep(int(sensorsObj.scdMeasureTime))
-                                co2, temperature, humidity = scd41.read_measurement()
+                                #co2, temperature, humidity = scd41.read_measurement()
                                 sensorContent.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3])
                                 sensorContent.append('0')
                                 sensorContent.append('0')
