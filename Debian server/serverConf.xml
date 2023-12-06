@@ -3,6 +3,8 @@
     <config name="csv_upload_folder">upladed_csv</config>
     <!-- server location for the POST Processed CSV by the server -->
     <config name="csv_post_folder">processed_db</config>
+    <!-- location for saving the files after they have been saved on database -->
+    <config name="csv_backup_folder">saved_csv</config>
     <!-- specifications of the database name -->
     <config name="database_name">sensorsAnalysis.db</config>
 

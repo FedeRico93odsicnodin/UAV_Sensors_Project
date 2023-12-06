@@ -28,6 +28,14 @@ initSensorsData = {}
 # current session for the CSV
 currSession = {}
 
+# getting the file name from its initial path 
+def getFileName(pathFile):
+    pathParts = pathFile.split("/")
+    pathPartsLastPos = len(pathParts) - 1
+    fileName = pathParts[pathPartsLastPos]
+    print(fileName)
+    return fileName
+
 def dataSensorsElaborateThread(serverDataObj):
     currDir = os.getcwd()
     outputCSVFolder = os.path.join(currDir, serverDataObj.getUploadCSVFolder())
@@ -36,6 +44,8 @@ def dataSensorsElaborateThread(serverDataObj):
     global initSensorsData
     global currSession
     global scdParams
+    # folder in which save iterated CSVs
+    currSavedCSVFolder = os.path.join(currDir, serverDataObj.getSavedCSVFolder())
     while(True):
         currSession = None
         orderedFilesToProcess = []
@@ -70,7 +80,11 @@ def dataSensorsElaborateThread(serverDataObj):
                 print('file sensors rows has been added to DB')
             # deletion of file
             orderedFilesToProcess.remove(orderedFilesToProcess[0])
-            # os.remove(filePath)
+            # moving the file to the backup location 
+            fileName = getFileName(filePath)
+            fileNewDest = os.path.join(currSavedCSVFolder, fileName)
+            os.rename(filePath, fileNewDest)
+            print('file ' + fileName + "has been moved in " + fileNewDest)
             time.sleep(0.25)
 
 def dataSnesorsElaborateThreadTEST(refCSVPath):

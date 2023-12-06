@@ -20,10 +20,14 @@ def initServer():
     currDir = os.getcwd()
     outputCSVLocation = os.path.join(currDir, serverDataObj.getUploadCSVFolder())
     databaseLocation = os.path.join(currDir, serverDataObj.getProcessedDBFolder())
+    savedCSVLocation = os.path.join(currDir, serverDataObj.getSavedCSVFolder())
     if(os.path.exists(databaseLocation) == False):
         os.mkdir(databaseLocation)
     if(os.path.exists(outputCSVLocation) == False):
         os.mkdir(outputCSVLocation)
+    # creation of the folder in which moving the files 
+    if(os.path.exists(savedCSVLocation) == False):
+        os.mkdir(savedCSVLocation)
     fileUploadPath = outputCSVLocation
     databasePath = os.path.join(databaseLocation, serverDataObj.getDatabaseName())
     # database creation (if does not exist)

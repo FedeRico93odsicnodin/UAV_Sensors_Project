@@ -12,6 +12,8 @@ class ServerDataConfig:
         # CSV parameters and specifications
         self.uploadCSVFolder = "uploaded_csv"
         self.processCSVFolder = "processed_db"
+        # folder for the saved CSV
+        self.savedCSVFolder = "saved_csv"
         self.databaseName = "sensorsAnalysis.db"
         # waiting time in second for the processing thread 
         self.waitingProcessTime = 5
@@ -27,6 +29,8 @@ class ServerDataConfig:
         self.uploadCSVFolder = folderUpload 
     def getUploadCSVFolder(self):
         return self.uploadCSVFolder
+    def getSavedCSVFolder(self):
+        return self.savedCSVFolder
     def setProcessedDBFolder(self, folderProcessedCSV):
         self.processCSVFolder = folderProcessedCSV
     def getProcessedDBFolder(self):
@@ -35,6 +39,8 @@ class ServerDataConfig:
         self.databaseName = databaseName
     def getDatabaseName(self):
         return self.databaseName
+        
+    
     
     def setWaitingProcessTime(self, processTime):
         self.waitingProcessTime = processTime
@@ -63,6 +69,8 @@ class ServerDataConfig:
         self.debug_ppm_calculus = ppmCalcFlag
     def getDebugPPMCalculus(self):
         return self.debug_ppm_calculus
+    def setSavedCSVFolder(self, csvSavedFolder):
+        self.savedCSVFolder = csvSavedFolder
         
 
 # read configuration method
@@ -75,6 +83,8 @@ def readConfiguration(configFile):
             ServerDataObj.setUploadCSVFolder(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "csv_post_folder"):
             ServerDataObj.setProcessedDBFolder(str(configuration.firstChild.data))
+        if(configuration.attributes['name'].value == "saved_csv"):
+            ServerDataObj.setSavedCSVFolder(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "database_name"):
             ServerDataObj.setDatabaseName(str(configuration.firstChild.data))
         if(configuration.attributes['name'].value == "post_process_waiting_time"):
