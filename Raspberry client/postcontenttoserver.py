@@ -10,41 +10,47 @@ def CSVPostToServer(sensorsObj):
     errorWaitingTime = sensorsObj.getUploadWaitingErrorTime()
     interruption = False
     while(True):
-        orderedFilesToUpload = []
-        pendingCSVFiles = os.listdir(downloadDataPath)
-        if(len(pendingCSVFiles) == 0):
-            time.sleep(iterationWaitingTime)
-        for fileCSV in pendingCSVFiles:
-            currFileDate = getFileDate(fileCSV)
-            orderedFilesToUpload = addFileRefToDictionary(fileCSV, currFileDate, orderedFilesToUpload)
-        while(len(orderedFilesToUpload) > 0):  
-            fileName = orderedFilesToUpload[0]["fileName"]
-            filePath = os.path.join(downloadDataPath, fileName)
-            downloadSuccess = False
-            with open(filePath, 'rb') as f:
-                try:
-                    if(serverAddress.endswith("/") == False):
-                        serverAddress = serverAddress + "/"
-                    postAddress = serverAddress +  "/CSV/upload"
-                    r = requests.post(postAddress, files = {'upload': f})
-                    if(r.status_code == 200 and r.text == 'file uploaded successfully' and r.reason == 'OK'):
-                        #print("upload success")
-                        downloadSuccess = True
-                except:
-                    #print("server unavailable")
-                    time.sleep(1)
-            if(downloadSuccess):
-                orderedFilesToUpload.remove(orderedFilesToUpload[0])
-                os.remove(filePath)
-                time.sleep(0.25)
-            else: 
-                interruption = True
-                #break
-        if(interruption):
-            time.sleep(errorWaitingTime)
-        else:
-            time.sleep(iterationWaitingTime)
-        interruption = False
+        try:
+            orderedFilesToUpload = []
+            pendingCSVFiles = os.listdir(downloadDataPath)
+            #print(pendingCSVFiles)
+            if(len(pendingCSVFiles) == 0):
+                time.sleep(iterationWaitingTime)
+            for fileCSV in pendingCSVFiles:
+                currFileDate = getFileDate(fileCSV)
+                orderedFilesToUpload = addFileRefToDictionary(fileCSV, currFileDate, orderedFilesToUpload)
+            #print(orderedFilesToUpload)
+            while(len(orderedFilesToUpload) > 0):  
+                fileName = orderedFilesToUpload[0]["fileName"]
+                #print(fileName)
+                filePath = os.path.join(downloadDataPath, fileName)
+                downloadSuccess = False
+                with open(filePath, 'rb') as f:
+                    try:
+                        if(serverAddress.endswith("/") == False):
+                            serverAddress = serverAddress + "/"
+                        postAddress = serverAddress +  "/CSV/upload"
+                        r = requests.post(postAddress, files = {'upload': f})
+                        if(r.status_code == 200 and r.text == 'file uploaded successfully' and r.reason == 'OK'):
+                            print("upload success")
+                            downloadSuccess = True
+                    except:
+                        print("server unavailable")
+                        time.sleep(1)
+                if(downloadSuccess):
+                    orderedFilesToUpload.remove(orderedFilesToUpload[0])
+                    os.remove(filePath)
+                    time.sleep(0.25)
+                else: 
+                    interruption = True
+                    #break
+            if(interruption):
+                time.sleep(errorWaitingTime)
+            else:
+                time.sleep(iterationWaitingTime)
+            interruption = False
+        except:
+            print('exception in upload file to server')
 
 def getFileDate(filePath):
     fileNameParts = filePath.split("_")

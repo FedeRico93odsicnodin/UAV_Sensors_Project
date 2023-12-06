@@ -301,7 +301,7 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
     idxCsv = 0
     # all row analysis
     for csvContent in csvHeader:
-        print(csvContent['gas'] + "|" + csvContent['sensor'])
+        #print(csvContent['gas'] + "|" + csvContent['sensor'])
         if(trackNotAnalyzedColumn(csvContent)):
             idxCsv = idxCsv + 1
             continue
@@ -315,9 +315,8 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
             idxCsv = idxCsv + 1
             continue
         if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Overall)':
-            print('pippo')
             raspberryTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
-            print(raspberryTimestamp)
+            #print(raspberryTimestamp)
             idxCsv = idxCsv + 1
             continue
         if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Rpi)':
