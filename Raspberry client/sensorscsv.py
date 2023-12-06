@@ -16,12 +16,12 @@ arduinoUsefulLastReadInfo = ['0', '0', '0', '0', '0', '0', '0', '0']
 # Creating the column header for the CSV file of analysis
 def createSensorsHeader(sensorsRawLine):
     csvHeader = []
-    csvHeaderSCD = ["SCD time|SCD41|description SCD41", "ppm CO2|SCD41|description SCD41", "C|SCD41|description SCD41", "ticksC|SCD41|description SCD41", "RH|SCD41|description SCD41", "ticksRH|SCD41|description SCD41"]
+    csvHeaderSCD = ["SCDtime|SCD41|descriptionSCD41", "CO2|SCD41|descriptionSCD41", "C|SCD41|descriptionSCD41", "ticksC|SCD41|description SCD41", "RH|SCD41|description SCD41", "ticksRH|SCD41|description SCD41"]
     sensorsLineParts = utilitiesmanager.splitSensorDataLine(sensorsRawLine)
     # line of arduino is the first in header overall initialization 
     for indCol, content in enumerate(sensorsLineParts):
         if(indCol == 0):
-            csvHeader.append("TS|(Arduino)")    # timestamp inferred for Arduino
+            csvHeader.append("TS|(Overall)")    # timestamp inferred for Arduino
             csvHeader.append("TS|(Rpi)")        # timestamp inferred for the script 
         if(indCol == 3):
             content = content.replace('_', '|')
@@ -62,6 +62,8 @@ def processMQSensorsLineContent(sensorsRawLine):
         return ["", datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3], "","","","","","",]
     sensorsLineParts = utilitiesmanager.splitSensorDataLine(sensorsRawLine)
     sensorsContentLine = []
+
+    
     for indCol, content in enumerate(sensorsLineParts):
         if(indCol == 1):
             sensorsContentLine.append(str(content))

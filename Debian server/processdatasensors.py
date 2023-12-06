@@ -56,7 +56,7 @@ def dataSensorsElaborateThread(serverDataObj):
                 csvdata = csv.reader(f)
                 # getting the first header definition on the first csv row 
                 csvheader = initGasesAndSensors(csvdata)
-                print(csvheader)
+                # print(csvheader)
                 # getting the SCD columns params for calibration
                 scdParams = initSCDParametersCalibration(csvheader)
                 # getting the session header column index 
@@ -67,7 +67,7 @@ def dataSensorsElaborateThread(serverDataObj):
                 initSensorsData = checkIfNewSensorsToAdd(csvheader, initSensorsData, initGasesData)
                 # prepare and store current data values
                 beginProcessSensorsData(csvdata, csvheader, sessionCol)
-                #print('file sensors rows has been added to DB')
+                print('file sensors rows has been added to DB')
             # deletion of file
             orderedFilesToProcess.remove(orderedFilesToProcess[0])
             os.remove(filePath)
@@ -295,15 +295,19 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
             idxCsv = idxCsv + 1
             continue
         # definition for the timestamps of the current row 
-        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Arduino)':
+        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Overall)':
             arduinoTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
             idxCsv = idxCsv + 1
             continue
-        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Rpi)':
+        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Overall)':
             raspberryTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
             idxCsv = idxCsv + 1
             continue
-        if csvContent['gas'] == 'SCDetime':
+        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Rpi)':
+            # continuing on rpi time 
+            idxCsv = idxCsv + 1
+            continue
+        if csvContent['gas'] == 'SCDtime':
             idxCsv = idxCsv + 1
             continue
         # sensed value 
@@ -374,8 +378,8 @@ def processSensorData(sensorId, sensorDefinition, sensorValue, calibObj):
     # application mode: for the eventual calibration of MQ sensor and the current phase
     global application_mode
     sensedValue = 0
-    print(sensorDefinition)
-    print(sensorValue)
+    # print(sensorDefinition)
+    # print(sensorValue)
     if(sensorValue != ''):
         sensedValue = float(sensorValue)
     currT = calibObj['TVal']
@@ -387,12 +391,14 @@ def processSensorData(sensorId, sensorDefinition, sensorValue, calibObj):
        or sensorDefinition['sensor'] == 'MQ3'
        or sensorDefinition['sensor'] == 'MQ135'
        or sensorDefinition['sensor'] == 'MQ2'):
-        sensedValue = MQCalib.getPPMValue(
-            sensorValue, 
-            sensorId, 
-            sensorDefinition['sensor'], 
-            currT, 
-            currRH)
+        # deactivating the calculation process
+        return sensedValue
+        # sensedValue = MQCalib.getPPMValue(
+        #    sensorValue, 
+        #    sensorId, 
+        #    sensorDefinition['sensor'], 
+        #    currT, 
+        #    currRH)
     return sensedValue
     
 def updateR0Values():
