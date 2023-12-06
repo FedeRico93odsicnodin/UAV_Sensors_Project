@@ -33,7 +33,7 @@ def getFileName(pathFile):
     pathParts = pathFile.split("/")
     pathPartsLastPos = len(pathParts) - 1
     fileName = pathParts[pathPartsLastPos]
-    print(fileName)
+    #print(fileName)
     return fileName
 
 def dataSensorsElaborateThread(serverDataObj):
@@ -84,7 +84,7 @@ def dataSensorsElaborateThread(serverDataObj):
             fileName = getFileName(filePath)
             fileNewDest = os.path.join(currSavedCSVFolder, fileName)
             os.rename(filePath, fileNewDest)
-            print('file ' + fileName + "has been moved in " + fileNewDest)
+            #print('file ' + fileName + "has been moved in " + fileNewDest)
             time.sleep(0.25)
 
 def dataSnesorsElaborateThreadTEST(refCSVPath):
@@ -301,6 +301,7 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
     idxCsv = 0
     # all row analysis
     for csvContent in csvHeader:
+        print(csvContent['gas'] + "|" + csvContent['sensor'])
         if(trackNotAnalyzedColumn(csvContent)):
             idxCsv = idxCsv + 1
             continue
@@ -309,12 +310,14 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
             idxCsv = idxCsv + 1
             continue
         # definition for the timestamps of the current row 
-        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Overall)':
+        if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Arduino)':
             arduinoTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
             idxCsv = idxCsv + 1
             continue
         if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Overall)':
+            print('pippo')
             raspberryTimestamp = datetime.strptime(sensorDataRow[idxCsv], dateStampFormat)
+            print(raspberryTimestamp)
             idxCsv = idxCsv + 1
             continue
         if csvContent['gas'] == 'TS' and csvContent['sensor'] == '(Rpi)':
