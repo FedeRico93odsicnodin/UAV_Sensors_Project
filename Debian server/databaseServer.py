@@ -613,4 +613,14 @@ def get_rzero_values():
             allRZeroObjects[currRZeroObj.sensor_name] = currRZeroObj
     return allRZeroObjects
 
-
+# Methods of version SensServerUAV_v1
+# allows to update the color for which the gas is represented graphically
+def updateGasColorDefinition(gasId, gasNewColor):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_update_gascolor_statement = "UPDATE detected_substances SET color = '" + gasNewColor + "' WHERE id = " + str(gasId)
+        cur = con.execute(sqlite_update_gascolor_statement)
+        con.commit()
+        con.close()
+        print('execute statement ')

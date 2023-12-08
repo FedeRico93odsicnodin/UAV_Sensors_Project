@@ -62,6 +62,10 @@ function setNewSessionStorageFilters() {
     // verifying the presence of valorized colors for the gases to display
     if(Object.keys(GasColors).length) {
         postFiltersObj.gasColors = GasColors;
+        // setting for new colors definition in the context of visualized gases
+        for (var gasNameId in GasColors) {
+            StoredGasColors[gasNameId] = GasColors[gasNameId];
+        }
     }
 
     var filterObjToJSON = JSON.stringify(newFilterObj)

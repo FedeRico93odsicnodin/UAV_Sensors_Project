@@ -6,6 +6,7 @@ var OverallSessions = []
 
 // colors for the various gases 
 var GasColors = {}
+var StoredGasColors = {}
 var AtLeastAChangedColor = false
 
 // loaded filters matrix 
@@ -188,6 +189,17 @@ function getGasIdentifierFromColorPicker(colorPickerId) {
     var gasId = colorPickerId.substring(colorPickerMarker.length);
     return gasId;
 }
+// getting the gas identifier from the gasNameId
+function getGasIdFromGasNameId(gasNameId) {
+    var gasNameIdParts = gasNameId.split('_');
+    try {
+        var gasId = parseInt(gasNameIdParts[1]);
+        return gasId;
+    }
+    catch(e) {
+        return 0
+    }
+}
 // Initializations for the gases selection filters 
 function initGasesFilters(showView, callBackFilters) {
     $.ajax({
@@ -221,12 +233,13 @@ function initGasesFilters(showView, callBackFilters) {
                                     '<td id="' + gasIdentifier + '">' 
                                         + gasesObj[ind].name + '</td>' +
                                     '<td><button id="' + 'colorPicker_' + gasIdentifier + '">Show Color Picker</button></td>' + 
-                                    '<td><div id="' + 'colorShower_' + gasIdentifier + '" style="padding:15px;background-color:#' + gasColor + ';border-radius:5px"></div></td>' + 
+                                    '<td><div id="' + 'colorShower_' + gasIdentifier + '" style="padding:15px;background-color:rgb(' + gasColor + ');border-radius:5px"></div></td>' + 
                                     '</tr>'
                 gasesObj[ind]['checkId'] = checkId
                 gasesObj[ind]['filterNameId'] = gasIdentifier
                 // populating the values for the colors of the gas 
-                var objGasColorPopulation = {'id': gasesObj[ind].id, 'color': gasesObj[ind].color};
+                var objGasColorPopulation = {'Id': gasesObj[ind].id, 'color': gasesObj[ind].color};
+                StoredGasColors[gasIdentifier] = objGasColorPopulation;
                 $('#gasesTable').append(currRowGas);
                 // creation of the color picker for the current gas 
                 var colorPickerCurrGas = '#colorPicker_' + gasIdentifier;
@@ -235,15 +248,20 @@ function initGasesFilters(showView, callBackFilters) {
                     onSubmit: function() {
                         var newColor = this.fields[0].value;
                         var newColorSel = "#" + newColor;
+                        // getting the rgb definition to be stored 
+                        var colorR = this.fields[1].value;
+                        var colorG = this.fields[2].value;
+                        var colorB = this.fields[3].value;
+                        var complexiveRGB = colorR + "," + colorG + "," + colorB;
                         console.log(newColorSel);
                         // changing the color of the displayed visualization 
-                        var gasId = getGasIdentifierFromColorPicker(this.el.id);
-                        var colorShowerGas = 'colorShower_' + gasId;
+                        var gasNameId = getGasIdentifierFromColorPicker(this.el.id);
+                        var colorShowerGas = 'colorShower_' + gasNameId;
                         document.getElementById(colorShowerGas).style.backgroundColor = newColorSel;
                         // memorizing the new configuration for an eventual save 
-                        if(GasColors[gasId] != newColor) {
-                            GasColors[gasId] = newColor;
-                        }
+                        var gasId = getGasIdFromGasNameId(gasNameId);
+                        GasColors[gasNameId] = { "Id": gasId, "color": complexiveRGB };
+                        
                     }
             });
                 OverallGases.push(gasesObj[ind])

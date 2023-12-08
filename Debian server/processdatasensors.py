@@ -224,7 +224,7 @@ def checkIfNewGasesToAdd(rowHeader, prevStoredGases):
         if sensorHeaderCol['gas'] == 'timestamp' or sensorHeaderCol['gas'] == 'other':
             continue
         # by default the color for the gas is the standard of the chart.js definition
-        allNewCompoundsInCSV.append((None, str(sensorHeaderCol['gas']).replace(' ', '_'), 'eb1616'))
+        allNewCompoundsInCSV.append((None, str(sensorHeaderCol['gas']).replace(' ', '_'), '235,22,22'))
     if(len(allNewCompoundsInCSV) > 0):
         databaseServer.insertCompoundsData(allNewCompoundsInCSV)
         prevStoredGases = databaseServer.getCompoundsDefinitions()

@@ -124,7 +124,10 @@ def get_all_stored_filters():
         databaseServer.insertFilterOptions(filtersToInsert)
         # verifying for the eventual update of the color for the visualized gas
         for c in currColorsSel:
-            print(c + " - " + currColorsSel[c])
+            gasId = int(currColorsSel[c]['Id'])
+            gasNewColor = str(currColorsSel[c]['color'])
+            print(str(gasId) + " - " + gasNewColor)
+            databaseServer.updateGasColorDefinition(gasId, gasNewColor)
         return json.dumps({'status': 'ok'})
     #print("GETTING FILTERS PHASE")
     allFilters = databaseServer.getExistingFilters()

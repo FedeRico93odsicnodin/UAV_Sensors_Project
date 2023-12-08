@@ -27,6 +27,12 @@ function getGasNameFromGraphId(graphId) {
     var currGasName = currIdParts[1]
     return currGasName
 }
+// getting the gas nameid from the graph chart id 
+function getGasNameIdFromGraphId(graphId) {
+    var currIdParts = graphId.split("_")
+    var currGasNameId = currIdParts[1] + "_" + currIdParts[2];
+    return currGasNameId
+}
 // getting gasnameid from backward / forward move buttons 
 function getGasNameIdFromBtnMovementsId(movId) {
     var currIdParts = movId.split("_")
@@ -85,7 +91,11 @@ function setNewPointNumberGraph(sel) {
     var currentTimeInterval = currentCurve['labels'].slice(-currSelectionVal)
     var currentDataInterval = currentCurve['data'].slice(-currSelectionVal)
     var currGasName = getGasNameFromGraphId(gasVisualizationType)
-    allChartsRefs[gasVisualizationType] = renderVisualizationPointsOnGraph(gasVisualizationType, currGasName, currentTimeInterval, currentDataInterval)
+    allChartsRefs[gasVisualizationType] = renderVisualizationPointsOnGraph(
+        gasVisualizationType, 
+        currGasName, 
+        currentTimeInterval, 
+        currentDataInterval)
     checkArrowMovementsConsistency({"labels": currentTimeInterval, "data": currentDataInterval}, currentCurve, gasNameSessionId, timeRange)
 }
 // deciding how many selections for time visualizations add to curve  
@@ -357,9 +367,16 @@ function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationTyp
     return htmlCanvas
 }
 // rendering the visualization for the current time interval 
-function renderVisualizationPointsOnGraph(canvasId, gasName, visualizedInterval, visualizedData) {
-    // getting the ID for the canvas and applying the data 
-    console.log(canvasId);
+function renderVisualizationPointsOnGraph(
+    canvasId, 
+    gasName, 
+    visualizedInterval, 
+    visualizedData
+    ) {
+    // getting the gasNameId definition for applying the current color to canvas 
+    var gasNameIdRef = getGasNameIdFromGraphId(canvasId)
+    var currColorApplication = "rgba(" + StoredGasColors[gasNameIdRef].color + ", .45)";
+    console.log(currColorApplication);
     var canvGas = $("#" + canvasId).get(0).getContext("2d");
     var lineChart = new Chart(canvGas, {
         type: "line",
@@ -384,7 +401,7 @@ function renderVisualizationPointsOnGraph(canvasId, gasName, visualizedInterval,
                 {
                     label: gasName,
                     data: visualizedData,
-                    backgroundColor: "rgba(235, 22, 22, .5)",
+                    backgroundColor: currColorApplication,
                     fill: true
                 }
             ]
@@ -574,6 +591,7 @@ function prepareCarouselHtml(htmlContentArray) {
 // render the canvas for the selected gas 
 function renderGasCanvas(currCanvasDataArr) {
     for(var i in currCanvasDataArr) {
+        console.log(currCanvasDataArr[i]);
         currChart = renderVisualizationPointsOnGraph(
             currCanvasDataArr[i].canvasId, 
             currCanvasDataArr[i].gasName,
