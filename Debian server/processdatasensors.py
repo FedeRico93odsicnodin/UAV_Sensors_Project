@@ -62,8 +62,13 @@ def dataSensorsElaborateThread(serverDataObj):
             fileName = orderedFilesToProcess[0]["fileName"]
             #print('processing file ' + fileName)
             filePath = os.path.join(outputCSVFolder, fileName)
-            with open(filePath, 'r') as f:
-                csvdata = csv.reader(f)
+            with open(filePath, 'r', encoding='utf-8') as f:
+                print(filePath)
+                #csvdata = csv.reader(f)
+                csvdata = csv.reader(
+                    (row.replace('\0', '').replace('\x00', '') for row in f),
+                    delimiter=','
+                )
                 # getting the first header definition on the first csv row 
                 csvheader = initGasesAndSensors(csvdata)
                 # print(csvheader)
@@ -222,7 +227,7 @@ def checkIfNewGasesToAdd(rowHeader, prevStoredGases):
     if(len(allNewCompoundsInCSV) > 0):
         databaseServer.insertCompoundsData(allNewCompoundsInCSV)
         prevStoredGases = databaseServer.getCompoundsDefinitions()
-        print(prevStoredGases)
+        #print(prevStoredGases)
 
     return prevStoredGases
 
@@ -238,7 +243,7 @@ def checkIfNewSensorsToAdd(rowHeader, prevStoredSensors, checkedStoredGases):
         # getting the information to persist for current row
         sensorName = sensorHeaderCol['sensor']
         sensorDescription = sensorHeaderCol['sensorDescr']
-        print(sensorHeaderCol['gas'])
+        #print(sensorHeaderCol['gas'])
         refGasID = checkedStoredGases[sensorHeaderCol['gas']].id
         allNewSensorsInCSV.append((None, str(sensorName).replace(' ', 'e'), sensorDescription, refGasID))
     if(len(allNewSensorsInCSV) > 0):
@@ -248,6 +253,7 @@ def checkIfNewSensorsToAdd(rowHeader, prevStoredSensors, checkedStoredGases):
  
 def beginProcessSensorsData(csvdata, csvHeader, sessionCol):
     idx = 0
+    print(csvdata)
     for sensorData in csvdata:
         # data of the already analyzed header
         if(idx == 0): 
@@ -257,6 +263,8 @@ def beginProcessSensorsData(csvdata, csvHeader, sessionCol):
         if(idx == 1): 
             currSession = checkSessionDB(sensorData, sessionCol)
             idx = idx + 1
+        if(len(sensorData) < len(csvHeader)):
+            continue
         # processing sensor data row
         processSensorsDataRow(sensorData, csvHeader, currSession)
 
@@ -302,6 +310,7 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
     # all row analysis
     for csvContent in csvHeader:
         #print(csvContent['gas'] + "|" + csvContent['sensor'])
+        #print(str(idxCsv) + " - " + sensorDataRow[idxCsv])
         if(trackNotAnalyzedColumn(csvContent)):
             idxCsv = idxCsv + 1
             continue
@@ -346,6 +355,7 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
         currSensorObj.session_ref = sessionRefId
         toInsertValues.append(currSensorObj)
         idxCsv = idxCsv + 1
+        
     # insert values to db 
     databaseServer.insertDataSensor(toInsertValues)
 # getting the current RH and T values for the sensed row
@@ -380,7 +390,7 @@ def isArduinoSensor(sensorName):
     return isMQ
 
 def trackNotAnalyzedColumn(colDefinition):
-     if(colDefinition['gas'] == 'SCD time'):
+     if(colDefinition['gas'] == 'SCDtime'):
          return True
      if(colDefinition['gas'] == 'ticksC'):
          return True
