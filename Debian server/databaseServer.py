@@ -466,7 +466,7 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
         dataRecords = cur.fetchall()
         for filterRecord in dataRecords:
             currDataObj = {}
-            currDataObj['date'] = filterRecord[0]
+            currDataObj['date'] = str(filterRecord[0])[0:-3]
             if(filterRecord[1] != ''):
                 currDataObj['value'] = float(filterRecord[1])
             else: currDataObj['value'] = 0
@@ -515,7 +515,7 @@ def getAllDataSensorsToDisplayReload(
          dataRecords = cur.fetchall()
          for filterRecord in dataRecords:
             currDataObj = {}
-            currDataObj['date'] = filterRecord[0]
+            currDataObj['date'] = str(filterRecord[0])[0:-3]
             currDataObj['value'] = float(filterRecord[1])
             currDataObj['session'] = str(filterRecord[2])
             currDataObj['sessionID'] = int(filterRecord[3])

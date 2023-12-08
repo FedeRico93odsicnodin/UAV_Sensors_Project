@@ -44,6 +44,8 @@ function getDataToDisplayMMM(dataObj) {
     dataDisplay['data'] = []
     for(var currEntry in dataObj.gasData) {
         var currDate = dataObj.gasData[currEntry][0]
+        // cutting away the last three position of millis definition for clearness
+        currDate = currDate.substring(0, currDate.length - 3);
         var currVal = dataObj.gasData[currEntry][1]
         dataDisplay['labels'].push(currDate)
         dataDisplay['data'].push(currVal)

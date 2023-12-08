@@ -232,7 +232,7 @@ function initGasesFilters(showView, callBackFilters) {
                                     '</td>' + 
                                     '<td id="' + gasIdentifier + '">' 
                                         + gasesObj[ind].name + '</td>' +
-                                    '<td><button id="' + 'colorPicker_' + gasIdentifier + '">Show Color Picker</button></td>' + 
+                                    '<td><button id="' + 'colorPicker_' + gasIdentifier + '">Change Color</button></td>' + 
                                     '<td><div id="' + 'colorShower_' + gasIdentifier + '" style="padding:15px;background-color:rgb(' + gasColor + ');border-radius:5px"></div></td>' + 
                                     '</tr>'
                 gasesObj[ind]['checkId'] = checkId
