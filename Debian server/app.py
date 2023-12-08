@@ -12,6 +12,7 @@ from flask import send_from_directory
 
 fileUploadPath = ''
 
+# starting work on final branch 
 def initServer():
     global fileUploadPath
     # getting the current configuration from the xml file 
