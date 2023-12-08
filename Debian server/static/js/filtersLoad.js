@@ -289,6 +289,14 @@ function initGasesFilters(showView, callBackFilters) {
         }
     })
 }
+// cleaning the session name for creating the id 
+function initIdSessionFromName(sessionName) {
+    sessionName = sessionName.replaceAll(' ', '_');
+    sessionName = sessionName.replaceAll(':', '_');
+    sessionName = sessionName.replaceAll('.', '_');
+    sessionName = sessionName.replaceAll('-', '_');
+    return sessionName;
+}
 // Initialization for the sessions selection filters 
 function initSessionsFilters(showView, callBackFilters) {
     $.ajax({
@@ -308,12 +316,38 @@ function initSessionsFilters(showView, callBackFilters) {
             $("#sessionsTable").empty()
             // appending sensors to filters 
             for(var ind in sessionObj) {
-                var sessionIdentifier = sessionObj[ind].name + "_" + sessionObj[ind].id
+                var sessionNameCleaned = initIdSessionFromName(sessionObj[ind].name);
+                var sessionIdentifier = sessionNameCleaned + "_" + sessionObj[ind].id
+                var sessionIdentifierDatePicker = sessionIdentifier + "_date";
+                var sessionIdentifierTimePicker = sessionIdentifier + "_time";
                 var checkId = sessionIdentifier + "_check"
-                var currRowSession = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="' + checkId + '"></td><td id="' + sessionIdentifier + '">' + sessionObj[ind].name + '</td></tr>'
+                var currRowSession = 
+                '<tr>'
+                    + '<td style="width:25px">' 
+                        + '<input class="form-check-input" type="checkbox" id="' + checkId + '"/>'
+                    + '</td>' 
+                        + '<td id="' + sessionIdentifier + '">' 
+                            + sessionObj[ind].name 
+                    + '</td>'
+                    + '<td> add an initial date: </td>'
+                    + '<td>' + '<input id="' + sessionIdentifierDatePicker + '"></input></td>'
+                    + '<td>' + '<input id="' + sessionIdentifierTimePicker + '"></input></td>'
+                 + '</tr>'
+                
                 sessionObj[ind]['checkId'] = checkId
                 sessionObj[ind]['filterNameId'] = sessionIdentifier
                 $('#sessionsTable').append(currRowSession);
+                // creation of date and time picker for deciding the hour of each session
+                $( "#" + sessionIdentifierDatePicker ).datepicker(
+                    {
+                        dynamic: false,
+                        dropdown: true,
+                        scrollbar: true
+                    }
+                );
+                $( "#" + sessionIdentifierTimePicker ).timepicker(
+
+                );
                 OverallSessions.push(sessionObj[ind])
             }
             for(var ind in sessionObj) {
