@@ -115,9 +115,16 @@ def get_all_stored_filters():
     if request.method == "POST":
         filtersJSON = request.get_json()
         filtersToInsert = []
-        for f in filtersJSON:
-            filtersToInsert.append(filtersJSON[f])
+        # getting the new filters config from the object 
+        currFilterSel = filtersJSON['newFiltersConfig']
+        currColorsSel = filtersJSON['gasColors']
+        print(currFilterSel)
+        for f in currFilterSel:
+            filtersToInsert.append(currFilterSel[f])
         databaseServer.insertFilterOptions(filtersToInsert)
+        # verifying for the eventual update of the color for the visualized gas
+        for c in currColorsSel:
+            print(c + " - " + currColorsSel[c])
         return json.dumps({'status': 'ok'})
     #print("GETTING FILTERS PHASE")
     allFilters = databaseServer.getExistingFilters()

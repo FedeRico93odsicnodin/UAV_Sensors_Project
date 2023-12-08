@@ -23,11 +23,13 @@ def createDatabase(databaseLocation):
     
     con = sqlite3.connect(databaseLocation)
     # tables of detected substances in the air 
+    # it is also added a new property for persisting the given value by FE
     create_gases_table = """
         CREATE TABLE
         detected_substances(
         id integer PRIMARY KEY AUTOINCREMENT,
-        name text
+        name text,
+        color text
         )
 """
     # tables of all the sessions of detection done by the UAV
@@ -108,7 +110,7 @@ def insertCompoundsData(compoundsData):
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         cur = con.cursor()
-        insert_compounds_query = "INSERT INTO detected_substances (id, name) VALUES (?, ?);"
+        insert_compounds_query = "INSERT INTO detected_substances (id, name, color) VALUES (?, ?, ?);"
         cur.executemany(insert_compounds_query, compoundsData)
         con.commit()
         con.close()
@@ -166,15 +168,17 @@ def getCompoundsDefinitions():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sel_gases_query = "SELECT id, name FROM detected_substances"
+        sel_gases_query = "SELECT id, name, color FROM detected_substances"
         cur = con.execute(sel_gases_query)
         returnedCompounds = {}
         
         compoundsRecords = cur.fetchall()
         for compRec in compoundsRecords:
+            print(compRec)
             currCompObj = dbmodels.CompoundObj()
             currCompObj.id = int(compRec[0])
             currCompObj.name = str(compRec[1])
+            currCompObj.color = str(compRec[2])
             returnedCompounds[currCompObj.name] = currCompObj
         con.close()
     return returnedCompounds

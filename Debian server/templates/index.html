@@ -56,12 +56,10 @@
                     <div class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown"><i class="fa fa-filter me-2"></i>Filters</a>
                         <div class="dropdown-menu bg-transparent border-0">
-                            <a class="dropdown-item" id="dateFilters">Date</a>
-                            <a class="dropdown-item" id="sensorsFilters">Sensor</a>
+                            <a class="dropdown-item" id="sensorsFilters">Sensors</a>
                             <a class="dropdown-item" id="gasFilters">Gases</a>
-                            <a class="dropdown-item" id="sessionFilters">Session</a>
-                            <a class="dropdown-item" id="positionFilters">Position</a>
-                            <a class="dropdown-item" id="optionsFilters">Options</a>
+                            <a class="dropdown-item" id="sessionFilters">Sessions</a>
+                            <a class="dropdown-item" id="sessionEvents">Events</a>
                         </div>
                     </div>
                     <a id="downloadModule" href="{{url_for('download_data_file')}}" class="nav-item nav-link"><i class="bi bi-download me-2"></i>Download</a>
@@ -231,8 +229,8 @@
     </div>
     <!-- JavaScript Libraries TODO: import in the project of referenced libraries-->
     <link href=
-'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/
-ui-lightness/jquery-ui.css'
+        'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/
+        ui-lightness/jquery-ui.css'
         rel='stylesheet'>
     <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
@@ -293,6 +291,13 @@ ui-lightness/jquery-ui.css'
         url_for('static', filename='js/main.js')
       }}"></script>
     
+    <!-- adding the color picker reference -->
+    <script src="{{
+        url_for('static', filename='colorpicker/js/colpick.js')
+      }}"></script>
+    <link rel="stylesheet" href="{{
+        url_for('static', filename='colorpicker/css/colpick.css')
+      }}" type="text/css"/>
 </body>
 
 </html>

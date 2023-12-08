@@ -10,8 +10,9 @@ class CompoundObj:
      def __init__(self):
           self.id = 0
           self.name = ''
+          self.color = ''
      def gasObj(self):
-          return {'id': self.id, 'name': self.name }
+          return {'id': self.id, 'name': self.name, 'color': self.color }
 
 class SensorObj:
      def __init__(self):

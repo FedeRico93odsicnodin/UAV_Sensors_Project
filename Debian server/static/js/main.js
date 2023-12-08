@@ -88,6 +88,8 @@
         // TODO: eventual display of message of pending modifications 
         backToDashboardContext()
         isFilterContext = false
+        // resetting the color picker new colors config 
+        GasColors = {}
     })
     $("#saveBtn").click(function() {
         var newJSONFilters = setNewSessionStorageFilters()

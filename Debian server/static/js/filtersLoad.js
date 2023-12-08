@@ -3,6 +3,11 @@
 var OverallSensors = []
 var OverallGases = []
 var OverallSessions = []
+
+// colors for the various gases 
+var GasColors = {}
+var AtLeastAChangedColor = false
+
 // loaded filters matrix 
 var loadedFiltersParams = {}
 var isEmptyDatabase = false
@@ -177,6 +182,12 @@ function initSensorsFilters(showView, callBackFilters) {
         }
     })
 }
+// getting the gas identifier from the color picker 
+function getGasIdentifierFromColorPicker(colorPickerId) {
+    var colorPickerMarker = 'colorPicker_';
+    var gasId = colorPickerId.substring(colorPickerMarker.length);
+    return gasId;
+}
 // Initializations for the gases selection filters 
 function initGasesFilters(showView, callBackFilters) {
     $.ajax({
@@ -192,16 +203,49 @@ function initGasesFilters(showView, callBackFilters) {
             }
             var gasesObj = JSON.parse(data)
             var sessionFilters = getSessionStorageFilters()
+            // resetting params population 
             $("#gasesTable").empty()
             OverallGases = []
+            GasColors = {}
+            AtLeastAChangedColor = false;
             // appending sensors to filters 
             for(var ind in gasesObj) {
                 var gasIdentifier = gasesObj[ind].name + "_" + gasesObj[ind].id
+                var gasColor = gasesObj[ind].color
                 var checkId = gasIdentifier + "_check"
-                var currRowGas = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="' + checkId + '"></td><td id="' + gasIdentifier + '">' + gasesObj[ind].name + '</td></tr>'
+                // adding the checkbox for gas selection and the color picker for the gas color 
+                var currRowGas = '<tr>' + 
+                                    '<td style="width:25px">' + 
+                                        '<input class="form-check-input" type="checkbox" id="' + checkId + '">' + 
+                                    '</td>' + 
+                                    '<td id="' + gasIdentifier + '">' 
+                                        + gasesObj[ind].name + '</td>' +
+                                    '<td><button id="' + 'colorPicker_' + gasIdentifier + '">Show Color Picker</button></td>' + 
+                                    '<td><div id="' + 'colorShower_' + gasIdentifier + '" style="padding:15px;background-color:#' + gasColor + ';border-radius:5px"></div></td>' + 
+                                    '</tr>'
                 gasesObj[ind]['checkId'] = checkId
                 gasesObj[ind]['filterNameId'] = gasIdentifier
+                // populating the values for the colors of the gas 
+                var objGasColorPopulation = {'id': gasesObj[ind].id, 'color': gasesObj[ind].color};
                 $('#gasesTable').append(currRowGas);
+                // creation of the color picker for the current gas 
+                var colorPickerCurrGas = '#colorPicker_' + gasIdentifier;
+                $(colorPickerCurrGas).colpick({
+                    color: gasColor,
+                    onSubmit: function() {
+                        var newColor = this.fields[0].value;
+                        var newColorSel = "#" + newColor;
+                        console.log(newColorSel);
+                        // changing the color of the displayed visualization 
+                        var gasId = getGasIdentifierFromColorPicker(this.el.id);
+                        var colorShowerGas = 'colorShower_' + gasId;
+                        document.getElementById(colorShowerGas).style.backgroundColor = newColorSel;
+                        // memorizing the new configuration for an eventual save 
+                        if(GasColors[gasId] != newColor) {
+                            GasColors[gasId] = newColor;
+                        }
+                    }
+            });
                 OverallGases.push(gasesObj[ind])
             }
             for(var ind in gasesObj) {

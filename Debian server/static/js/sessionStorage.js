@@ -54,9 +54,20 @@ function setNewSessionStorageFilters() {
     newFilterObj['humidity_time_graph'] = createFilterSessionObj("humidity_time_graph", "FilterOptions", document.getElementById('humidity_time_graph_check').checked)
     newFilterObj['ppms_temperature_graph'] = createFilterSessionObj("ppms_temperature_graph", "FilterOptions", document.getElementById('ppms_temperature_graph_check').checked)
     newFilterObj['ppms_humidity_graph'] = createFilterSessionObj("ppms_humidity_graph", "FilterOptions", document.getElementById('ppms_humidity_graph_check').checked)
+
+    // the overall passed object 
+    postFiltersObj = {};
+    postFiltersObj.newFiltersConfig = newFilterObj
+    postFiltersObj.gasColors = {};
+    // verifying the presence of valorized colors for the gases to display
+    if(Object.keys(GasColors).length) {
+        postFiltersObj.gasColors = GasColors;
+    }
+
     var filterObjToJSON = JSON.stringify(newFilterObj)
+    var objPostDef = JSON.stringify(postFiltersObj)
     sessionStorage.setItem("filterOptions", filterObjToJSON)
-    return filterObjToJSON
+    return objPostDef
 }
 // creating filter obj for POST request and successive session storage 
 function createFilterSessionObj(filterID, filterContext, selected, dataContent) {
