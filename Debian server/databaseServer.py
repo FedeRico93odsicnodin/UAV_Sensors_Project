@@ -648,11 +648,11 @@ def alignPointsSessionWithModifiedDate(sessionId, modifiedDateObj):
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         sqlite_update_datanewdate_statement = """
-        update processed_sensors_data SET date = 
-        DATETIME(
-        date, 
-        cast((JulianDay('{0}') - JulianDay(date)) * 24 * 60 As Integer) 
-        || ' minutes') || substr(date, instr(date, '.'))
+        update processed_sensors_data set date = (datetime
+            (
+                (JulianDay(date) + (JulianDay('{0}') 
+                - Julianday((select date from processed_sensors_data where session_ref = {1} order by date LIMIT 1)))
+            )) || substr(date, instr(date, '.')))
         where session_ref = {1}
 """
         sqlite_update_datanewdate_statement = sqlite_update_datanewdate_statement.format(str(modifiedDateObj), str(sessionId))
