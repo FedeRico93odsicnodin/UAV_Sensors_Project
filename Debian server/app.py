@@ -1,3 +1,4 @@
+import datetime
 from flask import Flask, render_template, request, url_for, jsonify
 import os
 import threading 
@@ -134,11 +135,32 @@ def get_all_stored_filters():
 
         # verifying the eventual update for the session date 
         for dt in currSessionDatesModification:
+            # getting all parameters for the session and date modifications 
             sessionId = int(currSessionDatesModification[dt]['sessionId'])
-            modifiedDate = currSessionDatesModification[dt]['modifiedDate']
-            modifiedDateStr = currSessionDatesModification[dt]['modifiedDateStr']
-            print(modifiedDate)
-            print(str(sessionId) + " - " + modifiedDateStr)
+            #modifiedDate = currSessionDatesModification[dt]['modifiedDate']
+            #modifiedDateStr = currSessionDatesModification[dt]['modifiedDateStr']
+            dateYear = currSessionDatesModification[dt]['dateYear']
+            dateMonth = currSessionDatesModification[dt]['dateMonth']
+            dateDay = currSessionDatesModification[dt]['dateDay']
+            dateHour = currSessionDatesModification[dt]['dateHour']
+            dateMinutes = currSessionDatesModification[dt]['dateMinutes']
+            dateSeconds = currSessionDatesModification[dt]['dateSeconds']
+            dateMillis = currSessionDatesModification[dt]['dateMillis']
+            newDateForSession = datetime.datetime(
+                dateYear
+                ,dateMonth
+                ,dateDay
+                ,dateHour
+                ,dateMinutes
+                , dateSeconds
+                , dateMillis)
+            #print(modifiedDate)
+            #print(str(sessionId) + " - " + modifiedDateStr)
+            print(newDateForSession)
+            # modification for the current session
+            databaseServer.updateDateSessionWithModifiedDate(sessionId, newDateForSession)
+            # modification for all the points set for the current session
+            databaseServer.alignPointsSessionWithModifiedDate(sessionId, newDateForSession)
         return json.dumps({'status': 'ok'})
 
         

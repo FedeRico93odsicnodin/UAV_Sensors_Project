@@ -11,6 +11,7 @@ var StoredGasColors = {}
 // new values for the sessions date and time 
 var SessionsDateTimes = {}
 var StoredSessionsDateTimes = {}
+var timeInit = 0;
 
 // loaded filters matrix 
 var loadedFiltersParams = {}
@@ -326,7 +327,11 @@ function initSessionsFilters(showView, callBackFilters) {
             }
             var sessionObj = JSON.parse(data)
             var sessionFilters = getSessionStorageFilters()
+            // resetting parameters 
             OverallSessions = []
+            SessionsDateTimes = {}
+            // initialization for the date and time pickers 
+            timeInit = sessionObj.length;
             $("#sessionsTable").empty()
             // appending sensors to filters 
             for(var ind in sessionObj) {
@@ -364,6 +369,8 @@ function initSessionsFilters(showView, callBackFilters) {
                         scrollbar: true,
                         setDate : initDateSession,
                         onSelect: function(dataText) {
+                            // decrementation on eventual initialization
+                            if(dateInit)
                             // getting the current session identifier
                             var currIdElement = $(this)[0].attributes.id.value;
                             // console.log(currIdElement);
@@ -401,7 +408,17 @@ function initSessionsFilters(showView, callBackFilters) {
                             // getting the id for the current session
                             var currSessionId = getStoredSessionIdFromBuiltId(sessionId);
                             // creation of the new object for the date modification 
-                            var dateModificationObj = {'sessionId': currSessionId, 'modifiedDate': newDate }
+                            var dateModificationObj = {
+                                'sessionId': currSessionId, 
+                                'modifiedDate': newDate,
+                                'dateYear': newDate.getFullYear(),
+                                'dateMonth': newDate.getMonth(),
+                                'dateDay': newDate.getDate(),
+                                'dateHour': newDate.getHours(),
+                                'dateMinutes': newDate.getMinutes(),
+                                'dateSeconds': newDate.getSeconds(),
+                                'dateMillis': newDate.getMilliseconds()
+                            }
                             SessionsDateTimes[sessionId] = dateModificationObj;
                         }
                     }
@@ -410,6 +427,11 @@ function initSessionsFilters(showView, callBackFilters) {
                     {
                         defaultTime: initDateSession.getHours() + ":" + initDateSession.getMinutes(),
                         change: function(timeDate) {
+                            // while initialization: decrement 
+                            if(timeInit > 0) {
+                                timeInit = timeInit -1;
+                                return;
+                            }
                             // getting the current session identifier
                             var currIdElement = $(this)[0].attributes.id.value;
                             // console.log(currIdElement);
@@ -446,7 +468,17 @@ function initSessionsFilters(showView, callBackFilters) {
                             // getting the id for the current session
                             var currSessionId = getStoredSessionIdFromBuiltId(sessionId);
                             // creation of the new object for the date modification 
-                            var dateModificationObj = {'sessionId': currSessionId, 'modifiedDate': newDate }
+                            var dateModificationObj = {
+                                'sessionId': currSessionId, 
+                                'modifiedDate': newDate,
+                                'dateYear': newDate.getFullYear(),
+                                'dateMonth': newDate.getMonth(),
+                                'dateDay': newDate.getDate(),
+                                'dateHour': newDate.getHours(),
+                                'dateMinutes': newDate.getMinutes(),
+                                'dateSeconds': newDate.getSeconds(),
+                                'dateMillis': newDate.getMilliseconds()
+                            }
                             SessionsDateTimes[sessionId] = dateModificationObj;
                         }
                     }

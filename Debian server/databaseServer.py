@@ -625,13 +625,38 @@ def updateGasColorDefinition(gasId, gasNewColor):
         con.close()
         #print('execute statement ')
 
+# method for getting the current formatted date for sqlite starting from a date of type 
+# 2 - Thu Dec 07 2023 09:59:00 GMT+0100 (Central European Standard Time)
+def getFormattedSQLiteDate(modifiedDateObj):
+    ""
+
 # allow to save the new information for the session initial date modification 
 def updateDateSessionWithModifiedDate(sessionId, modifiedDateObj):
     with Lock():
         global DatabaseLocation
+        sessionNewName = 'session started in ' + str(modifiedDateObj)
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_update_gascolor_statement = "UPDATE detected_substances SET color = '" + gasNewColor + "' WHERE id = " + str(gasId)
-        cur = con.execute(sqlite_update_gascolor_statement)
+        sqlite_update_session_statement = "UPDATE sessions SET name = '" + sessionNewName + "', begin_date = '" + str(modifiedDateObj) + "' WHERE id = " + str(sessionId)
+        cur = con.execute(sqlite_update_session_statement)
         con.commit()
         con.close()
-        #print('execute statement ')
+        print('execute statement ')
+
+# allow the modification for all the points of the session with an alignment to the modified date
+def alignPointsSessionWithModifiedDate(sessionId, modifiedDateObj):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_update_datanewdate_statement = """
+        update processed_sensors_data SET date = 
+        DATETIME(
+        date, 
+        cast((JulianDay('{0}') - JulianDay(date)) * 24 * 60 As Integer) 
+        || ' minutes') || substr(date, instr(date, '.'))
+        where session_ref = {1}
+"""
+        sqlite_update_datanewdate_statement = sqlite_update_datanewdate_statement.format(str(modifiedDateObj), str(sessionId))
+        cur = con.execute(sqlite_update_datanewdate_statement)
+        con.commit()
+        con.close()
+        print('execute statement UPDATE POINTS date')
