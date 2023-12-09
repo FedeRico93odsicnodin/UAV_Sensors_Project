@@ -45,7 +45,10 @@ function getUpTimesObjGases() {
         var gasNameId = gasName + "_" + gasId
         // TODO: just a test 
         var lastLabelIndex = allTimeDivisionPoints[gasRangeSelector].labels.length - 1
-        var lastGasLabel = allTimeDivisionPoints[gasRangeSelector].labels[lastLabelIndex]
+        var lastGasLabel = allTimeDivisionPoints[gasRangeSelector].labels[lastLabelIndex];
+        if(typeof(lastGasLabel) === "undefined") {
+            continue;
+        }
         var lastGasLabelConversion = new Date(lastGasLabel)
         var currObjGas = {"gasId": gasId, "gasName": gasName, "upTime": lastGasLabel, "upTimeConv": lastGasLabelConversion}
         if(gasNameId in currInputsPost) {
@@ -310,7 +313,7 @@ function reloadData() {
                 }
                 // new session will be loaded 
                 if(pageReload) {
-                    document.location.reload();
+                    // document.location.reload();
                 }
                 // updating the points of the added session 
                 else {
@@ -324,5 +327,5 @@ function reloadData() {
     }
 }
 function startUpdaterScript() {
-    setInterval(reloadData, 5000)
+    // setInterval(reloadData, 5000) // TODO: reviewing of this logic 
 }

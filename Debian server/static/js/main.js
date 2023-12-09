@@ -1,3 +1,4 @@
+
 (function ($) {
     
     "use strict";
@@ -32,7 +33,7 @@
         $('.sidebar, .content').toggleClass("open");
         return false;
     });
-
+    
 
     // Progress Bar
     $('.pg-bar').waypoint(function () {
@@ -110,6 +111,10 @@
             })
     })
     $(document).ready(function() {
+        setTimeout(function() {
+            $("#ui-datepicker-div").hide();
+        }, 500)
+        
         // at the beginning i'm visualizing data 
         isFilterContext = false
         // loading phase
