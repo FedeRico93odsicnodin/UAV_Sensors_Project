@@ -118,17 +118,30 @@ def get_all_stored_filters():
         # getting the new filters config from the object 
         currFilterSel = filtersJSON['newFiltersConfig']
         currColorsSel = filtersJSON['gasColors']
-        print(currFilterSel)
+        currSessionDatesModification = filtersJSON['modifiedDateSessions']
+        #print(currFilterSel)
+        #print(currSessionDatesModification)
         for f in currFilterSel:
             filtersToInsert.append(currFilterSel[f])
         databaseServer.insertFilterOptions(filtersToInsert)
+
         # verifying for the eventual update of the color for the visualized gas
         for c in currColorsSel:
             gasId = int(currColorsSel[c]['Id'])
             gasNewColor = str(currColorsSel[c]['color'])
-            print(str(gasId) + " - " + gasNewColor)
+            #print(str(gasId) + " - " + gasNewColor)
             databaseServer.updateGasColorDefinition(gasId, gasNewColor)
+
+        # verifying the eventual update for the session date 
+        for dt in currSessionDatesModification:
+            sessionId = int(currSessionDatesModification[dt]['sessionId'])
+            modifiedDate = currSessionDatesModification[dt]['modifiedDate']
+            modifiedDateStr = currSessionDatesModification[dt]['modifiedDateStr']
+            print(modifiedDate)
+            print(str(sessionId) + " - " + modifiedDateStr)
         return json.dumps({'status': 'ok'})
+
+        
     #print("GETTING FILTERS PHASE")
     allFilters = databaseServer.getExistingFilters()
     objFilters = {}
@@ -150,12 +163,12 @@ def get_gasdata_selected():
     # verifying the selection as filter for the current substance 
     gasActivation = databaseServer.checkFilterActivatedOnGas(gasName, gasId)
     if(gasActivation == False):
-        print('the gas is not activated')
+        #print('the gas is not activated')
         return json.dumps({'status': gasName + ': gas not activated'})
     # verifying the activation of the respective sensor 
     sensorActivation = databaseServer.checkFilterActivateOnSensor(gasName, gasId)
     if(sensorActivation == False):
-       print('sensor is marked as not activated ' + str(gasName))
+       #print('sensor is marked as not activated ' + str(gasName))
        return json.dumps({'status': gasName + ': sensor not activated'})
     # verifying presence of date filters 
     activeDateFilters = databaseServer.getActiveDataFilters()

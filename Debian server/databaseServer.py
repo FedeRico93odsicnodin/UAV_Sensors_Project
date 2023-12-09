@@ -174,7 +174,7 @@ def getCompoundsDefinitions():
         
         compoundsRecords = cur.fetchall()
         for compRec in compoundsRecords:
-            print(compRec)
+            #print(compRec)
             currCompObj = dbmodels.CompoundObj()
             currCompObj.id = int(compRec[0])
             currCompObj.name = str(compRec[1])
@@ -360,12 +360,12 @@ def getExistingFilters():
 # checking if the gas is selected in filters 
 def checkFilterActivatedOnGas(gasName, gasId):
      gasName = str(gasName).replace(' ', 'e')
-     print('gasName: ' + str(gasName) + ' - gasId: ' + str(gasId))
+     #print('gasName: ' + str(gasName) + ' - gasId: ' + str(gasId))
      with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         check_gasfilter_query = "SELECT selected FROM options_data_filters WHERE filter_name = '" + gasName + "' AND filter_value = " + str(gasId) + " AND filter_context = 'Gases'"
-        print('QUERY CHECK: ' + check_gasfilter_query)
+        #print('QUERY CHECK: ' + check_gasfilter_query)
         cur = con.execute(check_gasfilter_query)
         gasRecord = cur.fetchone()
         try:
@@ -623,4 +623,4 @@ def updateGasColorDefinition(gasId, gasNewColor):
         cur = con.execute(sqlite_update_gascolor_statement)
         con.commit()
         con.close()
-        print('execute statement ')
+        #print('execute statement ')

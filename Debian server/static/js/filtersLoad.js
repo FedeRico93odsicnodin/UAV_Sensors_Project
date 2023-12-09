@@ -7,7 +7,10 @@ var OverallSessions = []
 // colors for the various gases 
 var GasColors = {}
 var StoredGasColors = {}
-var AtLeastAChangedColor = false
+
+// new values for the sessions date and time 
+var SessionsDateTimes = {}
+var StoredSessionsDateTimes = {}
 
 // loaded filters matrix 
 var loadedFiltersParams = {}
@@ -219,7 +222,6 @@ function initGasesFilters(showView, callBackFilters) {
             $("#gasesTable").empty()
             OverallGases = []
             GasColors = {}
-            AtLeastAChangedColor = false;
             // appending sensors to filters 
             for(var ind in gasesObj) {
                 var gasIdentifier = gasesObj[ind].name + "_" + gasesObj[ind].id
@@ -291,11 +293,23 @@ function initGasesFilters(showView, callBackFilters) {
 }
 // cleaning the session name for creating the id 
 function initIdSessionFromName(sessionName) {
-    sessionName = sessionName.replaceAll(' ', '_');
-    sessionName = sessionName.replaceAll(':', '_');
-    sessionName = sessionName.replaceAll('.', '_');
-    sessionName = sessionName.replaceAll('-', '_');
+    sessionName = sessionName.replaceAll(' ', '');
+    sessionName = sessionName.replaceAll(':', '');
+    sessionName = sessionName.replaceAll('.', '');
+    sessionName = sessionName.replaceAll('-', '');
     return sessionName;
+}
+// getting the session identifier from the built id 
+function getSessionIdFromBuiltId(buildId) {
+    var splittedId = buildId.split('_');
+    var sessionId = splittedId[0] + '_' + splittedId[1];
+    return sessionId;
+}
+// getting the id of the stored session from the built id 
+function getStoredSessionIdFromBuiltId(buildId) {
+    var splittedId = buildId.split('_');
+    var sessionStoredId = parseInt(splittedId[1]);
+    return sessionStoredId;
 }
 // Initialization for the sessions selection filters 
 function initSessionsFilters(showView, callBackFilters) {
@@ -321,6 +335,11 @@ function initSessionsFilters(showView, callBackFilters) {
                 var sessionIdentifierDatePicker = sessionIdentifier + "_date";
                 var sessionIdentifierTimePicker = sessionIdentifier + "_time";
                 var checkId = sessionIdentifier + "_check"
+
+                // initializing the date object 
+                var initDateSession = new Date(sessionObj[ind].begin_date);
+                StoredSessionsDateTimes[sessionIdentifier] = initDateSession;
+
                 var currRowSession = 
                 '<tr>'
                     + '<td style="width:25px">' 
@@ -342,11 +361,93 @@ function initSessionsFilters(showView, callBackFilters) {
                     {
                         dynamic: false,
                         dropdown: true,
-                        scrollbar: true
+                        scrollbar: true,
+                        onSelect: function(dataText) {
+                            // getting the current session identifier
+                            var currIdElement = $(this)[0].attributes.id.value;
+                            // console.log(currIdElement);
+                            var sessionId = getSessionIdFromBuiltId(currIdElement);
+                            // console.log(sessionId);
+                            // getting the stored date for the selected session 
+                            var storedDate = StoredSessionsDateTimes[sessionId];
+                            // verifying if a modification for the date already exists
+                            if(SessionsDateTimes.hasOwnProperty(sessionId)) {
+                                // console.log('a modification for the date already occur')
+                                storedDate = SessionsDateTimes[sessionId].modifiedDate;
+                            }
+                            // console.log('stored date ' + storedDate);
+                            // getting aa new date for the selected date from the picker 
+                            var newDatePart = new Date(dataText);
+                            // console.log('changing the date part from the date ' + newDatePart);
+                            // calculation for the new date 
+                            var newYear = newDatePart.getFullYear();
+                            var newMonth = newDatePart.getMonth();
+                            var newDay = newDatePart.getDate();
+                            var storedHour = storedDate.getHours();
+                            var storedMinutes = storedDate.getMinutes();
+                            var storedSeconds = storedDate.getSeconds();
+                            var storedMillis = storedDate.getMilliseconds();
+                            var newDate = new Date(
+                                newYear, 
+                                newMonth,
+                                newDay,
+                                storedHour,
+                                storedMinutes,
+                                storedSeconds,
+                                storedMillis
+                                );
+                            console.log(newDate);
+                            // getting the id for the current session
+                            var currSessionId = getStoredSessionIdFromBuiltId(sessionId);
+                            // creation of the new object for the date modification 
+                            var dateModificationObj = {'sessionId': currSessionId, 'modifiedDate': newDate }
+                            SessionsDateTimes[sessionId] = dateModificationObj;
+                        }
                     }
                 );
                 $( "#" + sessionIdentifierTimePicker ).timepicker(
-
+                    {
+                        change: function(timeDate) {
+                            // getting the current session identifier
+                            var currIdElement = $(this)[0].attributes.id.value;
+                            // console.log(currIdElement);
+                            var sessionId = getSessionIdFromBuiltId(currIdElement);
+                            // console.log(sessionId);
+                            // getting the stored date for the selected session 
+                            var storedDate = StoredSessionsDateTimes[sessionId];
+                            // verifying if a modification for the date already exists
+                            if(SessionsDateTimes.hasOwnProperty(sessionId)) {
+                                // console.log('a modification for the date already occur');
+                                storedDate = SessionsDateTimes[sessionId].modifiedDate;
+                            }
+                            // console.log('stored date ' + storedDate);
+                            // no necessity for a new conversion in date 
+                            var newTimePart = timeDate;
+                            // calculation for the new date
+                            var storedYear = storedDate.getFullYear();
+                            var storedMonth = storedDate.getMonth();
+                            var storedDay = storedDate.getDate();
+                            var newHour = newTimePart.getHours();
+                            var newMinutes = newTimePart.getMinutes();
+                            var newSeconds = newTimePart.getSeconds();
+                            var newMillis = newTimePart.getMilliseconds();
+                            var newDate = new Date(
+                                storedYear, 
+                                storedMonth,
+                                storedDay,
+                                newHour,
+                                newMinutes,
+                                newSeconds,
+                                newMillis
+                                );
+                            console.log(newDate);
+                            // getting the id for the current session
+                            var currSessionId = getStoredSessionIdFromBuiltId(sessionId);
+                            // creation of the new object for the date modification 
+                            var dateModificationObj = {'sessionId': currSessionId, 'modifiedDate': newDate }
+                            SessionsDateTimes[sessionId] = dateModificationObj;
+                        }
+                    }
                 );
                 OverallSessions.push(sessionObj[ind])
             }

@@ -67,6 +67,15 @@ function setNewSessionStorageFilters() {
             StoredGasColors[gasNameId] = GasColors[gasNameId];
         }
     }
+    // adding possibly date modifications for the sessions 
+    postFiltersObj.modifiedDateSessions = {}
+    if(Object.keys(SessionsDateTimes).length) {
+        for (var dateMod in SessionsDateTimes) {
+            SessionsDateTimes[dateMod].modifiedDateStr = String(SessionsDateTimes[dateMod].modifiedDate);
+        }
+
+        postFiltersObj.modifiedDateSessions = SessionsDateTimes;
+    }
 
     var filterObjToJSON = JSON.stringify(newFilterObj)
     var objPostDef = JSON.stringify(postFiltersObj)
