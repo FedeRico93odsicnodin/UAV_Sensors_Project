@@ -624,3 +624,14 @@ def updateGasColorDefinition(gasId, gasNewColor):
         con.commit()
         con.close()
         #print('execute statement ')
+
+# allow to save the new information for the session initial date modification 
+def updateDateSessionWithModifiedDate(sessionId, modifiedDateObj):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_update_gascolor_statement = "UPDATE detected_substances SET color = '" + gasNewColor + "' WHERE id = " + str(gasId)
+        cur = con.execute(sqlite_update_gascolor_statement)
+        con.commit()
+        con.close()
+        #print('execute statement ')

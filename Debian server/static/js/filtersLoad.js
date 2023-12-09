@@ -362,6 +362,7 @@ function initSessionsFilters(showView, callBackFilters) {
                         dynamic: false,
                         dropdown: true,
                         scrollbar: true,
+                        setDate : initDateSession,
                         onSelect: function(dataText) {
                             // getting the current session identifier
                             var currIdElement = $(this)[0].attributes.id.value;
@@ -404,9 +405,10 @@ function initSessionsFilters(showView, callBackFilters) {
                             SessionsDateTimes[sessionId] = dateModificationObj;
                         }
                     }
-                );
+                ).datepicker("setDate", initDateSession);
                 $( "#" + sessionIdentifierTimePicker ).timepicker(
                     {
+                        defaultTime: initDateSession.getHours() + ":" + initDateSession.getMinutes(),
                         change: function(timeDate) {
                             // getting the current session identifier
                             var currIdElement = $(this)[0].attributes.id.value;
@@ -449,6 +451,7 @@ function initSessionsFilters(showView, callBackFilters) {
                         }
                     }
                 );
+
                 OverallSessions.push(sessionObj[ind])
             }
             for(var ind in sessionObj) {

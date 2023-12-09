@@ -90,6 +90,8 @@
         isFilterContext = false
         // resetting the color picker new colors config 
         GasColors = {}
+        // resetting the modification of the dates for the sessions 
+        SessionsDateTimes = {}
     })
     $("#saveBtn").click(function() {
         var newJSONFilters = setNewSessionStorageFilters()
