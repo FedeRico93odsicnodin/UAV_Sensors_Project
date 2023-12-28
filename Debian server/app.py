@@ -120,8 +120,8 @@ def get_all_stored_filters():
         currFilterSel = filtersJSON['newFiltersConfig']
         currColorsSel = filtersJSON['gasColors']
         currSessionDatesModification = filtersJSON['modifiedDateSessions']
-        #print(currFilterSel)
-        #print(currSessionDatesModification)
+        # print(currFilterSel)
+        # print(currSessionDatesModification)
         for f in currFilterSel:
             filtersToInsert.append(currFilterSel[f])
         databaseServer.insertFilterOptions(filtersToInsert)
@@ -156,7 +156,7 @@ def get_all_stored_filters():
                 , dateMillis)
             #print(modifiedDate)
             #print(str(sessionId) + " - " + modifiedDateStr)
-            print(newDateForSession)
+            # print(newDateForSession)
             # modification for the current session
             databaseServer.updateDateSessionWithModifiedDate(sessionId, newDateForSession)
             # modification for all the points set for the current session
@@ -193,13 +193,14 @@ def get_gasdata_selected():
        #print('sensor is marked as not activated ' + str(gasName))
        return json.dumps({'status': gasName + ': sensor not activated'})
     # verifying presence of date filters 
-    activeDateFilters = databaseServer.getActiveDataFilters()
+    # activeDateFilters = databaseServer.getActiveDataFilters()
     # getting the data for the current gas TODO: implement date filters selection
     currGasData = databaseServer.getAllDataSensorsToDisplay(gasId)
     finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 
+# reload for each of the substances (first version v1)
 @app.route('/gasdata_reload', methods=['POST'])
 def get_gasdata_selected_reload():
     gasInputs = request.get_json() 
@@ -218,8 +219,33 @@ def get_gasdata_selected_reload():
     activeDateFilters = databaseServer.getActiveDataFilters()
     # getting the data for the current gas TODO: implement date filters selection
     currGasData = databaseServer.getAllDataSensorsToDisplayReload(gasId, upTime)
+    # currGasData = databaseServer.getAllDataSensorsToDisplay(gasId)
     finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
     #print(len(finalResult['gasData']))
+    finalResultJSON = json.dumps(finalResult)
+    return finalResultJSON
+
+@app.route('/gasdata_reload_v2', methods=['POST'])
+def get_gasdata_selected_reload_v2():
+    contentInput = request.get_json() 
+    # print("GAS DATA RELOAD V2")
+    finalResult = {}
+    for gas in contentInput:
+        # print(gas)
+        # print(contentInput[gas]) 
+        gasId = contentInput[gas]["gasId"]
+        gasName = contentInput[gas]["gasName"]
+        upTime = contentInput[gas]["upTime"]
+        # verifying the selection as filter for the current substance 
+        gasActivation = databaseServer.checkFilterActivatedOnGas(gasName, gasId)
+        if(gasActivation == False):
+            finalResult[gas] = { 'status': gasName + ': gas not activated'} 
+        # verifying the activation of the respective sensor 
+        sensorActivation = databaseServer.checkFilterActivateOnSensor(gasName, gasId)
+        if(sensorActivation == False):
+            finalResult[gas] = { 'status': gasName + ': gas not activated'} 
+        currGasData = databaseServer.getAllDataSensorsToDisplayReload(gasId, upTime)
+        finalResult[gas] = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 

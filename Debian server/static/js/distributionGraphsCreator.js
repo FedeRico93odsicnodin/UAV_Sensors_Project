@@ -84,7 +84,7 @@ function setNewPointNumberGraph(sel) {
     var currentCurve = allTimeDivisionPoints[gasVisualizationType]
     // getting the last points for visualize (only if enought points)
     if(currentCurve['data'].length < currSelectionVal) {
-        console.log('same curve')
+        // console.log('same curve')
         return
     }
     // TODO: eventually take the first or the last set based on a decision
@@ -376,7 +376,7 @@ function renderVisualizationPointsOnGraph(
     // getting the gasNameId definition for applying the current color to canvas 
     var gasNameIdRef = getGasNameIdFromGraphId(canvasId)
     var currColorApplication = "rgba(" + StoredGasColors[gasNameIdRef].color + ", .45)";
-    console.log(currColorApplication);
+    // console.log(currColorApplication);
     var canvGas = $("#" + canvasId).get(0).getContext("2d");
     var lineChart = new Chart(canvGas, {
         type: "line",
@@ -450,7 +450,7 @@ function getOverallCarouselContainerOfGas(htmlGas) {
 }
 // creating the main body of graphs for the specific session 
 function createBodyGraphsCurrSession(data, gasNameSessionId) {
-    console.log('gasSessionId ' + gasNameSessionId)
+    // console.log('gasSessionId ' + gasNameSessionId)
     // getting data for default visualization
     var dataDisplayMMM = getDataToDisplayMMM(data)
     var dataDisplayS = getDataToDisplaySS(data)
@@ -458,7 +458,7 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
     var dataDisplayH = getDataToDisplayHH(data)
     // no data to display for the basic case 
     if(dataDisplayMMM['data'].length == 0) {
-        console.log("nothing to display")
+        // console.log("nothing to display")
         return ''
     }
     allTimeDivisionPoints["mmm_" + gasNameSessionId] = dataDisplayMMM 
@@ -524,12 +524,12 @@ function loadDashboardData() {
             success: function(data) {
                 // somthing wrong in the call
                 if(data['status'].startsWith("ok_") == false) {
-                    console.log("nothing to display")
+                    // console.log("nothing to display")
                     return 
                 }
                 // no data to display ù
                 if(data['gasData'].length == 0) {
-                    console.log("nothing to display")
+                    // console.log("nothing to display")
                     return 
                 }
                 setCanvasPoints = []
@@ -591,7 +591,7 @@ function prepareCarouselHtml(htmlContentArray) {
 // render the canvas for the selected gas 
 function renderGasCanvas(currCanvasDataArr) {
     for(var i in currCanvasDataArr) {
-        console.log(currCanvasDataArr[i]);
+        // console.log(currCanvasDataArr[i]);
         currChart = renderVisualizationPointsOnGraph(
             currCanvasDataArr[i].canvasId, 
             currCanvasDataArr[i].gasName,

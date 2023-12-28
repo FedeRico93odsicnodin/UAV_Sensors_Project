@@ -107,7 +107,7 @@ function addCurrGasRefForUpdateGraph(gasNameSessionId) {
 function getNoOverlappedDataVisualization(newPointsToAdd, lastElementInSet) {
     var cleanedPointsToAdd = {}
     if(newPointsToAdd["labels"].includes(lastElementInSet)) {
-        console.log('TRUE INCLUSION')
+        // console.log('TRUE INCLUSION')
         var indexOfStart = newPointsToAdd["labels"].indexOf(lastElementInSet) + 1
         if(indexOfStart < newPointsToAdd["labels"].length) {
             cleanedPointsToAdd["labels"] = newPointsToAdd["labels"].slice(indexOfStart)
@@ -183,7 +183,7 @@ function addCurrentDataToExistingSet(dataToAdd, gasNameSessionId) {
     var dataDisplayMMM = getDataToDisplayMMM(dataToAdd)
     // no data to display for the basic case 
     if(dataDisplayMMM['data'].length == 0) {
-        console.log('no data for the ref ' + gasNameSessionId)
+        // console.log('no data for the ref ' + gasNameSessionId)
         return
     }
     // adding current gas reference for update to matrix 
@@ -270,7 +270,7 @@ function checkSessionIdDataVisualized(retrievedSessionId) {
 function reloadData() {
     // TODO: implementation of reload filters 
     if(isFilterContext) {
-        console.log('data refresh standby')
+        // console.log('data refresh standby')
         return
     }
     // resetting matrix update 
@@ -292,7 +292,7 @@ function reloadData() {
             dataType: 'json',
             success: function(data) {
                 if(data['gasData'].length == 0) {
-                    console.log('no new data to display')
+                    // console.log('no new data to display')
                     return 
                 }
                 // getting datas splitted by session 
@@ -310,6 +310,10 @@ function reloadData() {
                     }
                     // forcing the relaod of the browser including the points of the added session
                     pageReload = true
+                    // recursive invoke after 1 sec
+                    setTimeout(
+                        // starting the update phase script 
+                        reloadData, 1000);
                 }
                 // new session will be loaded 
                 if(pageReload) {
@@ -326,6 +330,69 @@ function reloadData() {
           });
     }
 }
+// function of addition of points on current curves (v2)
+function reloadData_v2() {
+    if(isFilterContext) {
+        // console.log('data refresh standby')
+        return
+    }
+    // resetting matrix update 
+    currGasUpdatingCurveMatrix = {}
+    currSetPointsDifference = {}
+    // getting current up times for the displayed gases 
+    var currGasNewSelectionsObj = getUpTimesObjGases();
+    // console.log(currGasNewSelectionsObj);
+    $.ajax({
+        type: "POST",
+        url: "/gasdata_reload_v2",
+        data: JSON.stringify(currGasNewSelectionsObj),
+        contentType: "application/json",
+        dataType: 'json',
+        success: function(data) {
+            // forcing page reload with a new session 
+            console.log("data reload");
+            var pageReload = false
+            // console.log(data);
+            for(var gasObj in data) {
+                // console.log(data[gasObj]);
+                // no new data to display for current gas 
+                if(data[gasObj]['gasData'].length == 0) {
+                    // console.log('no new data to display')
+                    continue; 
+                }
+                // getting datas splitted by session 
+                var splittedDataSessions = getSplittedSessionsData(data[gasObj]);
+                console.log(splittedDataSessions);
+                // adding the points for the current session 
+                gasNameSessionIds = []
+                
+                for(var i in splittedDataSessions) {
+                    gasNameSessionId = splittedDataSessions[i]['gasName'] + "_" + splittedDataSessions[i]['gasId'] + '_session' + splittedDataSessions[i]['sessionID']
+                    gasNameSessionIds.push(gasNameSessionId)
+                    if(checkSessionIdDataVisualized(splittedDataSessions[i]['sessionID'])) {
+                        addCurrentDataToExistingSet(splittedDataSessions[i], gasNameSessionId)
+                        continue 
+                    }
+                    // forcing the relaod of the browser including the points of the added session
+                    pageReload = true
+                }
+                // new session will be loaded 
+                if(pageReload == false) {
+                    updateGraphsCurrentSelections();
+                }
+            }
+            if(pageReload) {
+                document.location.reload();
+            }
+            // executing eventual reload of points after 2.5 sec
+            setTimeout(reloadData_v2, 2500);
+        },
+        error: function(err) {
+            console.log('error saving filters\n' + err)
+        }
+    });
+}
+
 function startUpdaterScript() {
     // setInterval(reloadData, 5000) // TODO: reviewing of this logic 
 }

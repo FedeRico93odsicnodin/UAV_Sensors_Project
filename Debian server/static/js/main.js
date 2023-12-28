@@ -113,7 +113,8 @@
     $(document).ready(function() {
         setTimeout(function() {
             $("#ui-datepicker-div").hide();
-        }, 500)
+            reloadData_v2();
+        }, 500);
         
         // at the beginning i'm visualizing data 
         isFilterContext = false

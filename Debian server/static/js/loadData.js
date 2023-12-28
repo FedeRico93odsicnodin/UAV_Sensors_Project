@@ -30,7 +30,7 @@ function saveFiltersConfig(newJSONFilters, callBackLoad, errLoad) {
 function initAllDataAndFilters(data) {
     // storing all the filters and then load all the data
     if(data == "{}") {
-        console.log('filters to load')
+        // console.log('filters to load')
     }
     // setting initial data 
     sessionStorage.setItem("filterOptions", data)
@@ -38,8 +38,7 @@ function initAllDataAndFilters(data) {
     initAllFilters(filterCallbackMainLoad)
     // initial load completed 
     isLoadingPhase = false
-    // starting the update phase script 
-    startUpdaterScript()
+    
 }
 
 function filterCallbackMainLoad() {

@@ -22,7 +22,7 @@ function initDateFilters(showView, callBackFilters) {
         url: "/filters/date"
         , success: function(data) {
             if(data == "null") {
-                console.log('no data')
+                // console.log('no data')
                 isEmptyDatabase = true
                 if(checkIfLoadedFilters('DateFilters')) {
                     setTimeout(function() {document.location.reload()}, 3000)
@@ -138,7 +138,7 @@ function initSensorsFilters(showView, callBackFilters) {
         url: "/filters/sensors"
         , success: function(data) {
             if(data == "[]") {
-                console.log('no data')
+                // console.log('no data')
                 isEmptyDatabase = true
                 if(checkIfLoadedFilters('SensorsFilters')) {
                     setTimeout(function() {document.location.reload()}, 3000)
@@ -210,7 +210,7 @@ function initGasesFilters(showView, callBackFilters) {
         url: "/filters/gases"
         , success: function(data) {
             if(data == "[]") {
-                console.log('no data')
+                // console.log('no data')
                 isEmptyDatabase = true
                 if(checkIfLoadedFilters('GasesFilters')) {
                     setTimeout(function() {document.location.reload()}, 3000)
@@ -256,7 +256,7 @@ function initGasesFilters(showView, callBackFilters) {
                         var colorG = this.fields[2].value;
                         var colorB = this.fields[3].value;
                         var complexiveRGB = colorR + "," + colorG + "," + colorB;
-                        console.log(newColorSel);
+                        // console.log(newColorSel);
                         // changing the color of the displayed visualization 
                         var gasNameId = getGasIdentifierFromColorPicker(this.el.id);
                         var colorShowerGas = 'colorShower_' + gasNameId;
@@ -318,7 +318,7 @@ function initSessionsFilters(showView, callBackFilters) {
         url: "/filters/sessions"
         , success: function(data) {
             if(data == "[]") {
-                console.log('no data')
+                // console.log('no data')
                 isEmptyDatabase = true
                 if(checkIfLoadedFilters('SessionsFilters')) {
                     setTimeout(function() {document.location.reload()}, 3000)
@@ -404,7 +404,7 @@ function initSessionsFilters(showView, callBackFilters) {
                                 storedSeconds,
                                 storedMillis
                                 );
-                            console.log(newDate);
+                            // console.log(newDate);
                             // getting the id for the current session
                             var currSessionId = getStoredSessionIdFromBuiltId(sessionId);
                             // creation of the new object for the date modification 
@@ -464,7 +464,7 @@ function initSessionsFilters(showView, callBackFilters) {
                                 newSeconds,
                                 newMillis
                                 );
-                            console.log(newDate);
+                            // console.log(newDate);
                             // getting the id for the current session
                             var currSessionId = getStoredSessionIdFromBuiltId(sessionId);
                             // creation of the new object for the date modification 
