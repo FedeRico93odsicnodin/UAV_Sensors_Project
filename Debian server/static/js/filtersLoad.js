@@ -159,7 +159,7 @@ function initSensorsFilters(showView, callBackFilters) {
                 }
                 var checkId = sensorIdentifier + "_check";
                 var inputAdjustId = sensorIdentifier + "_adjust";
-                console.log(sensObj[ind]);
+                // console.log(sensObj[ind]);
                 var currRowSens = '<tr>' + 
                     '<td style="width:25px">' + 
                         '<input class="form-check-input" type="checkbox" id="' + checkId + '" />' + 

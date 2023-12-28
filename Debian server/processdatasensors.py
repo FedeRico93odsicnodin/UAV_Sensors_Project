@@ -438,3 +438,31 @@ def updateR0Values():
         databaseServer.update_rzero_value(sensorId, resVal)
     #if(num > 0):
     #    print('updated ' + str(num) + ' R0s values')
+        
+# method for version V1
+# allow the regulation of the outliers imposed on a particular sensor 
+def regulateOutliersCurrSensor(sensorId, outlierLowerBound):
+    # getting all the outliers for the current sensor 
+    outliersForSensor = databaseServer.getAllOutliersFromLowerLimitForSensor(sensorId, outlierLowerBound)
+    # print(outliersForSensor)
+    for outlier in outliersForSensor:
+        outlierId = outlier["id"]
+        # print(outlierId)
+        # getting the nearest min and the nearest max for the current outlier 
+        outlierNearestLow = databaseServer.getNearestValueToOutlierLower(sensorId, outlierId)
+        outlierNearestUp = databaseServer.getNearestValueToOutlierUpper(sensorId, outlierId)
+        # print(outlierNearestLow)
+        # print(outlierNearestUp)
+        # calculating the medium of the two nearest values 
+        medVal = 0
+        if(outlierNearestLow == None and outlierNearestUp == None):
+            medVal = outlier["sensedVal"]
+        if(outlierNearestUp == None):
+            medVal = outlierNearestLow["sensedValue"]
+        if(outlierNearestLow == None):
+            medVal = outlierNearestUp["sensedValue"]
+        else:
+            medVal = (outlierNearestLow["sensedValue"] + outlierNearestUp["sensedValue"]) / 2
+        # print(medVal)
+        # updating the outlier with the averaged value 
+        databaseServer.updateOutlierValue(outlierId, medVal)

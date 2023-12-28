@@ -649,7 +649,7 @@ def updateDateSessionWithModifiedDate(sessionId, modifiedDateObj):
         cur = con.execute(sqlite_update_session_statement)
         con.commit()
         con.close()
-        print('execute statement ')
+        # print('execute statement ')
 
 # allow the modification for all the points of the session with an alignment to the modified date
 def alignPointsSessionWithModifiedDate(sessionId, modifiedDateObj):
@@ -668,4 +668,81 @@ def alignPointsSessionWithModifiedDate(sessionId, modifiedDateObj):
         cur = con.execute(sqlite_update_datanewdate_statement)
         con.commit()
         con.close()
-        print('execute statement UPDATE POINTS date')
+        # print('execute statement UPDATE POINTS date')
+
+##### REGULATING OUTLIERS METHODS #####
+# getting all the outliers up to a certain value for a certain substance 
+def getAllOutliersFromLowerLimitForSensor(sensorId, lowerBound):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_alloutliers_statement = """
+        select id, detected_substance_value 
+        from processed_sensors_data
+        where sensor_ref = ?
+        and detected_substance_value > ?
+"""
+        cur = con.execute(sqlite_alloutliers_statement, (sensorId, lowerBound))
+        outliersRecords = cur.fetchall()
+        returnedData = []
+        for outlierRecord in outliersRecords:
+            currOutlierObj = {}
+            currOutlierObj['id'] = int(outlierRecord[0])
+            currOutlierObj['sensedVal'] = float(outlierRecord[1])
+            returnedData.append(currOutlierObj)
+        con.close()
+        return returnedData
+
+# getting the nearest lower value to the selected outlier and for the certain sensor 
+def getNearestValueToOutlierLower(sensorId, outlierId):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_nearest_min_sel = """
+        select id, detected_substance_value 
+        from processed_sensors_data
+        where 
+        sensor_ref = ? and id < ?
+        order by id desc 
+        limit 1
+"""
+        cur = con.execute(sqlite_nearest_min_sel, (sensorId, outlierId))
+        nearestLowerDb = cur.fetchone()
+        nearestLower = {"id": None, "sensedValue": None }
+        if(nearestLowerDb != None):
+            nearestLower["id"] = int(nearestLowerDb[0])
+            nearestLower["sensedValue"] = float(nearestLowerDb[1])
+        return nearestLower
+
+# getting the nearest upper value to the selected outlier and for the certain sensor 
+def getNearestValueToOutlierUpper(sensorId, outlierId):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_nearest_max_sel = """
+        select id, detected_substance_value 
+        from processed_sensors_data
+        where 
+        sensor_ref = ? and id > ?
+        order by id asc
+        limit 1
+"""
+        cur = con.execute(sqlite_nearest_max_sel, (sensorId, outlierId))
+        nearestUpperDb = cur.fetchone()
+        nearestUpper = {"id": None, "sensedValue": None }
+        if(nearestUpperDb != None):
+            nearestUpper["id"] = int(nearestUpperDb[0])
+            nearestUpper["sensedValue"] = float(nearestUpperDb[1])
+        return nearestUpper
+
+# updating the new calculated value for the current outlier 
+def updateOutlierValue(outlierId, newSensedValue):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_update_outlier_statement = """
+        update processed_sensors_data set detected_substance_value = ?
+        where id = ?"""
+        cur = con.execute(sqlite_update_outlier_statement, (newSensedValue, outlierId))
+        con.commit()
+        con.close()

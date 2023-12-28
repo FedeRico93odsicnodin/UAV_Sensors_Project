@@ -118,6 +118,7 @@
             })
     });
     $(document).ready(function() {
+
         setTimeout(function() {
             $("#ui-datepicker-div").hide();
             reloadData_v2();

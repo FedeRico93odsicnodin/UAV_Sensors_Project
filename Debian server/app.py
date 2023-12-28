@@ -124,6 +124,13 @@ def get_all_stored_filters():
         # print(currSessionDatesModification)
         for f in currFilterSel:
             filtersToInsert.append(currFilterSel[f])
+            if(currFilterSel[f]["filter_context"] == "Sensors"):
+                if(currFilterSel[f]["adjustmentValue"] > 0):
+                    # getting the id and the outlier lower bound for the regulation 
+                    sensorId = currFilterSel[f]["filter_value"]
+                    outlierLowerBound = currFilterSel[f]["adjustmentValue"] 
+                    # calling the method for the regulation on current sensed data 
+                    processdatasensors.regulateOutliersCurrSensor(sensorId, outlierLowerBound)
         databaseServer.insertFilterOptions(filtersToInsert)
 
         # verifying for the eventual update of the color for the visualized gas

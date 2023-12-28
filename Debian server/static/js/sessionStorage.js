@@ -23,8 +23,8 @@ function getGasesToDisplay() {
 // allow to validate the possible inputs for the current inserted filters 
 function validateInputFilterData() {
     for(var sensObj in OverallSensors) {
-        var currAdjustIdJQSel = OverallSensors[sensObj]['adjustId'];
-        var currAdjustmentInput = document.getElementById(currAdjustIdJQSel).value;
+        var currAdjustIdSel = OverallSensors[sensObj]['adjustId'];
+        var currAdjustmentInput = document.getElementById(currAdjustIdSel).value;
         if(currAdjustmentInput == '') {
             continue;
         }
@@ -48,9 +48,20 @@ function setNewSessionStorageFilters() {
     newFilterObj["max_time_filter"] = createFilterSessionObj("max_time_filter", "Date", datesSelections)
     // all the filters concerning the sensors 
     for(var sensObj in OverallSensors) {
-        var sensChecked = document.getElementById(OverallSensors[sensObj]['checkId']).checked
-        var sensVal = OverallSensors[sensObj]['filterId']
-        newFilterObj[OverallSensors[sensObj]['filterNameId']] = createFilterSessionObj(OverallSensors[sensObj]['name'], "Sensors", sensChecked, OverallSensors[sensObj]['id'])
+        var sensChecked = document.getElementById(OverallSensors[sensObj]['checkId']).checked;
+        var sensVal = OverallSensors[sensObj]['filterId'];
+        newFilterObj[OverallSensors[sensObj]['filterNameId']] = createFilterSessionObj(OverallSensors[sensObj]['name'], "Sensors", sensChecked, OverallSensors[sensObj]['id']);
+
+
+        // getting the value for the adjustment of outliers on current sensor 
+        var currAdjustIdSel = OverallSensors[sensObj]['adjustId'];
+        var adjustRawVal = document.getElementById(currAdjustIdSel).value;
+        var newValueForAdjustment = 0;
+        if(adjustRawVal != '') {
+            newValueForAdjustment = parseFloat(adjustRawVal);
+        }
+        newFilterObj[OverallSensors[sensObj]['filterNameId']].adjustmentValue = newValueForAdjustment;
+        console.log(newFilterObj[OverallSensors[sensObj]['filterNameId']]);
     }
     for(var gasObj in OverallGases) {
         var gasChecked = document.getElementById(OverallGases[gasObj]['checkId']).checked 
