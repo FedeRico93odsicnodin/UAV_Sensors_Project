@@ -189,10 +189,13 @@ def getSensorsDefinitions():
         con = sqlite3.connect(DatabaseLocation)
         sel_sensors_query = """
         SELECT 
-            id,
-            name,
-            description,
-            gas_detection_ref
+            sensors.id,
+            sensors.name,
+            sensors.description,
+            sensors.gas_detection_ref,
+			(select min(detected_substance_value) from processed_sensors_data where processed_sensors_data.sensor_ref = sensors.id),
+			(select max(detected_substance_value) from processed_sensors_data where processed_sensors_data.sensor_ref = sensors.id),
+			(select avg(detected_substance_value) from processed_sensors_data where processed_sensors_data.sensor_ref = sensors.id)
             FROM sensors
     """
         cur = con.execute(sel_sensors_query)
@@ -205,6 +208,12 @@ def getSensorsDefinitions():
             currSensorsDefition.name = str(sensorRow[1])
             currSensorsDefition.descrition = str(sensorRow[2])
             currSensorsDefition.gas_detection_ref = str(sensorRow[3])
+            if(sensorRow[4] != None):
+                currSensorsDefition.minVal = float(sensorRow[4])
+            if(sensorRow[5] != None):
+                currSensorsDefition.maxVal = float(sensorRow[5])
+            if(sensorRow[6] != None):
+                currSensorsDefition.avgVal = float(sensorRow[6])
             returnedSensors[currSensorsDefition.name] = currSensorsDefition
         con.close()
     return returnedSensors

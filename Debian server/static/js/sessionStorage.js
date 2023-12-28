@@ -20,6 +20,21 @@ function getGasesToDisplay() {
     }
     return gasesToRetrieve
 }
+// allow to validate the possible inputs for the current inserted filters 
+function validateInputFilterData() {
+    for(var sensObj in OverallSensors) {
+        var currAdjustIdJQSel = OverallSensors[sensObj]['adjustId'];
+        var currAdjustmentInput = document.getElementById(currAdjustIdJQSel).value;
+        if(currAdjustmentInput == '') {
+            continue;
+        }
+        if(isNaN(currAdjustmentInput)) {
+            alert('all the valued parameters must be numbers');
+            return false;
+        }
+    }
+    return true;
+}
 // setting new session storage value 
 function setNewSessionStorageFilters() {
     // overall filter object to persist 

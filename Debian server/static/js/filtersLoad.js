@@ -157,10 +157,30 @@ function initSensorsFilters(showView, callBackFilters) {
                         checked = false
                     }
                 }
-                var checkId = sensorIdentifier + "_check"
-                var currRowSens = '<tr><td style="width:25px"><input class="form-check-input" type="checkbox" id="' + checkId + '"></td><td id="' + sensorIdentifier + '">' + sensObj[ind].name + '</td></tr>'
-                sensObj[ind]['checkId'] = checkId
-                sensObj[ind]['filterNameId'] = sensorIdentifier
+                var checkId = sensorIdentifier + "_check";
+                var inputAdjustId = sensorIdentifier + "_adjust";
+                console.log(sensObj[ind]);
+                var currRowSens = '<tr>' + 
+                    '<td style="width:25px">' + 
+                        '<input class="form-check-input" type="checkbox" id="' + checkId + '" />' + 
+                    '</td>' + 
+                    '<td style="width:100px" id="' + sensorIdentifier + '"><b>' + sensObj[ind].name + '</b></td>' + 
+                    '<td style="width:100px">' + 
+                        '<div><b>min:</b> ' + sensObj[ind].minVal + '</div>' + 
+                    '</td>' + 
+                    '<td style="width:100px">' + 
+                        '<div><b>max:</b> ' + sensObj[ind].maxVal + '</div>' + 
+                    '</td>' + 
+                    '<td style="width:100px">' + 
+                        '<div><b>avg:</b> ' + sensObj[ind].avgVal + '</div>' + 
+                    '</td>' + 
+                    '<td style="width:100px">' + 
+                        '<div><b>adjustment from:</b> <input style="margin-left:3px" id="' + inputAdjustId + '"></input></div>' +
+                    '</td>' + 
+                    '</tr>'
+                sensObj[ind]['checkId'] = checkId;
+                sensObj[ind]['filterNameId'] = sensorIdentifier;
+                sensObj[ind]['adjustId'] = inputAdjustId;
                 $('#sensTable').append(currRowSens);
                 OverallSensors.push(sensObj[ind])
             }

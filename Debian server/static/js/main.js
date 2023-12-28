@@ -95,6 +95,13 @@
         SessionsDateTimes = {}
     })
     $("#saveBtn").click(function() {
+        // checking the prerequisites on input values 
+        var validationOnFilterInput = validateInputFilterData();
+        // validation on session filters parameters did not succeeded
+        if(validationOnFilterInput == false) {
+            return;
+        }
+        // getting the filters overall values 
         var newJSONFilters = setNewSessionStorageFilters()
         isLoadingPhase = false
         saveFiltersConfig(newJSONFilters, 
@@ -109,7 +116,7 @@
                 backToDashboardContext()
                 isFilterContext = false
             })
-    })
+    });
     $(document).ready(function() {
         setTimeout(function() {
             $("#ui-datepicker-div").hide();

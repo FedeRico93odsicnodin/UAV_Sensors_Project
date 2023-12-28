@@ -20,8 +20,19 @@ class SensorObj:
           self.name = ''
           self.descrition = ''
           self.gas_detection_ref = 0
+          self.minVal = 0
+          self.maxVal = 0
+          self.avgVal = 0
      def sensorObj(self):
-          return {"id":self.id, "name": self.name, "description": self.descrition, "ref_gas": self.gas_detection_ref}
+          return {
+               "id":self.id, 
+               "name": self.name, 
+               "description": self.descrition, 
+               "ref_gas": self.gas_detection_ref,
+               "minVal": self.minVal,
+               "maxVal": self.maxVal,
+               "avgVal": self.avgVal
+               }
 
 class SessionObj:
      def __init__(self):

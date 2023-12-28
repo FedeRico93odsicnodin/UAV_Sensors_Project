@@ -350,7 +350,7 @@ function reloadData_v2() {
         dataType: 'json',
         success: function(data) {
             // forcing page reload with a new session 
-            console.log("data reload");
+            // console.log("data reload");
             var pageReload = false
             // console.log(data);
             for(var gasObj in data) {
@@ -362,7 +362,7 @@ function reloadData_v2() {
                 }
                 // getting datas splitted by session 
                 var splittedDataSessions = getSplittedSessionsData(data[gasObj]);
-                console.log(splittedDataSessions);
+                // console.log(splittedDataSessions);
                 // adding the points for the current session 
                 gasNameSessionIds = []
                 
