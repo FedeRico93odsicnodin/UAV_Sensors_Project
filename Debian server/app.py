@@ -261,13 +261,26 @@ def get_gasdata_selected_reload_v2():
 # NEW LOAD METHOD: it is returned all the set of points to just display (no extra elaboration are required)
 # this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization 
 @app.route('/gasdata_load_new', methods=['POST'])
-def gas_data_reload_new():
-    print("implementation")
+def gas_data_load_new():
+    contentInput = request.get_json() 
+    for gasObj in contentInput:
+        print(gasObj)
+    # TODO: 
+    # 1) implementing in this way: returning an obj which maintains the information about the stored session (for visualizing the carousel rows)
+    # 2) getting all the points for the ONLY visualized session in this case (the visualized information of the new created table)
+    # 3) implementing extra methods information: 
+    #   3.1 a method for checking if a just added graph for the current graph is visualized or not (in this case the visualization is disabled for incoming data)
+    #   3.2 a method for updating the visualization when moving with respect to the carousel 
+    #   3.3 a single POST method for getting the data on carousel movement and on bases of current visualization type 
+    #   3.4 methods for updating the visualization entry on basis of the interval and the num of points selection 
+    # 4) refactoring of FE for having this kind of approach and allowing the non block of all the logic 
+    return
 # NEW RELOAD METHOD: it is returned all the set of NEWER POINTS to just display (append) wrt the already displayed points 
 # also this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization
 @app.route('/gasdata_reload_new', methods=['POST'])
 def gas_data_reload_new():
     print("implementation")
+    return 
 # DOWNLOAD all the dataset in xlsx format 
 @app.route('/download_file', methods=['GET'])
 def download_data_file():

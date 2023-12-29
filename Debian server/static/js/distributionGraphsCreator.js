@@ -513,7 +513,8 @@ function loadDashboardData() {
     allSessionsId = {}
     var allGasesToRetrieve = getGasesToDisplay()
     // reset of all attributes data to manage 
-    $('#dashboardContent').empty()
+    $('#dashboardContent').empty();
+    // console.log(allGasesToRetrieve);
     for(var currGas in allGasesToRetrieve) {
         $.ajax({
             type: "POST",
@@ -527,7 +528,7 @@ function loadDashboardData() {
                     // console.log("nothing to display")
                     return 
                 }
-                // no data to display ù
+                // no data to display 
                 if(data['gasData'].length == 0) {
                     // console.log("nothing to display")
                     return 
