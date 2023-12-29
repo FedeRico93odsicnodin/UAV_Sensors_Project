@@ -83,6 +83,8 @@ def dataSensorsElaborateThread(serverDataObj):
                 # prepare and store current data values
                 beginProcessSensorsData(csvdata, csvheader, sessionCol)
                 print('file sensors rows has been added to DB')
+                # inserting values for the current visualized graphs for all the substances and the current session 
+                insertDashboardFirstVisualized()
             # deletion of file
             orderedFilesToProcess.remove(orderedFilesToProcess[0])
             # moving the file to the backup location 
@@ -359,6 +361,7 @@ def processSensorsDataRow(sensorDataRow, csvHeader, currSession):
         
     # insert values to db 
     databaseServer.insertDataSensor(toInsertValues)
+
 # getting the current RH and T values for the sensed row
 def getCurrentParamsForCalib(sensorDataRow):
     global scdParams
@@ -466,3 +469,26 @@ def regulateOutliersCurrSensor(sensorId, outlierLowerBound):
         # print(medVal)
         # updating the outlier with the averaged value 
         databaseServer.updateOutlierValue(outlierId, medVal)
+
+# inserting for the first time the complete visualization for the dashboard 
+# the current session and the current substance 
+def insertDashboardFirstVisualized():
+    global initGasesData
+    global currSession
+    for currGas in initGasesData:
+        currGasId = initGasesData[currGas].id
+        sessionId = currSession.id
+        isDashboardPresent = databaseServer.checkInfoCurrVisualizationPresence(sessionId, currGasId)
+        if(isDashboardPresent == True):
+            continue
+        # preparation of the first graph visualization to insert 
+        graphVisObj = dbmodels.DashboardCurrVisualzed()
+        graphVisObj.session_ref = sessionId
+        graphVisObj.gas_ref = currGasId
+        # when -1 all the points are visualized 
+        graphVisObj.vis_type = -1
+        # default selection for the granularity is at mmm step
+        graphVisObj.vis_granularity = "mmm"
+        # this graph is selected as first instance 
+        graphVisObj.is_visualized = 1
+        databaseServer.insertCurrGasGraphVisualDefinition(graphVisObj)

@@ -69,3 +69,26 @@ class RZeroResistance:
           self.sensor_name = ''
           self.resValue = 0
 
+# object with all the returned information for the current visualized graphs 
+class DashboardCurrVisualzed:
+     def __init__(self):
+          self.id = 0
+          self.session_ref = 0
+          self.gas_ref = 0
+          # by default the visualization is on ALL the set (-1) 
+          self.vis_type = -1
+          # by default the granularity is of mmm
+          self.vis_granularity = "mmm"
+          # all the set exposed for the visualization
+          self.is_visualized = 0 
+          self.visualized_set = []
+     def dashboardCurrVisualized(self):
+          return {
+               "id": self.id, 
+               "session_ref": self.session_ref, 
+               "gas_ref": self.gas_ref, 
+               "vis_type": self.vis_type, 
+               "vis_granularity": self.vis_granularity, 
+               "visualized_set": self.visualized_set
+               }
+

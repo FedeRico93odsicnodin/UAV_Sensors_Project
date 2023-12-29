@@ -89,6 +89,20 @@ def createDatabase(databaseLocation):
     FOREIGN KEY (sensor_ref) REFERENCES sensors (id)
     )
 """
+    # creation of the table for the current visualized elements 
+    create_dashboard_visualized_graphs_table = """
+    CREATE TABLE 
+    dashboard_visualized(
+    id integer PRIMARY KEY AUTOINCREMENT,
+    session_ref integer,
+    gas_ref integer,
+    vis_type integer,
+    vis_granularity text,
+    is_visualized integer,
+    FOREIGN KEY (session_ref) REFERENCES sessions (id),
+    FOREIGN KEY (gas_ref) REFERENCES detected_substances (id)
+    )
+"""
     cur = con.cursor()
     cur.execute(create_gases_table)
     time.sleep(0.1)
@@ -101,6 +115,8 @@ def createDatabase(databaseLocation):
     cur.execute(create_filters_table)
     time.sleep(0.1)
     cur.execute(create_r0resistors_table)
+    time.sleep(0.1)
+    cur.execute(create_dashboard_visualized_graphs_table)
     con.close()
     DatabaseLocation = databaseLocation
     #print('DB LOCATION ' + DatabaseLocation)
@@ -482,7 +498,6 @@ def getAllDataSensorsToDisplay(gasId, dateSelectionType = 'None', dateRangeMin =
             currDataObj['session'] = str(filterRecord[2])
             currDataObj['sessionID'] = int(filterRecord[3])
             returnedData.append(currDataObj)
-        
         con.close()
     return dataRecords
 # getting session data on reload 
@@ -744,5 +759,56 @@ def updateOutlierValue(outlierId, newSensedValue):
         update processed_sensors_data set detected_substance_value = ?
         where id = ?"""
         cur = con.execute(sqlite_update_outlier_statement, (newSensedValue, outlierId))
+        con.commit()
+        con.close()
+
+######### DASHBOARD GRAPHS VISUALIZATION ##########
+# checking for the presence of the current visualization type 
+def checkInfoCurrVisualizationPresence(sessionId, gasId):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_check_dashboard_el = """
+        select count(*) from dashboard_visualized 
+        where session_ref = ?
+        and gas_ref = ?
+"""
+        cur = con.execute(sqlite_check_dashboard_el, (sessionId, gasId))
+        dashboardCreated = cur.fetchone()
+        if(dashboardCreated != None):
+            numEntries = int(dashboardCreated[0])
+            if(numEntries > 0):
+                return True
+        return False
+# inserting the definition for the current gas visualization and the updated session 
+def insertCurrGasGraphVisualDefinition(graphVisualizationObj):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        cur = con.cursor()
+        sqlite_insert_dashboard_def = """
+        insert into dashboard_visualized (
+            id, 
+            session_ref, 
+            gas_ref,
+            vis_type,
+            vis_granularity,
+            is_visualized) 
+            VALUES (
+                ?, 
+                ?, 
+                ?,
+                ?,
+                ?,
+                ?);
+"""
+        cur.execute(sqlite_insert_dashboard_def, (
+            None, 
+            graphVisualizationObj.session_ref, 
+            graphVisualizationObj.gas_ref, 
+            graphVisualizationObj.vis_type,
+            graphVisualizationObj.vis_granularity,
+            graphVisualizationObj.is_visualized
+            ))
         con.commit()
         con.close()

@@ -183,7 +183,8 @@ def get_all_stored_filters():
     res = json.dumps(objFilters)
     #print(res)
     return res
-
+# OLD METHOD: in this method ALL the points for the current gas are returned for the FE 
+# NB: it was the FE to have the logic for session and calculation of all the different visualizations for the current session 
 @app.route('/gasdata', methods=['POST'])
 def get_gasdata_selected():
     gasInputs = request.get_json() 
@@ -206,8 +207,9 @@ def get_gasdata_selected():
     finalResult = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
-
-# reload for each of the substances (first version v1)
+# OLD METHOD: reload for each of the substances (first version v1)
+# same logic as the previous method but concerning the reload. AGAIN was the FE to decide how to manage all the points 
+# returned by the BE 
 @app.route('/gasdata_reload', methods=['POST'])
 def get_gasdata_selected_reload():
     gasInputs = request.get_json() 
@@ -231,7 +233,8 @@ def get_gasdata_selected_reload():
     #print(len(finalResult['gasData']))
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
-
+# OLD METHOD FOR RELOAD v2: a first refactoring of the previous method, which attempted to return all the points at the same time 
+# for all the gases selected by the user 
 @app.route('/gasdata_reload_v2', methods=['POST'])
 def get_gasdata_selected_reload_v2():
     contentInput = request.get_json() 
@@ -255,7 +258,17 @@ def get_gasdata_selected_reload_v2():
         finalResult[gas] = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
-
+# NEW LOAD METHOD: it is returned all the set of points to just display (no extra elaboration are required)
+# this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization 
+@app.route('/gasdata_load_new', methods=['POST'])
+def gas_data_reload_new():
+    print("implementation")
+# NEW RELOAD METHOD: it is returned all the set of NEWER POINTS to just display (append) wrt the already displayed points 
+# also this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization
+@app.route('/gasdata_reload_new', methods=['POST'])
+def gas_data_reload_new():
+    print("implementation")
+# DOWNLOAD all the dataset in xlsx format 
 @app.route('/download_file', methods=['GET'])
 def download_data_file():
     #print('trying to download file data')
