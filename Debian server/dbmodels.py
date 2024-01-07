@@ -75,6 +75,7 @@ class DashboardCurrVisualzed:
           self.id = 0
           self.session_ref = 0
           self.gas_ref = 0
+          self.gas_name = ""
           # by default the visualization is on ALL the set (-1) 
           self.vis_type = -1
           # by default the granularity is of mmm
@@ -89,6 +90,7 @@ class DashboardCurrVisualzed:
                "gas_ref": self.gas_ref, 
                "vis_type": self.vis_type, 
                "vis_granularity": self.vis_granularity, 
-               "visualized_set": self.visualized_set
+               "visualized_set": self.visualized_set,
+               "gas_name": self.gas_name
                }
 

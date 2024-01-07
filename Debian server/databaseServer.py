@@ -68,6 +68,24 @@ def createDatabase(databaseLocation):
             FOREIGN KEY (detected_substance_ref) REFERENCES detected_substances (id)
             )
             """
+    # creating the table for the different visualization types 
+    # seconds visualization
+    create_data_table_vis = """
+        CREATE TABLE 
+        processed_sensors_data_vis(
+            id integer PRIMARY KEY AUTOINCREMENT, 
+            date datetime, 
+            detected_substance_ref integer,
+            detected_substance_value real,
+            sensor_ref integer,
+            session_ref integer,
+            vis_granularity text,
+            vis_lbl text,
+            FOREIGN KEY (sensor_ref) REFERENCES sensors (id),
+            FOREIGN KEY (session_ref) REFERENCES sessions (id)
+            FOREIGN KEY (detected_substance_ref) REFERENCES detected_substances (id)
+            )
+"""
     # creation of options table 
     create_filters_table = """
     CREATE TABLE
@@ -111,6 +129,8 @@ def createDatabase(databaseLocation):
     cur.execute(create_sensors_table)
     time.sleep(0.1)
     cur.execute(create_data_table)
+    time.sleep(0.1)
+    cur.execute(create_data_table_vis)
     time.sleep(0.1)
     cur.execute(create_filters_table)
     time.sleep(0.1)
@@ -780,6 +800,7 @@ def checkInfoCurrVisualizationPresence(sessionId, gasId):
             if(numEntries > 0):
                 return True
         return False
+
 # inserting the definition for the current gas visualization and the updated session 
 def insertCurrGasGraphVisualDefinition(graphVisualizationObj):
     with Lock():
@@ -812,3 +833,45 @@ def insertCurrGasGraphVisualDefinition(graphVisualizationObj):
             ))
         con.commit()
         con.close()
+
+# getting all the objects with an active visualization to give back to the FE in a set of points  
+def checkGasDashboardVisualization():
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_all_el_to_visualize_query = """SELECT
+        dashboard_visualized.id, 
+        dashboard_visualized.session_ref,
+        dashboard_visualized.gas_ref,
+        dashboard_visualized.vis_type,
+        dashboard_visualized.vis_granularity,
+        optgas.filter_name,
+        dashboard_visualized.is_visualized
+        FROM options_data_filters as optgas 
+        join dashboard_visualized on dashboard_visualized.gas_ref = optgas.filter_value
+        join options_data_filters as optsession on dashboard_visualized.session_ref = optsession.filter_value
+        where 
+        optgas.filter_context = 'Gases'
+        and optsession.filter_context = 'Sessions'
+        and optgas.selected = 1
+        and optsession.selected = 1"""
+        cur = con.execute(sqlite_all_el_to_visualize_query)
+        dashboardObjVis = cur.fetchall()
+        returnedData = []
+        if(dashboardObjVis != None):
+            for dashboardRecord in dashboardObjVis:
+                currDataObj = dbmodels.DashboardCurrVisualzed()
+                currDataObj.id = int(dashboardRecord[0])
+                currDataObj.session_ref = int(dashboardRecord[1])
+                currDataObj.gas_ref = int(dashboardRecord[2])
+                currDataObj.vis_type = int(dashboardRecord[3])
+                currDataObj.vis_granularity = str(dashboardRecord[4])
+                currDataObj.gas_name = str(dashboardRecord[5])
+                returnedData.append(currDataObj)
+        con.close()
+    return returnedData
+
+# getting the set of all the points for a particular substance and session to visualize
+# in context of data load or reload 
+def getAllPointsToVisualize(gasId, sessionId, vis_type, vis_granularity):
+    print("TODO: implementation of getting the point of visualization type basis")

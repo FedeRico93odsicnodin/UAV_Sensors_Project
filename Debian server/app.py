@@ -262,9 +262,17 @@ def get_gasdata_selected_reload_v2():
 # this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization 
 @app.route('/gasdata_load_new', methods=['POST'])
 def gas_data_load_new():
-    contentInput = request.get_json() 
-    for gasObj in contentInput:
-        print(gasObj)
+    # getting all the substances for which product a visualization 
+    objToVis = databaseServer.checkGasDashboardVisualization()
+    # print(objToVis)
+    finalResult = {}
+    for currSub in objToVis:
+        print(currSub.gas_ref)
+        print(currSub.session_ref)
+        print(currSub.vis_type)
+        print(currSub.vis_granularity)
+        # selection of the points for the current substance 
+        
     # TODO: 
     # 1) implementing in this way: returning an obj which maintains the information about the stored session (for visualizing the carousel rows)
     # 2) getting all the points for the ONLY visualized session in this case (the visualized information of the new created table)
@@ -274,7 +282,8 @@ def gas_data_load_new():
     #   3.3 a single POST method for getting the data on carousel movement and on bases of current visualization type 
     #   3.4 methods for updating the visualization entry on basis of the interval and the num of points selection 
     # 4) refactoring of FE for having this kind of approach and allowing the non block of all the logic 
-    return
+    finalResultJSON = json.dumps(finalResult)
+    return finalResultJSON
 # NEW RELOAD METHOD: it is returned all the set of NEWER POINTS to just display (append) wrt the already displayed points 
 # also this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization
 @app.route('/gasdata_reload_new', methods=['POST'])

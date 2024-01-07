@@ -61,7 +61,7 @@ function setNewSessionStorageFilters() {
             newValueForAdjustment = parseFloat(adjustRawVal);
         }
         newFilterObj[OverallSensors[sensObj]['filterNameId']].adjustmentValue = newValueForAdjustment;
-        console.log(newFilterObj[OverallSensors[sensObj]['filterNameId']]);
+        // console.log(newFilterObj[OverallSensors[sensObj]['filterNameId']]);
     }
     for(var gasObj in OverallGases) {
         var gasChecked = document.getElementById(OverallGases[gasObj]['checkId']).checked 

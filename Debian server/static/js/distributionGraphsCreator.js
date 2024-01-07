@@ -511,7 +511,7 @@ function loadDashboardData() {
     setCanvasPoints = []
     allChartsRefs = {}
     allSessionsId = {}
-    var allGasesToRetrieve = getGasesToDisplay()
+    var allGasesToRetrieve = getGasesToDisplay();
     // reset of all attributes data to manage 
     $('#dashboardContent').empty();
     // console.log(allGasesToRetrieve);
@@ -571,6 +571,27 @@ function loadDashboardData() {
             }
           });
     }
+}
+// second versione for the rendering the selected filtered substances 
+// this second version render all the points in a unique post call and for all the substances 
+function loadDashboardDataNew() {
+    // getting all the substances to be displayed 
+    // var allGasesToRetrieve = getGasesToDisplay();
+    // console.log(allGasesToRetrieve);
+    // making the call for returning the points 
+    $.ajax({
+        type: "POST",
+        url: "/gasdata_load_new",
+        contentType: "application/json",
+        dataType: 'json',
+        success: function(data) {
+
+            
+        },
+        error: function(err) {
+            console.log('error saving filters\n' + err);
+        }
+      });
 }
 // preparation of the carousel elements 
 function prepareCarouselHtml(htmlContentArray) {
