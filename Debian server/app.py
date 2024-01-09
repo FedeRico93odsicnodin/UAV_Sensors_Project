@@ -267,12 +267,16 @@ def gas_data_load_new():
     # print(objToVis)
     finalResult = {}
     for currSub in objToVis:
-        print(currSub.gas_ref)
-        print(currSub.session_ref)
-        print(currSub.vis_type)
-        print(currSub.vis_granularity)
+        # print(currSub.gas_ref)
+        # print(currSub.session_ref)
+        # print(currSub.vis_type)
+        # print(currSub.vis_granularity)
         # selection of the points for the current substance 
-        
+        processdatasensors.getPointsToVisualizeForSubstance(
+            currSub.gas_ref, 
+            currSub.session_ref, 
+            currSub.vis_type, 
+            currSub.vis_granularity)
     # TODO: 
     # 1) implementing in this way: returning an obj which maintains the information about the stored session (for visualizing the carousel rows)
     # 2) getting all the points for the ONLY visualized session in this case (the visualized information of the new created table)

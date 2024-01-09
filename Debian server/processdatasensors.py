@@ -492,3 +492,58 @@ def insertDashboardFirstVisualized():
         # this graph is selected as first instance 
         graphVisObj.is_visualized = 1
         databaseServer.insertCurrGasGraphVisualDefinition(graphVisObj)
+
+# getting the current points of visualization for the current substance 
+def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity, datetimeUp = None):
+    # getting all the points for the current visualization 
+    if(datetimeUp == None):
+        vis_granularity = "ss"
+        # for the case in which the mmm interval is selected 
+        if(vis_granularity == "mmm"):
+            allPointsSet = databaseServer.getAllPointsToVisualize(gasId, sessionId, vis_type)
+            # print(allPointsSet)
+            return allPointsSet
+        # attempting to get all the points for the current vis granularity 
+        allPointsSet = databaseServer.getAllPointsToVisualizeDiffGranularity(gasId, sessionId, vis_type, vis_granularity)
+        # if the length of the current set is = 0, then I have to calculate and persisting all the set before retrieving 
+        # the desired set 
+        if(len(allPointsSet) == 0):
+            # getting again all the point for the current set to visualize: NB the visualization must be on all the available set 
+            allPointsSet = databaseServer.getAllPointsToVisualize(gasId, sessionId, -1)
+            currDate = None 
+            for point in allPointsSet:
+                # currPointReadDate = point["dateread"]
+                date_str = point[0]
+                # 2023-12-07 10:41:22.669000
+                date_format = '%Y-%m-%d %H:%M:%S'
+                if(date_str[-7] == "."):
+                    date_format = '%Y-%m-%d %H:%M:%S.%f'
+                date_obj = datetime.strptime(date_str, date_format)
+                # print(point[0])
+                # print(date_obj.hour)
+                if(currDate == None): 
+                    currDate = date_obj
+                    print("TODO: implementation for the new element to insert (very first element)")
+                    continue
+                majorDate = (date_obj > currDate)
+                if(majorDate):
+                    # calculating the point to insert on basis of current visualization 
+                    newDateVis = None
+                    prevDateVis = None 
+                    if(vis_granularity == "ss"):
+                        newDateVis = date_obj.second
+                        prevDateVis = currDate.second
+                    if(vis_granularity == "mm"):
+                        newDateVis = date_obj.minute
+                        prevDateVis = currDate.minute
+                    if(vis_granularity == "hh"):
+                        newDateVis = date_obj.hour 
+                        prevDateVis = currDate.hour 
+                    # if the two elements for the insert are different, than a new insert must be provided 
+                    if(newDateVis != prevDateVis):
+                        print("TODO: implementation for the new element to insert")
+                currDate = date_obj
+            return allPointsSet
+        # returning the already present points for the selected set and the given gas, interval and session 
+        return allPointsSet
+
