@@ -983,3 +983,32 @@ def getAllPointsToVisualizeDiffGranularity(gasId, sessionId, vis_type, vis_granu
         returnedData.append(currDataObj)
     con.close()
     return dataRecords
+# method for insert points to visualize in the different allowed visualizations 
+def insertNewPointsForDifferentVisualization(refactoredPointsForSelectedGranularity):
+     with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        cur = con.cursor()
+        # creation of the new filters 
+        insert_filters_query = """INSERT INTO processed_sensors_data_vis 
+        (id, 
+        date, 
+        detected_substance_ref, 
+        detected_substance_value, 
+        sensor_ref,
+        session_ref,
+        vis_granularity,
+        vis_lbl
+        ) VALUES (
+        ?,
+        ?,
+        ?,
+        ?,
+        (select id from sensors where gas_detection_ref = ?),
+        ?,
+        ?,
+        ?
+        );"""
+        cur.executemany(insert_filters_query, refactoredPointsForSelectedGranularity)
+        con.commit()
+        con.close()

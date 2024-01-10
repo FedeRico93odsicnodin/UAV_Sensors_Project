@@ -510,24 +510,28 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
         if(len(allPointsSet) == 0):
             # getting again all the point for the current set to visualize: NB the visualization must be on all the available set 
             allPointsSet = databaseServer.getAllPointsToVisualize(gasId, sessionId, -1)
+            allPointsSetToReturn = []
             currDate = None 
+            # the set of all final points to persist for the selected visualization 
+            newSetPointsForSelectedGranularity = []
             for point in allPointsSet:
+                # print(point[0])
                 # currPointReadDate = point["dateread"]
+                # print(currPointReadDate)
                 date_str = point[0]
                 # 2023-12-07 10:41:22.669000
                 date_format = '%Y-%m-%d %H:%M:%S'
                 if(date_str[-7] == "."):
                     date_format = '%Y-%m-%d %H:%M:%S.%f'
                 date_obj = datetime.strptime(date_str, date_format)
-                # print(point[0])
+                print(date_obj)
                 # print(date_obj.hour)
                 if(currDate == None): 
                     currDate = date_obj
-                    print("TODO: implementation for the new element to insert (very first element)")
                     continue
                 majorDate = (date_obj > currDate)
                 if(majorDate):
-                    # calculating the point to insert on basis of current visualization 
+                   # calculating the point to insert on basis of current visualization 
                     newDateVis = None
                     prevDateVis = None 
                     if(vis_granularity == "ss"):
@@ -539,10 +543,30 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
                     if(vis_granularity == "hh"):
                         newDateVis = date_obj.hour 
                         prevDateVis = currDate.hour 
-                    # if the two elements for the insert are different, than a new insert must be provided 
-                    if(newDateVis != prevDateVis):
-                        print("TODO: implementation for the new element to insert")
+                    #if the two elements for the insert are different, than a new insert must be provided 
+                    allPointsSetToReturn.append({
+                        "id" : None,
+                        "dateread" : date_obj,
+                        "date" : str(date_obj)[0:-3],
+                        "value" : newDateVis,
+                        "session" : "",
+                        "sessionID" : sessionId
+                        }
+                    )
+                    newSetPointsForSelectedGranularity.append((
+                        None,
+                        date_obj,
+                        gasId,
+                        point[1],
+                        gasId,
+                        sessionId,
+                        vis_granularity,
+                        newDateVis
+                    ))
                 currDate = date_obj
+            # print(newSetPointsForSelectedGranularity)
+            # persistance of all the collected points for the current visualization 
+            databaseServer.insertNewPointsForDifferentVisualization(newSetPointsForSelectedGranularity)
             return allPointsSet
         # returning the already present points for the selected set and the given gas, interval and session 
         return allPointsSet
