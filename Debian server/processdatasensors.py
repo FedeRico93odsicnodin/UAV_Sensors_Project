@@ -497,7 +497,7 @@ def insertDashboardFirstVisualized():
 def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity, datetimeUp = None):
     # getting all the points for the current visualization 
     if(datetimeUp == None):
-        vis_granularity = "ss"
+        vis_granularity = "hh"
         # for the case in which the mmm interval is selected 
         if(vis_granularity == "mmm"):
             allPointsSet = databaseServer.getAllPointsToVisualize(gasId, sessionId, vis_type)
@@ -524,45 +524,68 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
                 if(date_str[-7] == "."):
                     date_format = '%Y-%m-%d %H:%M:%S.%f'
                 date_obj = datetime.strptime(date_str, date_format)
-                print(date_obj)
+                # print(date_obj)
                 # print(date_obj.hour)
                 if(currDate == None): 
                     currDate = date_obj
+                    # creation of the new first point to add 
+                    newPointToAdd = createNewGranularityPoint(point, sessionId, gasId, vis_granularity)
+                    # appending the point to the different lists to get 
+                    allPointsSetToReturn.append(newPointToAdd)
+                    newSetPointsForSelectedGranularity.append((
+                            None,
+                            newPointToAdd["dateread"],
+                            newPointToAdd["gasId"],
+                            newPointToAdd["value"],
+                            newPointToAdd["gasId"],
+                            newPointToAdd["sessionId"],
+                            vis_granularity,
+                            newPointToAdd["date"]
+                        ))
                     continue
                 majorDate = (date_obj > currDate)
                 if(majorDate):
                    # calculating the point to insert on basis of current visualization 
                     newDateVis = None
                     prevDateVis = None 
+                    completingTime = None
                     if(vis_granularity == "ss"):
                         newDateVis = date_obj.second
                         prevDateVis = currDate.second
+                        if(date_obj.hour < 10):
+                            completingTime = "0" + str(date_obj.hour)
+                        else :
+                            completingTime = str(date_obj.hour)
+                        if(date_obj.minute < 10): 
+                            competingTime = completingTime  + ":0" + str(date_obj.minute) 
+                        else: 
+                            completingTime = completingTime + ":" + str(date_obj.minute)
                     if(vis_granularity == "mm"):
                         newDateVis = date_obj.minute
                         prevDateVis = currDate.minute
+                        if(date_obj.hour < 10):
+                            completingTime = "0" + str(date_obj.hour)
+                        else :
+                            completingTime = str(date_obj.hour)
                     if(vis_granularity == "hh"):
                         newDateVis = date_obj.hour 
-                        prevDateVis = currDate.hour 
-                    #if the two elements for the insert are different, than a new insert must be provided 
-                    allPointsSetToReturn.append({
-                        "id" : None,
-                        "dateread" : date_obj,
-                        "date" : str(date_obj)[0:-3],
-                        "value" : newDateVis,
-                        "session" : "",
-                        "sessionID" : sessionId
-                        }
-                    )
-                    newSetPointsForSelectedGranularity.append((
-                        None,
-                        date_obj,
-                        gasId,
-                        point[1],
-                        gasId,
-                        sessionId,
-                        vis_granularity,
-                        newDateVis
-                    ))
+                        prevDateVis = currDate.hour
+
+                    # the selected interval effectively changed for the current visualization  
+                    if(newDateVis != prevDateVis):
+                         # appending the point to the different lists to get 
+                        newPointToAdd = createNewGranularityPoint(point, sessionId, gasId, vis_granularity)
+                        allPointsSetToReturn.append(newPointToAdd)
+                        newSetPointsForSelectedGranularity.append((
+                                None,
+                                newPointToAdd["dateread"],
+                                newPointToAdd["gasId"],
+                                newPointToAdd["value"],
+                                newPointToAdd["gasId"],
+                                newPointToAdd["sessionId"],
+                                vis_granularity,
+                                newPointToAdd["date"]
+                            ))
                 currDate = date_obj
             # print(newSetPointsForSelectedGranularity)
             # persistance of all the collected points for the current visualization 
@@ -570,4 +593,56 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
             return allPointsSet
         # returning the already present points for the selected set and the given gas, interval and session 
         return allPointsSet
-
+# creation for the new point to visualized based on the granularity 
+def createNewGranularityPoint(point, sessionId, gasId, vis_granularity):
+    # creation for the new date to compare wrt the previous one 
+    date_str = point[0]
+    # 2023-12-07 10:41:22.669000
+    date_format = '%Y-%m-%d %H:%M:%S'
+    if(date_str[-7] == "."):
+        date_format = '%Y-%m-%d %H:%M:%S.%f'
+    date_obj = datetime.strptime(date_str, date_format)
+    newDateVis = date_obj.second
+    labelToShow = None
+    if(vis_granularity == "ss"):
+        if(date_obj.hour < 10):
+            completingTime = "0" + str(date_obj.hour)
+        else :
+            completingTime = str(date_obj.hour)
+        if(date_obj.minute < 10): 
+            competingTime = completingTime  + ":0" + str(date_obj.minute) 
+        else: 
+            completingTime = completingTime + ":" + str(date_obj.minute)
+        # creation of the remaining elements for visualizing the seconds
+        variationSecond = str(newDateVis) 
+        if(newDateVis < 10):
+            variationSecond = "0" + variationSecond
+        # creation of the new label for the visualization in seconds 
+        labelToShow = completingTime + ":" + variationSecond
+    if(vis_granularity == "mm"):
+        newDateVis = date_obj.minute
+        if(date_obj.hour < 10):
+            completingTime = "0" + str(date_obj.hour)
+        else :
+            completingTime = str(date_obj.hour)
+        variationMinutes = str(newDateVis)
+        if(newDateVis < 10):
+            variationMinutes = "0" + variationMinutes
+        labelToShow = completingTime + ":" + variationMinutes + ":00"
+    if(vis_granularity == "hh"):
+        newDateVis = date_obj.hour
+        variationHour = str(newDateVis)
+        if(newDateVis < 10):
+            variationHour = "0" + variationHour
+        labelToShow = variationHour + ":00:00"
+    # object to return 
+    currPointObj = {
+                    "id" : None,
+                    "dateread" : date_obj,
+                    "date" : labelToShow,
+                    "value" : point[1],
+                    "session" : "",
+                    "sessionId" : sessionId,
+                    "gasId" : gasId
+                    }
+    return currPointObj
