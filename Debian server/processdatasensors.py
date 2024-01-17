@@ -497,7 +497,6 @@ def insertDashboardFirstVisualized():
 def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity, datetimeUp = None):
     # getting all the points for the current visualization 
     if(datetimeUp == None):
-        vis_granularity = "hh"
         # for the case in which the mmm interval is selected 
         if(vis_granularity == "mmm"):
             allPointsSet = databaseServer.getAllPointsToVisualize(gasId, sessionId, vis_type)

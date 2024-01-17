@@ -585,8 +585,7 @@ function loadDashboardDataNew() {
         contentType: "application/json",
         dataType: 'json',
         success: function(data) {
-
-            
+            console.log(data)
         },
         error: function(err) {
             console.log('error saving filters\n' + err);

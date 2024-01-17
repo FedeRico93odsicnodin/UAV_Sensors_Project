@@ -271,21 +271,14 @@ def gas_data_load_new():
         # print(currSub.session_ref)
         # print(currSub.vis_type)
         # print(currSub.vis_granularity)
+        # print(currSub.gas_name)
         # selection of the points for the current substance 
-        processdatasensors.getPointsToVisualizeForSubstance(
+        currElementVis = processdatasensors.getPointsToVisualizeForSubstance(
             currSub.gas_ref, 
             currSub.session_ref, 
             currSub.vis_type, 
             currSub.vis_granularity)
-    # TODO: 
-    # 1) implementing in this way: returning an obj which maintains the information about the stored session (for visualizing the carousel rows)
-    # 2) getting all the points for the ONLY visualized session in this case (the visualized information of the new created table)
-    # 3) implementing extra methods information: 
-    #   3.1 a method for checking if a just added graph for the current graph is visualized or not (in this case the visualization is disabled for incoming data)
-    #   3.2 a method for updating the visualization when moving with respect to the carousel 
-    #   3.3 a single POST method for getting the data on carousel movement and on bases of current visualization type 
-    #   3.4 methods for updating the visualization entry on basis of the interval and the num of points selection 
-    # 4) refactoring of FE for having this kind of approach and allowing the non block of all the logic 
+        finalResult[currSub.gas_name] = {'status' : 'ok_' + currSub.gas_name, 'gasData': currElementVis, 'gasName': currSub.gas_name, 'gasId': currSub.gas_ref}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 # NEW RELOAD METHOD: it is returned all the set of NEWER POINTS to just display (append) wrt the already displayed points 
