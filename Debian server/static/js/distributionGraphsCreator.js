@@ -392,6 +392,22 @@ function getMovingButtonsHtml(gasNameId, visualizationType) {
     '</div>'
     return renderHtml
 }
+// moving buttons through iterated points (new implementation)
+function getMovingButtonsHtmlNew(gasNameId, visualizationType) {
+    var moveForwardValueId = "moveForwardValue_" + visualizationType + "_" + gasNameId
+    var moveBackwardValueId = "moveBackwardValue_" + visualizationType + "_" + gasNameId
+    var gasNameIdMoveForward = "moveBtnForward_" + visualizationType + "_" + gasNameId
+    var gasNameIdMoveBackward = "moveBtnBackward_" + visualizationType + "_" + gasNameId
+    var gasNameIdMoveBtnsMenuId = "moveButtons_" + visualizationType + "_" + gasNameId
+    var renderHtml = '<div style="margin-top:35px" id="' + gasNameIdMoveBtnsMenuId + '">' + 
+    '<span onclick="moveBackwardNew(this)" class="bi bi-arrow-left-circle" style="float:left;font-size: 1.5rem;" id="' + gasNameIdMoveBackward + '""></span>' + 
+    '<input type="text" style="width:35px;height:20px;float:left;margin-left:7.5px;margin-top:8.5px" value="1" id="' + moveBackwardValueId + '"></input>'+
+    
+    '<span onclick="moveForwardNew(this)" class="bi bi-arrow-right-circle" style="float:right;font-size: 1.5rem;" id="' + gasNameIdMoveForward +'"></span>' + 
+    '<input type="text" style="width:35px;height:20px;float:right;margin-right:7.5px;margin-top:8.5px" value="1" id="' + moveForwardValueId + '"></input>'+
+    '</div>'
+    return renderHtml
+}
 // html for rendering single canvas gas visualizer
 function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationType, selIntervalHtml, selPointsHtml) {
     // rendered html 
@@ -408,6 +424,29 @@ function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationTyp
                                     selPointsHtml + 
                                 '</div>' +
                                 getMovingButtonsHtml(gasNameSessionId, visualizationType) + 
+                                '<canvas id="' + gasVisualizationType + '"></canvas>' +
+                            '</div>' +
+                        '</div>' + 
+                        '</div>'
+                    '</div>'
+    return htmlCanvas
+}
+// html for rendering single canvas gas visualizer (new implementation)
+function createGasCanvasNew(gasName, gasSession, gasNameSessionId, visualizationType, selIntervalHtml, selPointsHtml) {
+    // rendered html 
+    var rowIdGasVisualization = visualizationType + "_" + gasNameSessionId + "_row"
+    var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameSessionId
+    var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameSessionId
+    var gasVisualizationType = visualizationType + "_" + gasNameSessionId 
+    var htmlCanvas ='<div class="row" id="' + rowIdGasVisualization + '">' +  
+                        '<div class="col-sm-24 col-xl-10 mx-auto">' + 
+                            '<div class="bg-secondary text-center rounded p-4">' +
+                                '<div>' +
+                                    '<h6 class="mb-0" style="float:left">' + gasName + ' - ' + gasSession + '</h6>' +
+                                    selIntervalHtml + 
+                                    selPointsHtml + 
+                                '</div>' +
+                                getMovingButtonsHtmlNew(gasNameSessionId, visualizationType) + 
                                 '<canvas id="' + gasVisualizationType + '"></canvas>' +
                             '</div>' +
                         '</div>' + 
@@ -552,6 +591,19 @@ function createBodyGraphsCurrSessionNew(data, gasNameSessionId) {
     var setIntervalsHtml = decideTimeIntervalSelectionNew(gasNameSessionId);
     // getting the HTML for the current presentation points 
     var selPointsHtml = decidePointsIntervalSelectionNew(gasNameSessionId, data.gasData.lenInd);
+    // creation of the HTML for the current container of visualization
+    var gasName = data.gasName;
+    var gasSessionName = data.gasData.sessionName;
+    var visType = data.vis_granularity;
+    var currVisualizationContainer = createGasCanvasNew(
+        gasName, 
+        gasSessionName, 
+        gasNameSessionId,
+        visType,
+        setIntervalsHtml,
+        selPointsHtml
+        );
+    return currVisualizationContainer;
 }
 // insertion of new session id 
 function insertNewSessionId(loadedSessionId) {
@@ -633,13 +685,12 @@ function loadDashboardData() {
 function loadDashboardDataNew() {
     // initializing dashboard parameters 
     allTimeDivisionPoints = {};
-    setCanvasPoints = [];
+    allCanvasPoints = {};
     allChartsRefs = {};
     allSessionsId = {};
     var gasNameSessionIds = [];
-    setCanvasPoints = [];
     // variable for all displayed chart of the carousel 
-    var allDisplayedChartSessions = [];
+    var allDisplayedChartSessions = {};
     // making the call for returning the points 
     $.ajax({
         type: "POST",
@@ -661,6 +712,7 @@ function loadDashboardDataNew() {
                 }
                 setCanvasPoints = [];
                 // gas identification ids
+                var gasName = currGasObj['gasName'];
                 var gasNameId = currGasObj['gasName'] + "_" + currGasObj['gasId'];
                 var currGasParts = gasToLoad.split("_");
                 var sessionId = currGasParts[1];
@@ -672,8 +724,24 @@ function loadDashboardDataNew() {
 
                 // getting the html for the current graph
                 var currGraphHtml = createBodyGraphsCurrSessionNew(currGasObj, gasNameSessionId);
+                if(gasName in allDisplayedChartSessions) {
+                    allDisplayedChartSessions[gasName].gasNameId = gasNameId;
+                    allDisplayedChartSessions[gasName].push(currGraphHtml);
+                    allCanvasPoints[gasName].push({ "canvasId": gasNameSessionId, "gasName": gasName, "currSet": currGasObj.gasData });
+                    continue;
+                }
+                // first graph to visualize for the current gas
+                allDisplayedChartSessions[gasName] = [];
+                allDisplayedChartSessions[gasName].push(currGraphHtml);
+                allCanvasPoints[gasName] = [];
+                allCanvasPoints[gasName].push({ "canvasId": gasNameSessionId, "gasName": gasName, "currSet": currGasObj.gasData });
+                
             }
-            console.log(allDisplayedChartSessions);
+            for(var currGas in allDisplayedChartSessions) {
+                initSessionsCarousel(allDisplayedChartSessions[currGas]
+                    , allDisplayedChartSessions[currGas].gasNameId
+                    , allCanvasPoints[currGas]);
+            }
         },
         error: function(err) {
             console.log('error saving filters\n' + err);

@@ -511,6 +511,8 @@ def formatElaboratedPointsForView(pointsSet):
     returnedPointsForVis["labels"] = arrLabels
     returnedPointsForVis["values"] = arrValues
     returnedPointsForVis["lenInd"] = lenIndex
+    # getting the gas current session name 
+    returnedPointsForVis["sessionName"] = pointsSet[0][2]
     return returnedPointsForVis
 
 # getting the current points of visualization for the current substance 
@@ -521,6 +523,8 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
     arrLabels = []
     # array with all the set of values 
     arrValues = []
+    # current session gas name 
+    currSessionName = ""
     # getting all the points for the current visualization 
     if(datetimeUp == None):
         # for the case in which the mmm interval is selected 
@@ -542,6 +546,8 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
             lenIndex = 0
             # getting again all the point for the current set to visualize: NB the visualization must be on all the available set 
             allPointsSet = databaseServer.getAllPointsToVisualize(gasId, sessionId, -1)
+            # getting the current session name 
+            currSessionName = allPointsSet[0][2]
             allPointsSetToReturn = []
             currDate = None 
             # the set of all final points to persist for the selected visualization 
@@ -629,6 +635,7 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
             returnedPointsForVis["labels"] = arrLabels
             returnedPointsForVis["values"] = arrValues
             returnedPointsForVis["lenInd"] = lenIndex
+            returnedPointsForVis["sessionName"] = currSessionName
             databaseServer.insertNewPointsForDifferentVisualization(newSetPointsForSelectedGranularity)
             return returnedPointsForVis
         else:
