@@ -1012,3 +1012,23 @@ def insertNewPointsForDifferentVisualization(refactoredPointsForSelectedGranular
         cur.executemany(insert_filters_query, refactoredPointsForSelectedGranularity)
         con.commit()
         con.close()
+# getting the number of all the points for the current visualization 
+def getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sqlite_get_allpoints_curr_granularity = """
+        SELECT COUNT(*) FROM processed_sensors_data
+        WHERE detected_substance_ref = ? and session_ref = ?
+"""
+        if(vis_granularity != "mmm"):
+            sqlite_get_allpoints_curr_granularity = """
+        SELECT count(*) FROM processed_sensors_data_vis
+        WHERE detected_substance_ref = ? and session_ref = ? and vis_granularity = ?      
+"""
+        if(vis_granularity == "mmm"):
+            cur = con.execute(sqlite_get_allpoints_curr_granularity, (gasId, sessionId))
+        else:
+            cur = con.execute(sqlite_get_allpoints_curr_granularity, (gasId, sessionId, vis_granularity))
+        visNum = cur.fetchone()
+        return visNum

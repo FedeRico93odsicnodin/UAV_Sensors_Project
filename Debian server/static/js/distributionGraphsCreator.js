@@ -125,6 +125,18 @@ function decideTimeIntervalSelection(gasNameSessionId, visualizationType, allPoi
     selStartHtml += '</select>'
     return selStartHtml
 } 
+// deciding how many selections for time visualizations add to curve (new version)
+function decideTimeIntervalSelectionNew(gasNameSessionId) {
+    var selTimeInterval = 'intervalDashboardSel_' + gasNameSessionId;
+    // enabling all the possible visualization granularity: at least one point for each of the selection is possible to visualize 
+    var selStartHtml = '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraphNew(this);">'
+    + '<option value="mmm">mmm</option>'
+    + '<option value="ss">ss</option>'
+    + '<option value="mm">mm</option>'
+    + '<option value="hh">hh</option>'
+    + '</select>';
+    return selStartHtml;
+}
 // deciding how many selections for points to display on curve 
 function decidePointsIntervalSelection(gasNameSessionId, visualizationType, currVisualizationNum) {
     // if num of points less than 5 the menu will not be created 
@@ -132,6 +144,43 @@ function decidePointsIntervalSelection(gasNameSessionId, visualizationType, curr
         return ''
     }
     var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameSessionId
+    var selStartHtml = '<select class="select" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);">'
+    + '<option value="5">5</option>'
+    if(currVisualizationNum < 10) {
+        selStartHtml += '<option value="all">all</option>'
+        selStartHtml += '</select>'
+        return selStartHtml
+    }
+    selStartHtml += '<option value="10">10</option>'
+    if(currVisualizationNum < 25) {
+        selStartHtml += '<option value="all">all</option>'
+        selStartHtml += '</select>'
+        return selStartHtml
+    }
+    selStartHtml += '<option value="25">25</option>'
+    if(currVisualizationNum < 50) {
+        selStartHtml += '<option value="all">all</option>'
+        selStartHtml += '</select>'
+        return selStartHtml
+    }
+    selStartHtml += '<option value="50">50</option>'
+    if(currVisualizationNum < 100) {
+        selStartHtml += '<option value="all">all</option>'
+        selStartHtml += '</select>'
+        return selStartHtml
+    }
+    selStartHtml += '<option value="100">100</option>'
+    selStartHtml += '<option value="all">all</option>'
+    selStartHtml += '</select>'
+    return selStartHtml
+}
+// deciding how many selections for points to display on curve (new version)
+function decidePointsIntervalSelectionNew(gasNameSessionId, currVisualizationNum) {
+    // if num of points less than 5 the menu will not be created 
+    if(currVisualizationNum < 5) {
+        return ''
+    }
+    var selPointsInterval = 'pointsIntervalSel_' + gasNameSessionId;
     var selStartHtml = '<select class="select" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);">'
     + '<option value="5">5</option>'
     if(currVisualizationNum < 10) {
@@ -497,6 +546,13 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
     var overallHtmlCarousel = getOverallCarouselContainerOfGas(htmlCanvasAppend)
     return overallHtmlCarousel
 }
+// new function for visualizing the current substances 
+function createBodyGraphsCurrSessionNew(data, gasNameSessionId) {
+    // getting the HTML for the selection of the type of visualization 
+    var setIntervalsHtml = decideTimeIntervalSelectionNew(gasNameSessionId);
+    // getting the HTML for the current presentation points 
+    var selPointsHtml = decidePointsIntervalSelectionNew(gasNameSessionId, data.gasData.lenInd);
+}
 // insertion of new session id 
 function insertNewSessionId(loadedSessionId) {
     if(loadedSessionId in allSessionsId) {
@@ -507,10 +563,10 @@ function insertNewSessionId(loadedSessionId) {
 // iteration for rendering the selected filtered substances
 function loadDashboardData() {
     // initializing dashboard parameters 
-    allTimeDivisionPoints = {}
-    setCanvasPoints = []
-    allChartsRefs = {}
-    allSessionsId = {}
+    allTimeDivisionPoints = {};
+    setCanvasPoints = [];
+    allChartsRefs = {};
+    allSessionsId = {};
     var allGasesToRetrieve = getGasesToDisplay();
     // reset of all attributes data to manage 
     $('#dashboardContent').empty();
@@ -575,9 +631,15 @@ function loadDashboardData() {
 // second versione for the rendering the selected filtered substances 
 // this second version render all the points in a unique post call and for all the substances 
 function loadDashboardDataNew() {
-    // getting all the substances to be displayed 
-    // var allGasesToRetrieve = getGasesToDisplay();
-    // console.log(allGasesToRetrieve);
+    // initializing dashboard parameters 
+    allTimeDivisionPoints = {};
+    setCanvasPoints = [];
+    allChartsRefs = {};
+    allSessionsId = {};
+    var gasNameSessionIds = [];
+    setCanvasPoints = [];
+    // variable for all displayed chart of the carousel 
+    var allDisplayedChartSessions = [];
     // making the call for returning the points 
     $.ajax({
         type: "POST",
@@ -585,7 +647,33 @@ function loadDashboardDataNew() {
         contentType: "application/json",
         dataType: 'json',
         success: function(data) {
-            console.log(data)
+            for(var gasToLoad in data) {
+                var currGasObj = data[gasToLoad];
+                console.log(currGasObj);
+                if(currGasObj['status'].startsWith("ok_") == false) {
+                    // console.log("nothing to display")
+                    return 
+                }
+                // no data to display 
+                if(currGasObj['gasData'].length == 0) {
+                    // console.log("nothing to display")
+                    return 
+                }
+                setCanvasPoints = [];
+                // gas identification ids
+                var gasNameId = currGasObj['gasName'] + "_" + currGasObj['gasId'];
+                var currGasParts = gasToLoad.split("_");
+                var sessionId = currGasParts[1];
+                var gasNameSessionId = gasNameId + '_session' + sessionId;
+
+                // mapping the current session id 
+                insertNewSessionId(sessionId);
+                gasNameSessionIds.push(gasNameSessionId);
+
+                // getting the html for the current graph
+                var currGraphHtml = createBodyGraphsCurrSessionNew(currGasObj, gasNameSessionId);
+            }
+            console.log(allDisplayedChartSessions);
         },
         error: function(err) {
             console.log('error saving filters\n' + err);

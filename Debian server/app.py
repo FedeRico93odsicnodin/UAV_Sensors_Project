@@ -268,7 +268,7 @@ def gas_data_load_new():
     finalResult = {}
     for currSub in objToVis:
         # print(currSub.gas_ref)
-        # print(currSub.session_ref)
+        print(currSub.session_ref)
         # print(currSub.vis_type)
         # print(currSub.vis_granularity)
         # print(currSub.gas_name)
@@ -278,7 +278,14 @@ def gas_data_load_new():
             currSub.session_ref, 
             currSub.vis_type, 
             currSub.vis_granularity)
-        finalResult[currSub.gas_name] = {'status' : 'ok_' + currSub.gas_name, 'gasData': currElementVis, 'gasName': currSub.gas_name, 'gasId': currSub.gas_ref}
+        finalResult[currSub.gas_name + "_" + str(currSub.session_ref)] = {
+            'status' : 'ok_' + currSub.gas_name, 
+            'gasData': currElementVis, 
+            'gasName': currSub.gas_name, 
+            'gasId': currSub.gas_ref,
+            'vis_type': currSub.vis_type,
+            'vis_granularity': currSub.vis_granularity
+            }
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
 # NEW RELOAD METHOD: it is returned all the set of NEWER POINTS to just display (append) wrt the already displayed points 
