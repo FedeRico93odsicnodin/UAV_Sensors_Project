@@ -218,9 +218,6 @@ function checkIfFitstPointInSet(currSet, allInterval) {
 }
 // reloading data and back to dashboard context 
 function backToDashboardReload() {
-    // DEPRECATED: substitution with a BE logic instead
-    // loadDashboardData();
-    // calling the second method for the rendering 
-    loadDashboardDataNew();
+    loadDashboardData();
     backToDashboardContext();
 }

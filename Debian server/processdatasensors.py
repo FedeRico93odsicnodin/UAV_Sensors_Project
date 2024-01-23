@@ -509,7 +509,7 @@ def formatElaboratedPointsForView(pointsSet):
         arrValues.append(currObjGas[1])
         lenIndex = lenIndex + 1
     returnedPointsForVis["labels"] = arrLabels
-    returnedPointsForVis["values"] = arrValues
+    returnedPointsForVis["data"] = arrValues
     returnedPointsForVis["lenInd"] = lenIndex
     # getting the gas current session name 
     returnedPointsForVis["sessionName"] = pointsSet[0][2]
@@ -633,7 +633,7 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
                 currDate = date_obj
             # constructing the object of all visualized points 
             returnedPointsForVis["labels"] = arrLabels
-            returnedPointsForVis["values"] = arrValues
+            returnedPointsForVis["data"] = arrValues
             returnedPointsForVis["lenInd"] = lenIndex
             returnedPointsForVis["sessionName"] = currSessionName
             databaseServer.insertNewPointsForDifferentVisualization(newSetPointsForSelectedGranularity)
