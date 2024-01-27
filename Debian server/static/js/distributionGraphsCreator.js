@@ -16,17 +16,18 @@ function moveBackward(arrId) {
 function moveForward(arrId) {
     
 }
+
 // second versione for the rendering the selected filtered substances 
 // this second version render all the points in a unique post call and for all the substances 
 function loadDashboardData() {
     // initializing dashboard parameters 
     allTimeDivisionPoints = {};
-    allCanvasPoints = {};
+    allCanvasPoints = [];
     allChartsRefs = {};
     allSessionsId = {};
     var gasNameSessionIds = [];
     // variable for all displayed chart of the carousel 
-    var allDisplayedChartSessions = {};
+    var allDisplayedChartSessions = [];
     // making the call for returning the points 
     $.ajax({
         type: "POST",
@@ -36,7 +37,7 @@ function loadDashboardData() {
         success: function(data) {
             for(var gasToLoad in data) {
                 var currGasObj = data[gasToLoad];
-                console.log(currGasObj);
+                // console.log(currGasObj);
                 if(currGasObj['status'].startsWith("ok_") == false) {
                     // console.log("nothing to display")
                     return 
@@ -57,20 +58,26 @@ function loadDashboardData() {
                 gasNameSessionIds.push(gasNameSessionId);
 
                 // getting the html for the current graph
-                var currGraphHtml = createBodyGraphsCurrSession(currGasObj, gasNameSessionId);
-             
-                if(gasNameId in allDisplayedChartSessions) {
-                    allDisplayedChartSessions[gasNameId].push(currGraphHtml);
-                    allCanvasPoints[gasNameId].push({ "canvasId": gasNameSessionId, "gasName": gasName, "currSet": currGasObj.gasData });
-                    continue;
-                }
-                // first graph to visualize for the current gas
-                allDisplayedChartSessions[gasNameId] = [];
-                allDisplayedChartSessions[gasNameId].push(currGraphHtml);
-                allCanvasPoints[gasNameId] = [];
-                allCanvasPoints[gasNameId].push({ "canvasId": gasNameSessionId, "gasName": gasName, "currSet": currGasObj.gasData });
+                var currGraphHtmlRef = createBodyGraphsCurrSession(currGasObj, gasNameSessionId);
+            
+                allCanvasPoints.push({ "canvasId": gasNameSessionId, "gasNameSession": gasNameSessionId, "currSet": currGasObj.gasData });
+                allDisplayedChartSessions.push(currGraphHtmlRef)
             }
-            console.log(allDisplayedChartSessions);
+            // preparation of all the carousels for displaying the different sessions 
+            renderedCarouselsObjects = prepareCarouselHtml(allDisplayedChartSessions);
+            for(var gasNameId in renderedCarouselsObjects) {
+                // init session carousel 
+                var gasCarouselId = 'gasCarousel_' + gasNameId;
+                // creating and appending the overall carousel
+                var carouselHtml = getCarouselMainHtml(renderedCarouselsObjects[gasNameId], gasCarouselId);
+                // appending the current carousel block to the main dashboard content 
+                $('#dashboardContent').append(carouselHtml);
+                $('#' + gasCarouselId).carousel({
+                    interval: false
+                  });
+            }
+            console.log(renderedCarouselsObjects);
+            console.log(allCanvasPoints);
         },
         error: function(err) {
             console.log('error saving filters\n' + err);

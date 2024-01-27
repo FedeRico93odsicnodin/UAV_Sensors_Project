@@ -20,7 +20,12 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
         setIntervalsHtml,
         selPointsHtml
         );
-    return currVisualizationContainer;
+    // creation of the object for the identification of the gasNameSessionId owner
+    var currGasNameSingleRender = {
+        "gasNameSessionId" : gasNameSessionId,
+        "htmlRender" : currVisualizationContainer
+    }
+    return currGasNameSingleRender;
 }
 // deciding how many selections for time visualizations add to curve (new version)
 function decideTimeIntervalSelection(gasNameSessionId) {
@@ -90,8 +95,7 @@ function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationTyp
                                 '<canvas id="' + gasVisualizationType + '"></canvas>' +
                             '</div>' +
                         '</div>' + 
-                        '</div>' + 
-                    '</div>';
+                        '</div>';
     return htmlCanvas;
 }
 // moving buttons through iterated points (new implementation)
@@ -109,4 +113,67 @@ function getMovingButtonsHtmlNew(gasNameId, visualizationType) {
     '<input type="text" style="width:35px;height:20px;float:right;margin-right:7.5px;margin-top:8.5px" value="1" id="' + moveForwardValueId + '"></input>'+
     '</div>'
     return renderHtml
+}
+// getting the substance name and id from the gas name session id 
+function getGasNameIdFromLabelCarouselPreparation(gasNameSessionId) {
+    var idParts = gasNameSessionId.split("_");
+    var gasNameId = idParts[0] + "_" + idParts[1];
+    return gasNameId;
+}
+// preparation of the SINGLE carousel distinguishing by all elements in the content array 
+function prepareCarouselHtml(htmlContentArray) {
+    // the html for the current substance and for displaying all the sessions 
+    var currHtmlCarouselRender = '';
+    var currGasReference = '';
+    var carouselObjects = {};
+    // indicating the active carousel element for the current gas 
+    var firstElement = false;
+    for(var i in htmlContentArray) {
+        // treating the first element of the content set 
+        if(currGasReference == '') {
+            currGasReference = getGasNameIdFromLabelCarouselPreparation(htmlContentArray[i].gasNameSessionId);
+            firstElement = true;
+        }
+        // curr gas name id 
+        var currGasNameId = getGasNameIdFromLabelCarouselPreparation(htmlContentArray[i].gasNameSessionId);
+        // creating the final html 
+        if(currGasReference != currGasNameId) {
+            carouselObjects[currGasReference] = currHtmlCarouselRender;
+            // resetting variables for next iterations 
+            currGasReference = getGasNameIdFromLabelCarouselPreparation(htmlContentArray[i].gasNameSessionId);
+            currHtmlCarouselRender = '';
+            firstElement = true;
+        }
+        // handling for the visualization of the active carousel
+        if(firstElement) {
+            var currHtmlElement = '<div class="carousel-item active">' + htmlContentArray[i].htmlRender + '</div>';
+            currHtmlCarouselRender += currHtmlElement;
+            firstElement = false;
+            continue;
+        }
+        // handling the enqueued and not visible carousels for the other sessions 
+        var currHtmlElement = '<div class="carousel-item">' + htmlContentArray[i].htmlRender + '</div>';
+        currHtmlCarouselRender += currHtmlElement;
+    }
+    // adding the last element to the set 
+    carouselObjects[currGasReference] = currHtmlCarouselRender;
+    return carouselObjects
+}
+// preparation of all the carousel block with its main part for the current render of the substance display
+function getCarouselMainHtml(htmlContentArray, carouselId) {
+    var carouselHtml = 
+    '<div id="' + carouselId + '" class="row carousel slide carousel-fade" data-bs-ride="carousel" style="margin-top:25px">'
+    +'<div class="carousel-inner">'
+    +  htmlContentArray
+    +'</div>'
+    +'<button class="carousel-control-prev" style="width:5%" type="button" data-bs-target="#' + carouselId + '" data-bs-slide="prev">'
+    +  '<span class="carousel-control-prev-icon" aria-hidden="true"></span>'
+    +  '<span class="visually-hidden">Previous</span>'
+    +'</button>'
+    +'<button class="carousel-control-next" style="width:5%" type="button" data-bs-target="#' + carouselId + '" data-bs-slide="next">'
+    +  '<span class="carousel-control-next-icon" aria-hidden="true"></span>'
+    +  '<span class="visually-hidden">Next</span>'
+    +'</button>'
+    +'</div>'
+    return carouselHtml
 }
