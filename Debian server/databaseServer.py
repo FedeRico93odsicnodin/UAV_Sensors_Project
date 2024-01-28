@@ -839,22 +839,30 @@ def checkGasDashboardVisualization():
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
-        sqlite_all_el_to_visualize_query = """SELECT
+        sqlite_all_el_to_visualize_query = """SELECT DISTINCT
         dashboard_visualized.id, 
         dashboard_visualized.session_ref,
         dashboard_visualized.gas_ref,
         dashboard_visualized.vis_type,
         dashboard_visualized.vis_granularity,
-        optgas.filter_name,
+        detected_gas.name,
         dashboard_visualized.is_visualized
         FROM options_data_filters as optgas 
         join dashboard_visualized on dashboard_visualized.gas_ref = optgas.filter_value
         join options_data_filters as optsession on dashboard_visualized.session_ref = optsession.filter_value
+		join sensors on sensors.gas_detection_ref = dashboard_visualized.gas_ref
+		join options_data_filters as optsensors on sensors.id = optsensors.filter_value
+		join detected_substances as detected_gas on detected_gas.id = dashboard_visualized.gas_ref
         where 
-        optgas.filter_context = 'Gases'
+		((optgas.filter_context = 'Gases' 
+		and optgas.selected = 1 
         and optsession.filter_context = 'Sessions'
-        and optgas.selected = 1
-        and optsession.selected = 1"""
+        and optsession.selected = 1) or 
+		(optsensors.filter_context = 'Sensors' 
+		and optsensors.selected = 1
+		and optsession.filter_context = 'Sessions'
+        and optsession.selected = 1))
+		and (optsession.selected = 1 and optgas.selected = 1 and optsensors.selected = 1)"""
         cur = con.execute(sqlite_all_el_to_visualize_query)
         dashboardObjVis = cur.fetchall()
         returnedData = []

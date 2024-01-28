@@ -61,12 +61,14 @@ function renderVisualizationPointsOnGraph(
 // this second version render all the points in a unique post call and for all the substances 
 function loadDashboardData() {
     // initializing dashboard parameters 
-    allCanvasPoints = [];
-    allChartsRefs = {};
-    allSessionsId = {};
+    var allCanvasPoints = [];
+    // keeping track of the current order for the elements in the array 
+    var gasNameIdOrder = {};
     var gasNameSessionIds = [];
     // variable for all displayed chart of the carousel 
     var allDisplayedChartSessions = [];
+    // resetting content for the previous html
+    document.getElementById("dashboardContent").innerHTML = "";
     // making the call for returning the points 
     $.ajax({
         type: "POST",
@@ -74,6 +76,7 @@ function loadDashboardData() {
         contentType: "application/json",
         dataType: 'json',
         success: function(data) {
+            // console.log(data);
             for(var gasToLoad in data) {
                 var currGasObj = data[gasToLoad];
                 // console.log(currGasObj);
@@ -104,10 +107,29 @@ function loadDashboardData() {
                     "currSet": currGasObj.gasData, 
                     "gasName": gasName,
                     "gasNameId": gasNameId });
-                allDisplayedChartSessions.push(currGraphHtmlRef)
+                console.log(gasNameIdOrder);
+                
+                // verifyng the push order for the substance 
+                if(!gasNameIdOrder.hasOwnProperty(gasNameId)) {
+                    allDisplayedChartSessions.push(currGraphHtmlRef);
+                    gasNameIdOrder[gasNameId] = currGraphHtmlRef;
+                    continue;
+                }
+                var lastPushedHtml = gasNameIdOrder[gasNameId];
+                var lastHtmlIndex = allDisplayedChartSessions.indexOf(lastPushedHtml);
+                if(lastHtmlIndex == allDisplayedChartSessions.length - 1) {
+                    allDisplayedChartSessions.push(currGraphHtmlRef);
+                    gasNameIdOrder[gasNameId] = currGraphHtmlRef;
+                    continue;
+                }
+                lastHtmlIndex = lastHtmlIndex + 1;
+                allDisplayedChartSessions.splice(lastHtmlIndex, 0, currGraphHtmlRef);
+                gasNameIdOrder[gasNameId] = currGraphHtmlRef;
             }
+            console.log(allDisplayedChartSessions);
             // preparation of all the carousels for displaying the different sessions 
             renderedCarouselsObjects = prepareCarouselHtml(allDisplayedChartSessions);
+            
             for(var gasNameId in renderedCarouselsObjects) {
                 // init session carousel 
                 var gasCarouselId = 'gasCarousel_' + gasNameId;
