@@ -258,21 +258,17 @@ def get_gasdata_selected_reload_v2():
         finalResult[gas] = {'status' : 'ok_' + gasName, 'gasData': currGasData, 'gasName': gasName, 'gasId': gasId}
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
-# NEW LOAD METHOD: it is returned all the set of points to just display (no extra elaboration are required)
-# this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization 
+
+
+
+# LOAD METHOD: loading all the gases which are selected by filters and depending 
+# on interval of the current dashboard visualization for each of the substances
 @app.route('/gasdata_load_new', methods=['POST'])
 def gas_data_load_new():
     # getting all the substances for which product a visualization 
     objToVis = databaseServer.checkGasDashboardVisualization()
-    # print(objToVis)
     finalResult = {}
     for currSub in objToVis:
-        # print(currSub.gas_ref)
-        print(currSub.session_ref)
-        # print(currSub.vis_type)
-        # print(currSub.vis_granularity)
-        # print(currSub.gas_name)
-        # selection of the points for the current substance 
         currElementVis = processdatasensors.getPointsToVisualizeForSubstance(
             currSub.gas_ref, 
             currSub.session_ref, 
@@ -288,12 +284,36 @@ def gas_data_load_new():
             }
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
+
+# LOAD SPECIFIC GAS REQUEST: when a new selection is made for the visualization of the substance
+# here the request for getting the points on base of current visualization interval  
+@app.route('/gas_load_specific_gas', methods=['POST'])
+def gas_data_load_specific_substance():
+    # getting the object for the substance selection 
+    gasInputs = request.get_json()
+    gasId = gasInputs["gasId"]
+    sessionId = gasInputs["sessionId"]
+    vis_type = -1
+    vis_granularity = gasInputs["vis_granularity"]
+    # changing the current visualization to remember for the dashboard 
+    processdatasensors.updateDashboardVisualization(gasId, sessionId, vis_granularity)
+    # calling the function for retrieving the current points base on selection 
+    currElementVis = processdatasensors.getPointsToVisualizeForSubstance(
+            gasId, 
+            sessionId, 
+            vis_type, 
+            vis_granularity)
+    finalResultJSON = json.dumps(currElementVis)
+    return finalResultJSON
+    
+
 # NEW RELOAD METHOD: it is returned all the set of NEWER POINTS to just display (append) wrt the already displayed points 
 # also this set is returned on basis of what it is contained in the filter table and in the table for the current graph visualization
 @app.route('/gasdata_reload_new', methods=['POST'])
 def gas_data_reload_new():
     print("implementation")
     return 
+
 # DOWNLOAD all the dataset in xlsx format 
 @app.route('/download_file', methods=['GET'])
 def download_data_file():

@@ -492,6 +492,11 @@ def insertDashboardFirstVisualized():
         # this graph is selected as first instance 
         graphVisObj.is_visualized = 1
         databaseServer.insertCurrGasGraphVisualDefinition(graphVisObj)
+# changing the current visualization modality for a specific gas 
+def updateDashboardVisualization(gasId, sessionId, newVisGranularity):
+    # updating the current definition for the visualization of dashboard basing on new granularity 
+    databaseServer.updateCurrGasVisualDefinition(sessionId, gasId, newVisGranularity)
+
 # method to format the new points for the current view
 def formatElaboratedPointsForView(pointsSet):
     returnedPointsForVis = {}
@@ -514,7 +519,6 @@ def formatElaboratedPointsForView(pointsSet):
     # getting the gas current session name 
     returnedPointsForVis["sessionName"] = pointsSet[0][2]
     return returnedPointsForVis
-
 # getting the current points of visualization for the current substance 
 def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity, datetimeUp = None):
     # set of labels and data to visualize for the current selected visualization 

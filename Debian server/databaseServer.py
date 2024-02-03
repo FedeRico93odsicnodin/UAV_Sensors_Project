@@ -834,6 +834,21 @@ def insertCurrGasGraphVisualDefinition(graphVisualizationObj):
         con.commit()
         con.close()
 
+# updating for a new visualization of the context of a visualized dashboard 
+def updateCurrGasVisualDefinition(sessionId, gasId, vis_granularity): 
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        cur = con.cursor()
+        update_visualdefinition_sqlite = """
+        update dashboard_visualized set vis_granularity = ?
+        where session_ref = ?
+        and gas_ref = ?
+"""
+        cur.execute(update_visualdefinition_sqlite, (vis_granularity, sessionId, gasId))
+        con.commit()
+        con.close()
+
 # getting all the objects with an active visualization to give back to the FE in a set of points  
 def checkGasDashboardVisualization():
     with Lock():

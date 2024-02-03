@@ -5,7 +5,7 @@
 // new function for visualizing the current substances 
 function createBodyGraphsCurrSession(data, gasNameSessionId) {
     // getting the HTML for the selection of the type of visualization 
-    var setIntervalsHtml = decideTimeIntervalSelection(gasNameSessionId);
+    var setIntervalsHtml = decideTimeIntervalSelection(gasNameSessionId, data.vis_granularity);
     // getting the HTML for the current presentation points 
     var selPointsHtml = decidePointsIntervalSelection(gasNameSessionId, data.gasData.lenInd);
     // creation of the HTML for the current container of visualization
@@ -28,15 +28,35 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
     return currGasNameSingleRender;
 }
 // deciding how many selections for time visualizations add to curve (new version)
-function decideTimeIntervalSelection(gasNameSessionId) {
+function decideTimeIntervalSelection(gasNameSessionId, currGranularity) {
     var selTimeInterval = 'intervalDashboardSel_' + gasNameSessionId;
     // enabling all the possible visualization granularity: at least one point for each of the selection is possible to visualize 
     var selStartHtml = '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraphNew(this);">'
-    + '<option value="mmm">mmm</option>'
-    + '<option value="ss">ss</option>'
-    + '<option value="mm">mm</option>'
-    + '<option value="hh">hh</option>'
-    + '</select>';
+    if(currGranularity == "mmm") {
+        selStartHtml += '<option value="mmm" selected>mmm</option>';
+    }
+    else {
+        selStartHtml += '<option value="mmm">mmm</option>';
+    }
+    if(currGranularity == "ss") {
+        selStartHtml += '<option value="ss" selected>ss</option>';
+    }
+    else {
+        selStartHtml += '<option value="ss">ss</option>';
+    }
+    if(currGranularity == "mm") {
+        selStartHtml += '<option value="mm" selected>mm</option>';
+    }
+    else {
+        selStartHtml += '<option value="mm">mm</option>';
+    }
+    if(currGranularity == "hh") {
+        selStartHtml += '<option value="hh" selected>hh</option>';
+    }
+    else {
+        selStartHtml += '<option value="hh">hh</option>';
+    }
+    selStartHtml += '</select>';
     return selStartHtml;
 }
 // deciding how many selections for points to display on curve (new version)

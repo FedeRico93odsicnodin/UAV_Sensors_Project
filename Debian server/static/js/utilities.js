@@ -221,3 +221,20 @@ function backToDashboardReload() {
     loadDashboardData();
     backToDashboardContext();
 }
+
+// getting the parameters of the gas from the interval selector 
+function getGasParametersFromIntervalSelectorId(intervalSelectorId) {
+    // getting the parameters from the selector id 
+    var gasParametersParts = intervalSelectorId.split("_");
+    var gasName = gasParametersParts[1];
+    var gasId = gasParametersParts[2];
+    var sessionIdPart = gasParametersParts[3];
+    var sessionId = sessionIdPart.substring(7);
+    // creating the object to give back 
+    var gasObject = {
+        'gasName' : gasName,
+        'gasId': gasId,
+        'sessionId': sessionId
+    };
+    return gasObject;
+}

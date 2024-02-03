@@ -1,17 +1,38 @@
 // global variables of all the data to manage 
 var allTimeDivisionPoints = {}
-
+// new interval selection for the current substance 
+function setNewIntervalGraphNew(invokerGasBlock) {
+    // getting the gas attributes from the invokerId 
+    var invokerId = invokerGasBlock.id;
+    var vis_granularity = invokerGasBlock.value;
+    var gasObj = getGasParametersFromIntervalSelectorId(invokerId);
+    // modification of the object with the current interval 
+    gasObj.vis_granularity = vis_granularity;
+    var gasObjJSON = JSON.stringify(gasObj);
+    // making the POST for getting the new points set visualization 
+    $.ajax({
+        type: "POST",
+        url: "/gas_load_specific_gas",
+        contentType: "application/json",
+        dataType: 'json',
+        data: gasObjJSON,
+        success: function(data) 
+        { 
+            console.log(data);
+        }
+        });
+}
 // eventual deactivation of the arrow movement on visualized set 
 function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNameId, visualizationType) {
-    
+    console.log('arrow');
 }
 // moving backward on rendered graph
 function moveBackward(arrId) {
-
+    console.log('arrb');
 }
 // moving forward on rendered graph
 function moveForward(arrId) {
-    
+    console.log('arrf');
 }
 // rendering the visualization for the current time interval 
 function renderVisualizationPointsOnGraph(
@@ -76,7 +97,7 @@ function loadDashboardData() {
         contentType: "application/json",
         dataType: 'json',
         success: function(data) {
-            // console.log(data);
+            console.log(data);
             for(var gasToLoad in data) {
                 var currGasObj = data[gasToLoad];
                 // console.log(currGasObj);
@@ -107,7 +128,7 @@ function loadDashboardData() {
                     "currSet": currGasObj.gasData, 
                     "gasName": gasName,
                     "gasNameId": gasNameId });
-                console.log(gasNameIdOrder);
+                // console.log(gasNameIdOrder);
                 
                 // verifyng the push order for the substance 
                 if(!gasNameIdOrder.hasOwnProperty(gasNameId)) {
@@ -126,7 +147,6 @@ function loadDashboardData() {
                 allDisplayedChartSessions.splice(lastHtmlIndex, 0, currGraphHtmlRef);
                 gasNameIdOrder[gasNameId] = currGraphHtmlRef;
             }
-            console.log(allDisplayedChartSessions);
             // preparation of all the carousels for displaying the different sessions 
             renderedCarouselsObjects = prepareCarouselHtml(allDisplayedChartSessions);
             
