@@ -5,9 +5,11 @@
 // new function for visualizing the current substances 
 function createBodyGraphsCurrSession(data, gasNameSessionId) {
     // getting the HTML for the selection of the type of visualization 
-    var setIntervalsHtml = decideTimeIntervalSelection(gasNameSessionId, data.vis_granularity);
+    var vis_interval = data.vis_granularity;
+    var setIntervalsHtml = decideTimeIntervalSelectionHtml(gasNameSessionId, vis_interval);
     // getting the HTML for the current presentation points 
-    var selPointsHtml = decidePointsIntervalSelection(gasNameSessionId, data.gasData.lenInd);
+    var interval_len = data.gasData.lenInd;
+    var selPointsHtml = decidePointsIntervalSelectionHtml(gasNameSessionId, interval_len);
     // creation of the HTML for the current container of visualization
     var gasName = data.gasName;
     var gasSessionName = data.gasData.sessionName;
@@ -16,7 +18,6 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
         gasName, 
         gasSessionName, 
         gasNameSessionId,
-        visType,
         setIntervalsHtml,
         selPointsHtml
         );
@@ -28,8 +29,9 @@ function createBodyGraphsCurrSession(data, gasNameSessionId) {
     return currGasNameSingleRender;
 }
 // deciding how many selections for time visualizations add to curve (new version)
-function decideTimeIntervalSelection(gasNameSessionId, currGranularity) {
-    var selTimeInterval = 'intervalDashboardSel_' + gasNameSessionId;
+function decideTimeIntervalSelectionHtml(gasNameSessionId, currGranularity) {
+    // getting the new selector of num of points ID basing the decision on current gas and session
+    var selTimeInterval = getIdCurrentSelectorIntervals(gasNameSessionId);
     // enabling all the possible visualization granularity: at least one point for each of the selection is possible to visualize 
     var selStartHtml = '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraphNew(this);">'
     if(currGranularity == "mmm") {
@@ -60,58 +62,59 @@ function decideTimeIntervalSelection(gasNameSessionId, currGranularity) {
     return selStartHtml;
 }
 // deciding how many selections for points to display on curve (new version)
-function decidePointsIntervalSelection(gasNameSessionId, currVisualizationNum) {
+function decidePointsIntervalSelectionHtml(gasNameSessionId, currVisualizationNum) {
+    var selPointsInterval = getIdCurrentSelectorPoints(gasNameSessionId);
     // if num of points less than 5 the menu will not be created 
     if(currVisualizationNum < 5) {
-        return ''
+        return '<select class="select" hidden="true" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);"></select>'
     }
-    var selPointsInterval = 'pointsIntervalSel_' + gasNameSessionId;
     var selStartHtml = '<select class="select" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);">'
-    + '<option value="5">5</option>'
-    if(currVisualizationNum < 10) {
-        selStartHtml += '<option value="all">all</option>'
-        selStartHtml += '</select>'
-        return selStartHtml
-    }
-    selStartHtml += '<option value="10">10</option>'
-    if(currVisualizationNum < 25) {
-        selStartHtml += '<option value="all">all</option>'
-        selStartHtml += '</select>'
-        return selStartHtml
-    }
-    selStartHtml += '<option value="25">25</option>'
-    if(currVisualizationNum < 50) {
-        selStartHtml += '<option value="all">all</option>'
-        selStartHtml += '</select>'
-        return selStartHtml
-    }
-    selStartHtml += '<option value="50">50</option>'
-    if(currVisualizationNum < 100) {
-        selStartHtml += '<option value="all">all</option>'
-        selStartHtml += '</select>'
-        return selStartHtml
-    }
-    selStartHtml += '<option value="100">100</option>'
-    selStartHtml += '<option value="all">all</option>'
+    selStartHtml += getCurrentSelectorTimePointsHtml(currVisualizationNum);
     selStartHtml += '</select>'
     return selStartHtml
 }
+// obtaining html for the selections to insert in the selector of time points 
+function getCurrentSelectorTimePointsHtml(currVisualizationNum) {
+    var currSelectionsGranularity = "";
+    currSelectionsGranularity += '<option value="5">5</option>';
+    if(currVisualizationNum < 10) {
+        currSelectionsGranularity += '<option value="all">all</option>';
+        return currSelectionsGranularity;
+    }
+    currSelectionsGranularity += '<option value="10">10</option>';
+    if(currSelectionsGranularity < 25) {
+        currSelectionsGranularity += '<option value="all">all</option>';
+        return currSelectionsGranularity;
+    }
+    currSelectionsGranularity += '<option value="25">25</option>';
+    if(currSelectionsGranularity < 50) {
+        currSelectionsGranularity += '<option value="all">all</option>';
+        return currSelectionsGranularity;
+    }
+    currSelectionsGranularity += '<option value="50">50</option>';
+    if(currSelectionsGranularity < 100) {
+        currSelectionsGranularity += '<option value="all">all</option>';
+        return currSelectionsGranularity;
+    }
+    currSelectionsGranularity += '<option value="100">100</option>';
+    currSelectionsGranularity += '<option value="all">all</option>';
+    return currSelectionsGranularity;
+}
 // html for rendering single canvas gas visualizer (new implementation)
-function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationType, selIntervalHtml, selPointsHtml) {
+function createGasCanvas(gasName, gasSession, gasNameSessionId, selIntervalHtml, selPointsHtml) {
     // rendered html 
-    var rowIdGasVisualization = visualizationType + "_" + gasNameSessionId + "_row";
-    var selTimeInterval = 'intervalDashboardSel_' + visualizationType + "_" + gasNameSessionId;
-    var selPointsInterval = 'pointsIntervalSel_' + visualizationType + "_" + gasNameSessionId;
+    var rowIdGasVisualization = gasNameSessionId + "_row";
+    var rowIdGasSelectionDiv = getIdCurrentDivSelectionsForCanvas(gasNameSessionId);
     var gasVisualizationType = gasNameSessionId;
     var htmlCanvas ='<div class="row" id="' + rowIdGasVisualization + '">' +  
                         '<div class="col-sm-24 col-xl-10 mx-auto">' + 
                             '<div class="bg-secondary text-center rounded p-4">' +
-                                '<div>' +
+                                '<div id="' + rowIdGasSelectionDiv + '">' +
                                     '<h6 class="mb-0" style="float:left">' + gasName + ' - ' + gasSession + '</h6>' +
                                     selIntervalHtml + 
                                     selPointsHtml + 
                                 '</div>' +
-                                getMovingButtonsHtmlNew(gasNameSessionId, visualizationType) + 
+                                getMovingButtonsHtmlNew(gasNameSessionId) + 
                                 '<canvas id="' + gasVisualizationType + '"></canvas>' +
                             '</div>' +
                         '</div>' + 
@@ -119,12 +122,12 @@ function createGasCanvas(gasName, gasSession, gasNameSessionId, visualizationTyp
     return htmlCanvas;
 }
 // moving buttons through iterated points (new implementation)
-function getMovingButtonsHtmlNew(gasNameId, visualizationType) {
-    var moveForwardValueId = "moveForwardValue_" + visualizationType + "_" + gasNameId
-    var moveBackwardValueId = "moveBackwardValue_" + visualizationType + "_" + gasNameId
-    var gasNameIdMoveForward = "moveBtnForward_" + visualizationType + "_" + gasNameId
-    var gasNameIdMoveBackward = "moveBtnBackward_" + visualizationType + "_" + gasNameId
-    var gasNameIdMoveBtnsMenuId = "moveButtons_" + visualizationType + "_" + gasNameId
+function getMovingButtonsHtmlNew(gasNameSessionId) {
+    var moveForwardValueId = "moveForwardValue_" + gasNameSessionId
+    var moveBackwardValueId = "moveBackwardValue_" + gasNameSessionId
+    var gasNameIdMoveForward = "moveBtnForward_" + gasNameSessionId
+    var gasNameIdMoveBackward = "moveBtnBackward_" + gasNameSessionId
+    var gasNameIdMoveBtnsMenuId = "moveButtons_" + gasNameSessionId
     var renderHtml = '<div style="margin-top:35px" id="' + gasNameIdMoveBtnsMenuId + '">' + 
     '<span onclick="moveBackward(this)" class="bi bi-arrow-left-circle" style="float:left;font-size: 1.5rem;" id="' + gasNameIdMoveBackward + '""></span>' + 
     '<input type="text" style="width:35px;height:20px;float:left;margin-left:7.5px;margin-top:8.5px" value="1" id="' + moveBackwardValueId + '"></input>'+

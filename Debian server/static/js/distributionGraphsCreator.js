@@ -34,12 +34,30 @@ function setNewIntervalGraphNew(invokerGasBlock) {
             // getting the color for the graph to ricreate
             var currColorApplication = "rgba(" + StoredGasColors[currGasNameIdRef].color + ", .45)";
             // creating the new charts with the new set of retrieved points
+            // NB: the new selector for the canvas will be replaced to memory objects
             renderVisualizationPointsOnGraph(
                 currGasCanvasId
                 , gasName
                 , currGasNameIdRef
                 , visualizedInterval
                 , visualizedData);
+
+            // recalculating the current possible selections of the points 
+            // getting the new number of elements for the selection 
+            var currDataLen = visualizedInterval.length;
+            
+            // getting the selection point html
+            var selectorPointsId = getIdCurrentSelectorPoints(currGasCanvasId);
+            // data less than 5 points: just hide the selector of points bar 
+            if(currDataLen < 5) {
+                $("#" + selectorPointsId).hide();
+                return;
+            }
+            $("#" + selectorPointsId).show();
+            var selectorPointsHtml = document.getElementById(selectorPointsId);
+            var replacePointsSelectionHtml = getCurrentSelectorTimePointsHtml(currGasCanvasId, currDataLen);
+            selectorPointsHtml.innerHTML = replacePointsSelectionHtml;
+
         }
         });
        
@@ -49,12 +67,22 @@ function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNa
     console.log('arrow');
 }
 // moving backward on rendered graph
-function moveBackward(arrId) {
-    console.log('arrb');
+function moveBackward(arrObject) {
+    getDesiredPointsFromArrowSelector(arrObject);
 }
 // moving forward on rendered graph
-function moveForward(arrId) {
-    console.log('arrf');
+function moveForward(arrObject) {
+    getDesiredPointsFromArrowSelector(arrObject);
+}
+// common function for the arrow movements: retrieving the desired points to enqueue depending on the verse
+function getDesiredPointsFromArrowSelector(arrObject) {
+    // getting current arrow id 
+    var currArrId = arrObject.id;
+    // getting the definition of the object for the selected gas and session 
+    var gasObj = getGasParametersFromIntervalSelectorId(currArrId);
+
+    console.log(gasObj);
+
 }
 // rendering the visualization for the current time interval 
 function renderVisualizationPointsOnGraph(
@@ -120,7 +148,6 @@ function loadDashboardData() {
         contentType: "application/json",
         dataType: 'json',
         success: function(data) {
-            console.log(data);
             for(var gasToLoad in data) {
                 var currGasObj = data[gasToLoad];
                 // console.log(currGasObj);
@@ -151,8 +178,7 @@ function loadDashboardData() {
                     "currSet": currGasObj.gasData, 
                     "gasName": gasName,
                     "gasNameId": gasNameId });
-                // console.log(gasNameIdOrder);
-                
+                    
                 // verifyng the push order for the substance 
                 if(!gasNameIdOrder.hasOwnProperty(gasNameId)) {
                     allDisplayedChartSessions.push(currGraphHtmlRef);

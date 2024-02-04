@@ -238,3 +238,20 @@ function getGasParametersFromIntervalSelectorId(intervalSelectorId) {
     };
     return gasObject;
 }
+
+// getting the id for the current selector of intervals to visualize
+function getIdCurrentSelectorIntervals(gasNameSessionId) {
+    var currSelectorPointsId = "pointsIntervalSel_" + gasNameSessionId;
+    return currSelectorPointsId;
+}
+// getting the id forr the current selector of points to visualize
+function getIdCurrentSelectorPoints(gasNameSessionId) {
+    var currSelectorIntervalsId = 'pointsRangeSel_' + gasNameSessionId;
+    return currSelectorIntervalsId;
+}
+// getting the id for the current div in which
+// selector points for the canvas are rendered 
+function getIdCurrentDivSelectionsForCanvas(gasNameSessionId) {
+    var currIdDivSelectionsForCanvas = "selectionDiv_" + gasNameSessionId;
+    return currIdDivSelectionsForCanvas;
+}
