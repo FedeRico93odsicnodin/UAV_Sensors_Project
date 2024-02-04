@@ -1,5 +1,7 @@
 // global variables of all the data to manage 
 var allTimeDivisionPoints = {}
+// current visualized graph charts 
+var allVisualizedChartsPointers = {};
 // new interval selection for the current substance 
 function setNewIntervalGraphNew(invokerGasBlock) {
     // getting the gas attributes from the invokerId 
@@ -9,6 +11,7 @@ function setNewIntervalGraphNew(invokerGasBlock) {
     // modification of the object with the current interval 
     gasObj.vis_granularity = vis_granularity;
     var gasObjJSON = JSON.stringify(gasObj);
+    
     // making the POST for getting the new points set visualization 
     $.ajax({
         type: "POST",
@@ -18,9 +21,28 @@ function setNewIntervalGraphNew(invokerGasBlock) {
         data: gasObjJSON,
         success: function(data) 
         { 
-            console.log(data);
+            // getting the basic elements for the new visualization 
+            var gasName = gasObj.gasName;
+            var visualizedInterval = data.labels;
+            var visualizedData = data.data;
+            // creating the current ID for the canvas to select 
+            var currGasNameIdRef = gasName + "_" + gasObj.gasId;
+            var currGasCanvasId = gasName + "_" + gasObj.gasId + "_session" + gasObj.sessionId;
+            // emptying the content for the selected canvas
+            var currChart = allVisualizedChartsPointers[currGasCanvasId];
+            currChart.destroy();
+            // getting the color for the graph to ricreate
+            var currColorApplication = "rgba(" + StoredGasColors[currGasNameIdRef].color + ", .45)";
+            // creating the new charts with the new set of retrieved points
+            renderVisualizationPointsOnGraph(
+                currGasCanvasId
+                , gasName
+                , currGasNameIdRef
+                , visualizedInterval
+                , visualizedData);
         }
         });
+       
 }
 // eventual deactivation of the arrow movement on visualized set 
 function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNameId, visualizationType) {
@@ -43,7 +65,6 @@ function renderVisualizationPointsOnGraph(
     visualizedData
     ) {
     var currColorApplication = "rgba(" + StoredGasColors[gasNameIdRef].color + ", .45)";
-    // console.log(currColorApplication);
     var canvGas = $("#" + canvasId).get(0).getContext("2d");
     var lineChart = new Chart(canvGas, {
         type: "line",
@@ -77,6 +98,8 @@ function renderVisualizationPointsOnGraph(
             responsive: true
         }
     });
+    // storing the visualization for the current graph 
+    allVisualizedChartsPointers[canvasId] = lineChart;
 }
 // second versione for the rendering the selected filtered substances 
 // this second version render all the points in a unique post call and for all the substances 
