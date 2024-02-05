@@ -1054,4 +1054,5 @@ def getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity
         else:
             cur = con.execute(sqlite_get_allpoints_curr_granularity, (gasId, sessionId, vis_granularity))
         visNum = cur.fetchone()
-        return visNum
+        currNum = visNum[0]
+        return currNum

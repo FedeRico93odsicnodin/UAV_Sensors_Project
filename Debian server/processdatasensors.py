@@ -540,7 +540,6 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
             if(vis_type > 0):
                 allPointsCurrVis = databaseServer.getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity)
                 returnedPointsForVis["lenInd"] = allPointsCurrVis
-            # print(returnedPointsForVis)
             return returnedPointsForVis
         # attempting to get all the points for the current vis granularity 
         allPointsSet = databaseServer.getAllPointsToVisualizeDiffGranularity(gasId, sessionId, vis_type, vis_granularity)
@@ -648,6 +647,7 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
             if(vis_type > 0):
                 allPointsCurrVis = databaseServer.getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity)
                 returnedPointsForVis["lenInd"] = allPointsCurrVis
+        
         # returning the already present points for the selected set and the given gas, interval and session 
         return returnedPointsForVis
 # creation for the new point to visualized based on the granularity 

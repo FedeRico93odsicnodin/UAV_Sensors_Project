@@ -33,7 +33,7 @@ function decideTimeIntervalSelectionHtml(gasNameSessionId, currGranularity) {
     // getting the new selector of num of points ID basing the decision on current gas and session
     var selTimeInterval = getIdCurrentSelectorIntervals(gasNameSessionId);
     // enabling all the possible visualization granularity: at least one point for each of the selection is possible to visualize 
-    var selStartHtml = '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraphNew(this);">'
+    var selStartHtml = '<select class="select" style="float:right" id="' + selTimeInterval + '" onchange="setNewIntervalGraph(this);">'
     if(currGranularity == "mmm") {
         selStartHtml += '<option value="mmm" selected>mmm</option>';
     }
@@ -66,9 +66,9 @@ function decidePointsIntervalSelectionHtml(gasNameSessionId, currVisualizationNu
     var selPointsInterval = getIdCurrentSelectorPoints(gasNameSessionId);
     // if num of points less than 5 the menu will not be created 
     if(currVisualizationNum < 5) {
-        return '<select class="select" hidden="true" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);"></select>'
+        return '<select class="select" hidden="true" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewNumPointsGraph(this);"></select>'
     }
-    var selStartHtml = '<select class="select" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewPointNumberGraph(this);">'
+    var selStartHtml = '<select class="select" style="float:right;margin-right:10px" id="' + selPointsInterval + '" onchange="setNewNumPointsGraph(this);">'
     selStartHtml += getCurrentSelectorTimePointsHtml(currVisualizationNum);
     selStartHtml += '</select>'
     return selStartHtml
@@ -82,17 +82,17 @@ function getCurrentSelectorTimePointsHtml(currVisualizationNum) {
         return currSelectionsGranularity;
     }
     currSelectionsGranularity += '<option value="10">10</option>';
-    if(currSelectionsGranularity < 25) {
+    if(currVisualizationNum < 25) {
         currSelectionsGranularity += '<option value="all">all</option>';
         return currSelectionsGranularity;
     }
     currSelectionsGranularity += '<option value="25">25</option>';
-    if(currSelectionsGranularity < 50) {
+    if(currVisualizationNum < 50) {
         currSelectionsGranularity += '<option value="all">all</option>';
         return currSelectionsGranularity;
     }
     currSelectionsGranularity += '<option value="50">50</option>';
-    if(currSelectionsGranularity < 100) {
+    if(currVisualizationNum < 100) {
         currSelectionsGranularity += '<option value="all">all</option>';
         return currSelectionsGranularity;
     }
@@ -123,19 +123,19 @@ function createGasCanvas(gasName, gasSession, gasNameSessionId, selIntervalHtml,
 }
 // moving buttons through iterated points (new implementation)
 function getMovingButtonsHtmlNew(gasNameSessionId) {
-    var moveForwardValueId = "moveForwardValue_" + gasNameSessionId
-    var moveBackwardValueId = "moveBackwardValue_" + gasNameSessionId
-    var gasNameIdMoveForward = "moveBtnForward_" + gasNameSessionId
-    var gasNameIdMoveBackward = "moveBtnBackward_" + gasNameSessionId
-    var gasNameIdMoveBtnsMenuId = "moveButtons_" + gasNameSessionId
+    var moveForwardValueId = getMoveForwardValueId(gasNameSessionId);
+    var moveBackwardValueId = getMoveBackwardValueId(gasNameSessionId);
+    var gasNameIdMoveForward = getMoveBtnForwardId(gasNameSessionId);
+    var gasNameIdMoveBackward = getMoveBtnBackwardId(gasNameSessionId);
+    var gasNameIdMoveBtnsMenuId = getMoveBtnsMenuId(gasNameSessionId);
     var renderHtml = '<div style="margin-top:35px" id="' + gasNameIdMoveBtnsMenuId + '">' + 
     '<span onclick="moveBackward(this)" class="bi bi-arrow-left-circle" style="float:left;font-size: 1.5rem;" id="' + gasNameIdMoveBackward + '""></span>' + 
     '<input type="text" style="width:35px;height:20px;float:left;margin-left:7.5px;margin-top:8.5px" value="1" id="' + moveBackwardValueId + '"></input>'+
     
     '<span onclick="moveForward(this)" class="bi bi-arrow-right-circle" style="float:right;font-size: 1.5rem;" id="' + gasNameIdMoveForward +'"></span>' + 
     '<input type="text" style="width:35px;height:20px;float:right;margin-right:7.5px;margin-top:8.5px" value="1" id="' + moveForwardValueId + '"></input>'+
-    '</div>'
-    return renderHtml
+    '</div>';
+    return renderHtml;
 }
 // getting the substance name and id from the gas name session id 
 function getGasNameIdFromLabelCarouselPreparation(gasNameSessionId) {

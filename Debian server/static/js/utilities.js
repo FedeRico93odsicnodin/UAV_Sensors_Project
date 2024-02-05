@@ -255,3 +255,30 @@ function getIdCurrentDivSelectionsForCanvas(gasNameSessionId) {
     var currIdDivSelectionsForCanvas = "selectionDiv_" + gasNameSessionId;
     return currIdDivSelectionsForCanvas;
 }
+// getting the id for the input value of how much points to move 
+// eventually forward on the graph
+function getMoveForwardValueId(gasNameSessionId) {
+    var moveForwardInputID = "moveForwardValue_" + gasNameSessionId;
+    return moveForwardInputID;
+}
+// getting the id for the input value fo how much points to move 
+// eventually backward on the graph
+function getMoveBackwardValueId(gasNameSessionId) {
+    var moveBackwardInputID = "moveBackwardValue_" + gasNameSessionId;
+    return moveBackwardInputID;
+}
+// getting the ID for the arrow of movement forward 
+function getMoveBtnForwardId(gasNameSessionId) {
+    var moveForwardBtnId = "moveBtnForward_" + gasNameSessionId;
+    return moveForwardBtnId;
+}
+// getting the ID for the arrow of movement backward 
+function getMoveBtnBackwardId(gasNameSessionId) {
+    var moveBackwardBtnId =  "moveBtnBackward_" + gasNameSessionId;
+    return moveBackwardBtnId;
+}
+// getting the value of the menu context of arrow movements on points
+function getMoveBtnsMenuId(gasNameSessionId) {
+    var menuPointsId = "moveButtons_" + gasNameSessionId;
+    return menuPointsId;
+}

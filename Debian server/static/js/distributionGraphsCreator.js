@@ -2,8 +2,10 @@
 var allTimeDivisionPoints = {}
 // current visualized graph charts 
 var allVisualizedChartsPointers = {};
+
+///////////////////////// INTERVAL AND NUMBER OF POINTS SELECTIONS ///////////////////////// 
 // new interval selection for the current substance 
-function setNewIntervalGraphNew(invokerGasBlock) {
+function setNewIntervalGraph(invokerGasBlock) {
     // getting the gas attributes from the invokerId 
     var invokerId = invokerGasBlock.id;
     var vis_granularity = invokerGasBlock.value;
@@ -53,15 +55,26 @@ function setNewIntervalGraphNew(invokerGasBlock) {
                 $("#" + selectorPointsId).hide();
                 return;
             }
-            $("#" + selectorPointsId).show();
             var selectorPointsHtml = document.getElementById(selectorPointsId);
-            var replacePointsSelectionHtml = getCurrentSelectorTimePointsHtml(currGasCanvasId, currDataLen);
+            var replacePointsSelectionHtml = getCurrentSelectorTimePointsHtml(currDataLen);
             selectorPointsHtml.innerHTML = replacePointsSelectionHtml;
+            $("#" + selectorPointsId).show();
 
+            // setting the default selection for the current visualization 
+            // TODO: implementation for obtaining the SAME OBJECT as the one of the first load calls 
+            // so as to have the vis type for the set visualization type 
         }
         });
        
 }
+// new num of points selection for the current substance
+function setNewNumPointsGraph(invokerGasBlock) {
+    console.log(invokerGasBlock);
+    // TODO: implementation with new points selections
+}
+////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // eventual deactivation of the arrow movement on visualized set 
 function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNameId, visualizationType) {
     console.log('arrow');
@@ -129,6 +142,36 @@ function renderVisualizationPointsOnGraph(
     // storing the visualization for the current graph 
     allVisualizedChartsPointers[canvasId] = lineChart;
 }
+// enabling or disabling the gas movement bar basing on situation 
+function decideGasMovementBarVisualization(gasNameSessionId, currVisType, overallNumPoints) {
+    // getting the ID for the current bar
+    var gasMenuMovementBarId = getMoveBtnsMenuId(gasNameSessionId);
+    // if the current visualization type = -1 means that all the points are selected and the arrows movements should be disabled
+    if(currVisType == -1) {
+        $("#" + gasMenuMovementBarId).hide();
+        return;
+    }
+    // if the selection of the type (the number of visualized points) are bigger or equal 
+    // to the overall number of points for the visualization, the bar should be disabled
+    if(currVisType >= overallNumPoints) {
+        $("#" + gasMenuMovementBarId).hide();
+        return;
+    }
+    // for every other case the bar is enabled
+    $("#" + gasMenuMovementBarId).show();
+}
+// selection for the number of points visualization 
+function setNumOfPointsVisualizationSelection(gasNameSessionId, currVisType) {
+    // getting the current id for the number of points visualization
+    var selPointsInterval = getIdCurrentSelectorPoints(gasNameSessionId);
+    // case in which all the points are visualized for the current interval
+    if(currVisType == -1) {
+        document.getElementById(selPointsInterval).value = "all";
+        return;
+    }
+    // for the other cases the number of points selected is inserted as value 
+    document.getElementById(selPointsInterval).value = currVisType;
+}
 // second versione for the rendering the selected filtered substances 
 // this second version render all the points in a unique post call and for all the substances 
 function loadDashboardData() {
@@ -150,7 +193,6 @@ function loadDashboardData() {
         success: function(data) {
             for(var gasToLoad in data) {
                 var currGasObj = data[gasToLoad];
-                // console.log(currGasObj);
                 if(currGasObj['status'].startsWith("ok_") == false) {
                     // console.log("nothing to display")
                     return 
@@ -167,6 +209,7 @@ function loadDashboardData() {
                 var currGasParts = gasToLoad.split("_");
                 var sessionId = currGasParts[1];
                 var gasNameSessionId = gasNameId + '_session' + sessionId;
+                var gasVisType = currGasObj["vis_type"];
 
                 gasNameSessionIds.push(gasNameSessionId);
 
@@ -177,7 +220,8 @@ function loadDashboardData() {
                     "gasNameSession": gasNameSessionId, 
                     "currSet": currGasObj.gasData, 
                     "gasName": gasName,
-                    "gasNameId": gasNameId });
+                    "gasNameId": gasNameId,
+                    "vis_type": gasVisType});
                     
                 // verifyng the push order for the substance 
                 if(!gasNameIdOrder.hasOwnProperty(gasNameId)) {
@@ -217,6 +261,7 @@ function loadDashboardData() {
                 var gasNameId = allCanvasPoints[indCanvas].gasNameId;
                 var visualizedInterval = allCanvasPoints[indCanvas].currSet.labels;
                 var visualizedData = allCanvasPoints[indCanvas].currSet.data;
+                
                 // rendering for the current gas canvas 
                 renderVisualizationPointsOnGraph(
                     canvasId, 
@@ -224,6 +269,14 @@ function loadDashboardData() {
                     gasNameId, 
                     visualizedInterval, 
                     visualizedData);
+                // the overall number of points for the current visualization 
+                var overallNumPoints = allCanvasPoints[indCanvas].currSet.lenInd;
+                // the range visualization points 
+                var currVisualizedType = allCanvasPoints[indCanvas].vis_type;
+                // deciding if enabling or disabling the arrow movements based on the parameters
+                decideGasMovementBarVisualization(canvasId, currVisualizedType, overallNumPoints);
+                // set the first visualization for the number of points displayed bar 
+                setNumOfPointsVisualizationSelection(canvasId, currVisualizedType);
             }
         },
         error: function(err) {
