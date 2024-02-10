@@ -926,6 +926,7 @@ def getAllPointsToVisualize(gasId, sessionId, vis_type):
             ,processed_sensors_data.detected_substance_value
             ,sessions.name
             , sessions.id
+            , processed_sensors_data.date
             FROM processed_sensors_data
             JOIN sessions on processed_sensors_data.session_ref = sessions.id
             WHERE processed_sensors_data.detected_substance_ref = ?
@@ -943,87 +944,152 @@ def getAllPointsToVisualize(gasId, sessionId, vis_type):
             ,processed_sensors_data.detected_substance_value
             ,sessions.name
             , sessions.id
+            , processed_sensors_data.date
             FROM processed_sensors_data
             JOIN sessions on processed_sensors_data.session_ref = sessions.id
             WHERE processed_sensors_data.detected_substance_ref = ?
             AND processed_sensors_data.session_ref = ?
             AND processed_sensors_data.session_ref in (SELECT 
             filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
-            ORDER BY processed_sensors_data.date DESC
+            ORDER BY processed_sensors_data.date
             LIMIT ?
     """
             cur = con.execute(sel_data_query, (gasId, sessionId, vis_type)) 
         returnedData = []
         dataRecords = cur.fetchall()
-        for filterRecord in dataRecords:
-            currDataObj = {}
-            # real info for the datetime applied to the object 
-            currDataObj['dateread'] = filterRecord[0]
-            # visualized date 
-            currDataObj['date'] = str(filterRecord[0])[0:-3]
-            if(filterRecord[1] != ''):
-                currDataObj['value'] = float(filterRecord[1])
-            else: currDataObj['value'] = 0
-            currDataObj['session'] = str(filterRecord[2])
-            currDataObj['sessionID'] = int(filterRecord[3])
-            returnedData.append(currDataObj)
-        con.close()
-    return dataRecords
+        return dataRecords
+# getting points to visualize basing on selection of the range interval, the number of points and the sense of arrow
+def getAllPointsToVisualizeRangeInterval(
+        gasId
+        , sessionId
+        , directionMovement
+        , num_points
+        , extremeDate): 
+    with Lock():
+        # vis_type = 50
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        sel_data_query = """
+            SELECT 
+            processed_sensors_data.date
+            ,processed_sensors_data.detected_substance_value
+            ,sessions.name
+            , sessions.id
+            , processed_sensors_data.date
+            FROM processed_sensors_data
+            JOIN sessions on processed_sensors_data.session_ref = sessions.id
+            WHERE processed_sensors_data.detected_substance_ref = ?
+            AND processed_sensors_data.session_ref = ?
+            AND processed_sensors_data.session_ref in (SELECT 
+            filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
+    """
+        # customizing the query on the case 
+        if(directionMovement == 'forward'):
+            sel_data_query += " AND processed_sensors_data.date > ?"
+        else:
+            sel_data_query += " AND processed_sensors_data.date < ?"
+        if(directionMovement == 'forward'):
+            sel_data_query += " ORDER BY processed_sensors_data.date ASC"
+        else:
+            sel_data_query += " ORDER BY processed_sensors_data.date DESC"
+        # selecting only the input range points 
+        sel_data_query += " LIMIT ?"
+        cur = con.execute(sel_data_query, (gasId, sessionId, extremeDate, num_points)) 
+        dataRecords = cur.fetchall()
+        return dataRecords
 # getting all points to visualize for a particular visualization if they are present for 
 # selected substance and session 
-def getAllPointsToVisualizeDiffGranularity(gasId, sessionId, vis_type, vis_granularity):
-    global DatabaseLocation
-    con = sqlite3.connect(DatabaseLocation)
-    if(vis_type <= 0):
+def getAllPointsToVisualizeDiffGranularity(
+        gasId, 
+        sessionId, 
+        vis_type, 
+        vis_granularity
+        ):
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
+        if(vis_type <= 0):
+                sel_data_query = """
+                SELECT 
+                    processed_sensors_data_vis.vis_lbl
+                    ,processed_sensors_data_vis.detected_substance_value
+                    ,sessions.name
+                    , sessions.id
+                    , processed_sensors_data_vis.date
+                    FROM processed_sensors_data_vis
+                    JOIN sessions on processed_sensors_data_vis.session_ref = sessions.id
+                    WHERE processed_sensors_data_vis.detected_substance_ref = ?
+                    AND processed_sensors_data_vis.session_ref = ?
+                    AND processed_sensors_data_vis.vis_granularity = ?
+                    AND processed_sensors_data_vis.session_ref in (SELECT 
+                    filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
+                    ORDER BY processed_sensors_data_vis.date 
+        """
+                cur = con.execute(sel_data_query, (gasId, sessionId, vis_granularity))
+        # case in which a specific subset of points are decided to be visualized 
+        if(vis_type > 0):
             sel_data_query = """
             SELECT 
-                processed_sensors_data_vis.vis_lbl
-                ,processed_sensors_data_vis.detected_substance_value
-                ,sessions.name
-                , sessions.id
-                FROM processed_sensors_data_vis
-                JOIN sessions on processed_sensors_data_vis.session_ref = sessions.id
-                WHERE processed_sensors_data_vis.detected_substance_ref = ?
-                AND processed_sensors_data_vis.session_ref = ?
-                AND processed_sensors_data_vis.vis_granularity = ?
-                AND processed_sensors_data_vis.session_ref in (SELECT 
-                filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
-                ORDER BY processed_sensors_data_vis.date 
+                    processed_sensors_data_vis.vis_lbl
+                    ,processed_sensors_data_vis.detected_substance_value
+                    ,sessions.name
+                    , sessions.id
+                    , processed_sensors_data_vis.date
+                    FROM processed_sensors_data_vis
+                    JOIN sessions on processed_sensors_data_vis.session_ref = sessions.id
+                    WHERE processed_sensors_data_vis.detected_substance_ref = ?
+                    AND processed_sensors_data_vis.session_ref = ?
+                    AND processed_sensors_data_vis.vis_granularity = ?
+                    AND processed_sensors_data_vis.session_ref in (SELECT 
+                    filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
+                    ORDER BY processed_sensors_data_vis.date ASC
+                    LIMIT ?
     """
-            cur = con.execute(sel_data_query, (gasId, sessionId, vis_granularity))
-    # case in which a specific subset of points are decided to be visualized 
-    if(vis_type > 0):
+            cur = con.execute(sel_data_query, (gasId, sessionId, vis_granularity, vis_type)) 
+        dataRecords = cur.fetchall()
+        return dataRecords
+# getting the points to visualize for a particular visualization moving forward or backward 
+# the given visualization 
+def getAllPointsToVisualizeDiffGranularityRangeInterval( 
+        gasId
+        , sessionId
+        , vis_granularity
+        , directionMovement
+        , num_points
+        , extremeDate): 
+    with Lock():
+        global DatabaseLocation
+        con = sqlite3.connect(DatabaseLocation)
         sel_data_query = """
         SELECT 
-                processed_sensors_data_vis.vis_lbl
-                ,processed_sensors_data_vis.detected_substance_value
-                ,sessions.name
-                , sessions.id
-                FROM processed_sensors_data_vis
-                JOIN sessions on processed_sensors_data_vis.session_ref = sessions.id
-                WHERE processed_sensors_data_vis.detected_substance_ref = ?
-                AND processed_sensors_data_vis.session_ref = ?
-                AND processed_sensors_data_vis.vis_granularity = ?
-                AND processed_sensors_data_vis.session_ref in (SELECT 
-                filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
-                ORDER BY processed_sensors_data_vis.date ASC
-                LIMIT ?
-"""
-        cur = con.execute(sel_data_query, (gasId, sessionId, vis_granularity, vis_type)) 
-    returnedData = []
-    dataRecords = cur.fetchall()
-    for filterRecord in dataRecords:
-        currDataObj = {}
-        currDataObj['dateread'] = filterRecord[0]
-        currDataObj['date'] = str(filterRecord[0])[0:-3]
-        if(filterRecord[1] != ''):
-            currDataObj['value'] = float(filterRecord[1])
-        else: currDataObj['value'] = 0
-        currDataObj['session'] = str(filterRecord[2])
-        currDataObj['sessionID'] = int(filterRecord[3])
-        returnedData.append(currDataObj)
-    con.close()
-    return dataRecords
+            processed_sensors_data_vis.vis_lbl
+            ,processed_sensors_data_vis.detected_substance_value
+            ,sessions.name
+            , sessions.id
+            , processed_sensors_data_vis.date
+            FROM processed_sensors_data_vis
+            JOIN sessions on processed_sensors_data_vis.session_ref = sessions.id
+            WHERE processed_sensors_data_vis.detected_substance_ref = ?
+            AND processed_sensors_data_vis.session_ref = ?
+            AND processed_sensors_data_vis.vis_granularity = ?
+            AND processed_sensors_data_vis.session_ref in (SELECT 
+            filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
+            
+    """
+        # customization based on range of selection 
+        if(directionMovement == 'forward'):
+            sel_data_query += " AND processed_sensors_data_vis.date > ?"
+        else:
+            sel_data_query += " AND processed_sensors_data_vis.date < ?"
+        if(directionMovement == 'forward'):
+            sel_data_query += " ORDER BY processed_sensors_data_vis.date ASC"
+        else:
+            sel_data_query += " ORDER BY processed_sensors_data_vis.date DESC"
+        sel_data_query += " LIMIT ?"
+        cur = con.execute(sel_data_query, (gasId, sessionId, vis_granularity, extremeDate, num_points)) 
+        dataRecords = cur.fetchall()
+        return dataRecords
+
 # method for insert points to visualize in the different allowed visualizations 
 def insertNewPointsForDifferentVisualization(refactoredPointsForSelectedGranularity):
      with Lock():

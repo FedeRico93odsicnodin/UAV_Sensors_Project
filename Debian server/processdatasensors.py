@@ -506,40 +506,55 @@ def formatElaboratedPointsForView(pointsSet):
     arrLabels = []
     # array with all the set of values 
     arrValues = []
+    # array with the real dates for the current object 
+    arrReadDate = []
     lenIndex = 0
     for currObjGas in pointsSet:
         # date label
         arrLabels.append(currObjGas[0])
         # gas value 
         arrValues.append(currObjGas[1])
+        # the real date 
+        arrReadDate.append(currObjGas[4])
         lenIndex = lenIndex + 1
     returnedPointsForVis["labels"] = arrLabels
     returnedPointsForVis["data"] = arrValues
+    returnedPointsForVis["realdates"] = arrReadDate
     returnedPointsForVis["lenInd"] = lenIndex
     # getting the gas current session name 
-    returnedPointsForVis["sessionName"] = pointsSet[0][2]
+    if(len(pointsSet) > 0):
+        returnedPointsForVis["sessionName"] = pointsSet[0][2]
+    else: 
+        returnedPointsForVis["sessionName"] = ''
     return returnedPointsForVis
 # getting the current points of visualization for the current substance 
-def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity, datetimeUp = None):
+def getPointsToVisualizeForSubstance(
+        gasId
+        , sessionId
+        , vis_type
+        , vis_granularity
+        , movement = None
+        , num_add_point = None 
+        , datetimeUp = None):
     # set of labels and data to visualize for the current selected visualization 
     returnedPointsForVis = {}
     # array with all the set of labels 
     arrLabels = []
     # array with all the set of values 
     arrValues = []
+    # array with all the real reference date for the values 
+    arrDates = []
     # current session gas name 
     currSessionName = ""
     # getting all the points for the current visualization 
-    if(datetimeUp == None):
+    if(movement == None and num_add_point == None and datetimeUp == None):
         # for the case in which the mmm interval is selected 
         if(vis_granularity == "mmm"):
             allPointsSet = databaseServer.getAllPointsToVisualize(gasId, sessionId, vis_type)
-            # print(allPointsSet)
             returnedPointsForVis = formatElaboratedPointsForView(allPointsSet)
             # if the vis type for the numbered points is not all the set, have to get all the points for the current set 
-            if(vis_type > 0):
-                allPointsCurrVis = databaseServer.getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity)
-                returnedPointsForVis["lenInd"] = allPointsCurrVis
+            allPointsCurrVis = databaseServer.getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity)
+            returnedPointsForVis["lenInd"] = allPointsCurrVis
             return returnedPointsForVis
         # attempting to get all the points for the current vis granularity 
         allPointsSet = databaseServer.getAllPointsToVisualizeDiffGranularity(gasId, sessionId, vis_type, vis_granularity)
@@ -565,8 +580,6 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
                 if(date_str[-7] == "."):
                     date_format = '%Y-%m-%d %H:%M:%S.%f'
                 date_obj = datetime.strptime(date_str, date_format)
-                # print(date_obj)
-                # print(date_obj.hour)
                 if(currDate == None): 
                     currDate = date_obj
                     # creation of the new first point to add 
@@ -585,6 +598,7 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
                         ))
                     arrLabels.append(newPointToAdd["date"])
                     arrValues.append(newPointToAdd["value"])
+                    arrDates.append(currDate)
                     lenIndex = lenIndex + 1
                     continue
                 majorDate = (date_obj > currDate)
@@ -632,6 +646,7 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
                             ))
                         arrLabels.append(newPointToAdd["date"])
                         arrValues.append(newPointToAdd["value"])
+                        arrDates.append(newDateVis)
                         lenIndex = lenIndex + 1
                 currDate = date_obj
             # constructing the object of all visualized points 
@@ -650,6 +665,39 @@ def getPointsToVisualizeForSubstance(gasId, sessionId, vis_type, vis_granularity
         
         # returning the already present points for the selected set and the given gas, interval and session 
         return returnedPointsForVis
+    else:
+        # getting the points for the arrow movements 
+        print(movement)
+        print(num_add_point)
+        print(datetimeUp)
+        # selection of all the points of the interval 
+        if(vis_granularity == "mmm"):
+            pointsSetToAdd = databaseServer.getAllPointsToVisualizeRangeInterval(
+                gasId
+                , sessionId
+                , movement
+                , num_add_point
+                , datetimeUp
+            )
+            returnedPointsForVis = formatElaboratedPointsForView(pointsSetToAdd)
+            # if the vis type for the numbered points is not all the set, have to get all the points for the current set 
+            allPointsCurrVis = databaseServer.getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity)
+            returnedPointsForVis["lenInd"] = allPointsCurrVis
+            return returnedPointsForVis
+        # selection of the points based on a different granularity (must be already traced)
+        pointsSetToAdd = databaseServer.getAllPointsToVisualizeDiffGranularityRangeInterval(
+                gasId
+                , sessionId
+                , movement
+                , num_add_point
+                , datetimeUp
+            )
+        returnedPointsForVis = formatElaboratedPointsForView(pointsSetToAdd)
+        # if the vis type for the numbered points is not all the set, have to get all the points for the current set 
+        allPointsCurrVis = databaseServer.getOverallNumberOfPointsForCurrGranularity(gasId, sessionId, vis_granularity)
+        returnedPointsForVis["lenInd"] = allPointsCurrVis
+        return returnedPointsForVis
+
 # creation for the new point to visualized based on the granularity 
 def createNewGranularityPoint(point, sessionId, gasId, vis_granularity):
     # creation for the new date to compare wrt the previous one 

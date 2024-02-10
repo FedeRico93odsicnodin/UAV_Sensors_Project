@@ -2,7 +2,8 @@
 var allTimeDivisionPoints = {}
 // current visualized graph charts 
 var allVisualizedChartsPointers = {};
-
+// set of the objects defining the extreme points date of visualization 
+var extremesVisualizationMonitor = {};
 ///////////////////////// INTERVAL AND NUMBER OF POINTS SELECTIONS ///////////////////////// 
 // new interval selection for the current substance 
 function setNewIntervalGraph(invokerGasBlock) {
@@ -17,14 +18,9 @@ function setNewIntervalGraph(invokerGasBlock) {
     var gasId = gasObj.gasId;
     var gasName = gasObj.gasName;
     var sessionId = gasObj.sessionId;
-    var currGasCanvasId = gasName + "_" + gasId + "_session" + sessionId;
+    var currGasCanvasId = getGasNameSessionId(gasId, gasName, sessionId);
     // getting the selection for the number of points selection
-    var visTypeCurrCaseSelector = getIdCurrentSelectorPoints(currGasCanvasId);
-    var visTypeCurrCaseSelValue = document.getElementById(visTypeCurrCaseSelector).value;
-    var visTypeCurrCaseNumValue = -1;
-    if(visTypeCurrCaseSelValue != 'all') {
-        visTypeCurrCaseNumValue = parseInt(visTypeCurrCaseSelValue);
-    }
+    visTypeCurrCaseNumValue = getVisTypeCurrSubstance(currGasCanvasId);
     gasObj.vis_type = visTypeCurrCaseNumValue;
     var gasObjJSON = JSON.stringify(gasObj);
     
@@ -103,10 +99,9 @@ function setNewNumPointsGraph(invokerGasBlock) {
     var gasId = gasObj.gasId;
     var gasName = gasObj.gasName;
     var sessionId = gasObj.sessionId;
-    var currGasCanvasId = gasName + "_" + gasId + "_session" + sessionId;
+    var currGasCanvasId = getGasNameSessionId(gasId, gasName, sessionId);
     // getting the current visualization parameters for the granularity 
-    var visGranularityCurrCaseSelection = getIdCurrentSelectorIntervals(currGasCanvasId);
-    var visGranularityCurrCaseValue = document.getElementById(visGranularityCurrCaseSelection).value;
+    visGranularityCurrCaseValue = getVisGranularityCurrSubstance(currGasCanvasId);
     gasObj.vis_granularity = visGranularityCurrCaseValue;
     var gasObjJSON = JSON.stringify(gasObj);
     // making the POST for getting the new points set visualization 
@@ -123,6 +118,8 @@ function setNewNumPointsGraph(invokerGasBlock) {
             // getting the current elements di display
             var visualizedInterval = data[gasNameSessionId].gasData.labels;
             var visualizedData = data[gasNameSessionId].gasData.data;
+            // getting the overall number of points for selected substance
+            var overallNumPoints = data[gasNameSessionId].gasData.lenInd;
             // getting the vis_type 
             var vis_type = data[gasNameSessionId].vis_type;
             // creating the current ID for the canvas to select 
@@ -141,7 +138,9 @@ function setNewNumPointsGraph(invokerGasBlock) {
                  , currGasNameIdRef
                  , visualizedInterval
                  , visualizedData);
- 
+            // deciding whether activate or not the arrow movement visualization 
+            decideGasMovementBarVisualization(currGasCanvasId, vis_typeNum, overallNumPoints);
+
         }
         });
 }
@@ -154,21 +153,113 @@ function checkArrowMovementsConsistency(currVisualizedSet, currOverallSet, gasNa
 }
 // moving backward on rendered graph
 function moveBackward(arrObject) {
-    getDesiredPointsFromArrowSelector(arrObject);
+    // getting the gas object for the current request 
+    var gasObjRequest = getDesiredPointsFromArrowSelector(arrObject, false);
+    // string of the gas object request 
+    var gasObjRequestJSON = JSON.stringify(gasObjRequest);
+    // making the POST request for getting the set of the points to include to current graph
+    $.ajax({
+        type: "POST",
+        url: "/gas_load_movement_curve",
+        contentType: "application/json",
+        dataType: 'json',
+        data: gasObjRequestJSON,
+        success: function(data) 
+        { 
+            console.log(data);
+        }
+        });
 }
 // moving forward on rendered graph
 function moveForward(arrObject) {
-    getDesiredPointsFromArrowSelector(arrObject);
+    // getting the gas object for the current request 
+    var gasObjRequest = getDesiredPointsFromArrowSelector(arrObject, true);
+    // string of the gas object request 
+    var gasObjRequestJSON = JSON.stringify(gasObjRequest);
+    // making the POST request for getting the set of the points to include to current graph
+    $.ajax({
+        type: "POST",
+        url: "/gas_load_movement_curve",
+        contentType: "application/json",
+        dataType: 'json',
+        data: gasObjRequestJSON,
+        success: function(data) 
+        { 
+            console.log(data);
+        }
+        });
 }
 // common function for the arrow movements: retrieving the desired points to enqueue depending on the verse
-function getDesiredPointsFromArrowSelector(arrObject) {
+function getDesiredPointsFromArrowSelector(arrObject, isMovingForward) {
     // getting current arrow id 
     var currArrId = arrObject.id;
     // getting the definition of the object for the selected gas and session 
     var gasObj = getGasParametersFromIntervalSelectorId(currArrId);
+    // getting the curr gasNameSessionId
+    var gasName = gasObj.gasName; 
+    var gasId = gasObj.gasId;
+    var sessionId = gasObj.sessionId;
+    var gasNameSessionId = getGasNameSessionId(gasId, gasName, sessionId);
+    // getting the visualization type for the current substance 
+    var currVisType = getVisTypeCurrSubstance(gasNameSessionId);
+    gasObj.vis_type = currVisType;
+    // getting the visualization granularity for the current substance 
+    var currVisGranularity = getVisGranularityCurrSubstance(gasNameSessionId);
+    gasObj.vis_granularity = currVisGranularity;
+    // getting the extremes for the object depending on the sense of movement 
+    if(isMovingForward) {
+        // getting the max extreme for the current visualization 
+        var currMaxVisualizedDate = extremesVisualizationMonitor[gasNameSessionId].maxVisDate;
+        // getting the willing new point to insert in the graph 
+        var moveForwardIdContentValue = getMoveForwardValueId(gasNameSessionId);
+        var arrowMovementPointsVal = document.getElementById(moveForwardIdContentValue).value;
+        var arrowMovementPointsInt = parseInt(arrowMovementPointsVal);
+        // setting the value for the getting the points to add 
+        gasObj.direction = 'forward';
+        gasObj.extremeInterval = currMaxVisualizedDate;
+        gasObj.pointsOfMovement = arrowMovementPointsInt;
+    }
+    else {
+        // getting the min extreme for the current visualization 
+        var currMinVisualizedDate = extremesVisualizationMonitor[gasNameSessionId].minVisDate;
+        // getting the willing new point to insert in the graph 
+        var moveBackwardIdContentValue = getMoveBackwardValueId(gasNameSessionId);
+        var arrowMovementPointsVal = document.getElementById(moveBackwardIdContentValue).value;
+        var arrowMovementPointsInt = parseInt(arrowMovementPointsVal);
+        // setting the value for the getting the points to add 
+        gasObj.direction = 'backward';
+        gasObj.extremeInterval = currMinVisualizedDate;
+        gasObj.pointsOfMovement = arrowMovementPointsInt;
+    }
+    return gasObj;
 
-    console.log(gasObj);
-
+}
+// getting the current value for the vis_type
+function getVisTypeCurrSubstance(gasNameSessionId) {
+    var visTypeCurrCaseSelector = getIdCurrentSelectorPoints(gasNameSessionId);
+    var visTypeCurrCaseSelValue = document.getElementById(visTypeCurrCaseSelector).value;
+    var visTypeCurrCaseNumValue = -1;
+    if(visTypeCurrCaseSelValue != 'all') {
+        visTypeCurrCaseNumValue = parseInt(visTypeCurrCaseSelValue);
+    }
+    return visTypeCurrCaseNumValue;
+}
+// getting the current value for the vis_granularity
+function getVisGranularityCurrSubstance(gasNameSessionId) {
+    var visGranularityCurrCaseSelection = getIdCurrentSelectorIntervals(gasNameSessionId);
+    var visGranularityCurrCaseValue = document.getElementById(visGranularityCurrCaseSelection).value;
+    return visGranularityCurrCaseValue
+} 
+// setting the dates for the min and max points of visualization and for making a new eventual selection on arrows
+function setMinMaxVisualizedDatesPointsForSubstance(gasNameSessionId, minVisualizedDate, maxVisualizedDate) {
+    // creation of the object for keeping track of the range of selection 
+    var dateVisualizationObj = {
+        "minVisDate" : minVisualizedDate,
+        "maxVisDate" : maxVisualizedDate,
+        "gasNameSessionId": gasNameSessionId
+    };
+    // memorizing the current object for the extremes of visualization 
+    extremesVisualizationMonitor[gasNameSessionId] = dateVisualizationObj;
 }
 // rendering the visualization for the current time interval 
 function renderVisualizationPointsOnGraph(
@@ -266,6 +357,7 @@ function loadDashboardData() {
         success: function(data) {
             for(var gasToLoad in data) {
                 var currGasObj = data[gasToLoad];
+                
                 if(currGasObj['status'].startsWith("ok_") == false) {
                     // console.log("nothing to display")
                     return 
@@ -294,7 +386,8 @@ function loadDashboardData() {
                     "currSet": currGasObj.gasData, 
                     "gasName": gasName,
                     "gasNameId": gasNameId,
-                    "vis_type": gasVisType});
+                    "vis_type": gasVisType
+                });
                     
                 // verifyng the push order for the substance 
                 if(!gasNameIdOrder.hasOwnProperty(gasNameId)) {
@@ -334,6 +427,10 @@ function loadDashboardData() {
                 var gasNameId = allCanvasPoints[indCanvas].gasNameId;
                 var visualizedInterval = allCanvasPoints[indCanvas].currSet.labels;
                 var visualizedData = allCanvasPoints[indCanvas].currSet.data;
+                // getting the visualized extremes for the current visualization 
+                var lastIndexDate = allCanvasPoints[indCanvas].currSet.realdates.length - 1;
+                var minVisualizedDate = allCanvasPoints[indCanvas].currSet.realdates[0];
+                var maxVisualizedDate = allCanvasPoints[indCanvas].currSet.realdates[lastIndexDate];
                 
                 // rendering for the current gas canvas 
                 renderVisualizationPointsOnGraph(
@@ -350,6 +447,8 @@ function loadDashboardData() {
                 decideGasMovementBarVisualization(canvasId, currVisualizedType, overallNumPoints);
                 // set the first visualization for the number of points displayed bar 
                 setNumOfPointsVisualizationSelection(canvasId, currVisualizedType);
+                // setting the extremes of the inverval for the current substance visualization 
+                setMinMaxVisualizedDatesPointsForSubstance(canvasId, minVisualizedDate, maxVisualizedDate);
             }
         },
         error: function(err) {

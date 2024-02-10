@@ -320,6 +320,42 @@ def gas_data_load_specific_substance():
             }
     finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
+
+@app.route('/gas_load_movement_curve', methods=['POST'])
+def gas_data_load_movement_curve():
+    # getting the object for the substance selection 
+    gasInputs = request.get_json()
+    gasId = gasInputs["gasId"]
+    sessionId = gasInputs["sessionId"]
+    vis_type = gasInputs["vis_type"]
+    vis_typeNum = int(vis_type)
+    vis_granularity = gasInputs["vis_granularity"]
+    # getting the parameters for direction, extreme and number of points to include 
+    movementDirection = gasInputs["direction"]
+    extremeValue = gasInputs["extremeInterval"]
+    pointsOfMovement = gasInputs["pointsOfMovement"]
+    # retrieving the object of specifications for the visualized dashboard 
+    objToVis = databaseServer.checkGasDashboardVisualization(gasId, sessionId)
+    currGasObjVis = objToVis[0]
+    currElementVis = processdatasensors.getPointsToVisualizeForSubstance(
+            gasId, 
+            sessionId, 
+            vis_typeNum, 
+            vis_granularity,
+            movementDirection,
+            pointsOfMovement,
+            extremeValue)
+    finalResult = {}
+    finalResult[currGasObjVis.gas_name + "_" + str(currGasObjVis.session_ref)] = {
+            'status' : 'ok_' + currGasObjVis.gas_name, 
+            'gasData': currElementVis, 
+            'gasName': currGasObjVis.gas_name, 
+            'gasId': currGasObjVis.gas_ref,
+            'vis_type': vis_typeNum,
+            'vis_granularity': currGasObjVis.vis_granularity
+            }
+    finalResultJSON = json.dumps(finalResult)
+    return json.dumps(currElementVis)
     
 
 # NEW RELOAD METHOD: it is returned all the set of NEWER POINTS to just display (append) wrt the already displayed points 

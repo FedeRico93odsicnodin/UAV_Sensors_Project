@@ -238,7 +238,11 @@ function getGasParametersFromIntervalSelectorId(intervalSelectorId) {
     };
     return gasObject;
 }
-
+// getting the curr gasNameSessionId 
+function getGasNameSessionId(gasId, gasName, sessionId) {
+    var currGasNameSessionId = gasName + '_' + gasId + '_session' + sessionId;
+    return currGasNameSessionId;
+}
 // getting the id for the current selector of intervals to visualize
 function getIdCurrentSelectorIntervals(gasNameSessionId) {
     var currSelectorPointsId = "pointsIntervalSel_" + gasNameSessionId;
