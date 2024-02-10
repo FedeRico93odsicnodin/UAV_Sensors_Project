@@ -12,6 +12,20 @@ function setNewIntervalGraph(invokerGasBlock) {
     var gasObj = getGasParametersFromIntervalSelectorId(invokerId);
     // modification of the object with the current interval 
     gasObj.vis_granularity = vis_granularity;
+    // selection of the current vis_type to apply to the gas 
+    // getting the basic elements for the new visualization 
+    var gasId = gasObj.gasId;
+    var gasName = gasObj.gasName;
+    var sessionId = gasObj.sessionId;
+    var currGasCanvasId = gasName + "_" + gasId + "_session" + sessionId;
+    // getting the selection for the number of points selection
+    var visTypeCurrCaseSelector = getIdCurrentSelectorPoints(currGasCanvasId);
+    var visTypeCurrCaseSelValue = document.getElementById(visTypeCurrCaseSelector).value;
+    var visTypeCurrCaseNumValue = -1;
+    if(visTypeCurrCaseSelValue != 'all') {
+        visTypeCurrCaseNumValue = parseInt(visTypeCurrCaseSelValue);
+    }
+    gasObj.vis_type = visTypeCurrCaseNumValue;
     var gasObjJSON = JSON.stringify(gasObj);
     
     // making the POST for getting the new points set visualization 
@@ -23,13 +37,19 @@ function setNewIntervalGraph(invokerGasBlock) {
         data: gasObjJSON,
         success: function(data) 
         { 
-            // getting the basic elements for the new visualization 
-            var gasName = gasObj.gasName;
-            var visualizedInterval = data.labels;
-            var visualizedData = data.data;
+            console.log(data);
+            // pointer to the current gas reference 
+            var gasNameSessionId = gasName + "_" + sessionId;
+            // getting the current elements di display
+            var visualizedInterval = data[gasNameSessionId].gasData.labels;
+            var visualizedData = data[gasNameSessionId].gasData.data;
+            // getting the overall number of points for selected substance
+            var overallNumPoints = data[gasNameSessionId].gasData.lenInd;
+            // getting the vis_type 
+            var vis_type = data[gasNameSessionId].vis_type;
             // creating the current ID for the canvas to select 
-            var currGasNameIdRef = gasName + "_" + gasObj.gasId;
-            var currGasCanvasId = gasName + "_" + gasObj.gasId + "_session" + gasObj.sessionId;
+            var currGasNameIdRef = gasName + "_" + gasId;
+            
             // emptying the content for the selected canvas
             var currChart = allVisualizedChartsPointers[currGasCanvasId];
             currChart.destroy();
@@ -48,29 +68,82 @@ function setNewIntervalGraph(invokerGasBlock) {
             // getting the new number of elements for the selection 
             var currDataLen = visualizedInterval.length;
             
-            // getting the selection point html
-            var selectorPointsId = getIdCurrentSelectorPoints(currGasCanvasId);
             // data less than 5 points: just hide the selector of points bar 
             if(currDataLen < 5) {
-                $("#" + selectorPointsId).hide();
+                $("#" + visTypeCurrCaseSelector).hide();
                 return;
             }
-            var selectorPointsHtml = document.getElementById(selectorPointsId);
+            var selectorPointsHtml = document.getElementById(visTypeCurrCaseSelector);
             var replacePointsSelectionHtml = getCurrentSelectorTimePointsHtml(currDataLen);
             selectorPointsHtml.innerHTML = replacePointsSelectionHtml;
-            $("#" + selectorPointsId).show();
+            $("#" + visTypeCurrCaseSelector).show();
 
-            // setting the default selection for the current visualization 
-            // TODO: implementation for obtaining the SAME OBJECT as the one of the first load calls 
-            // so as to have the vis type for the set visualization type 
+            // setting the selection for the interval 
+            setNumOfPointsVisualizationSelection(currGasCanvasId, vis_type);
+
+            // deciding if visualize or not the arrow movements 
+            decideGasMovementBarVisualization(currGasCanvasId, visTypeCurrCaseNumValue, overallNumPoints);
         }
         });
        
 }
 // new num of points selection for the current substance
 function setNewNumPointsGraph(invokerGasBlock) {
-    console.log(invokerGasBlock);
-    // TODO: implementation with new points selections
+    // getting the references for the current gas 
+    var invokerId = invokerGasBlock.id;
+    var vis_typeNum = -1;
+    var vis_type = invokerGasBlock.value;
+    if(vis_type != 'all') {
+        vis_typeNum = parseInt(vis_type);
+    }
+    var gasObj = getGasParametersFromIntervalSelectorId(invokerId);
+    // valorization for the current vis_type to select 
+    gasObj.vis_type = vis_typeNum;
+    // retrieving the gas base parameters for the POST and the selection 
+    var gasId = gasObj.gasId;
+    var gasName = gasObj.gasName;
+    var sessionId = gasObj.sessionId;
+    var currGasCanvasId = gasName + "_" + gasId + "_session" + sessionId;
+    // getting the current visualization parameters for the granularity 
+    var visGranularityCurrCaseSelection = getIdCurrentSelectorIntervals(currGasCanvasId);
+    var visGranularityCurrCaseValue = document.getElementById(visGranularityCurrCaseSelection).value;
+    gasObj.vis_granularity = visGranularityCurrCaseValue;
+    var gasObjJSON = JSON.stringify(gasObj);
+    // making the POST for getting the new points set visualization 
+    $.ajax({
+        type: "POST",
+        url: "/gas_load_specific_gas",
+        contentType: "application/json",
+        dataType: 'json',
+        data: gasObjJSON,
+        success: function(data) 
+        { 
+            // pointer to the current gas reference 
+            var gasNameSessionId = gasName + "_" + sessionId;
+            // getting the current elements di display
+            var visualizedInterval = data[gasNameSessionId].gasData.labels;
+            var visualizedData = data[gasNameSessionId].gasData.data;
+            // getting the vis_type 
+            var vis_type = data[gasNameSessionId].vis_type;
+            // creating the current ID for the canvas to select 
+            var currGasNameIdRef = gasName + "_" + gasId;
+
+             // emptying the content for the selected canvas
+             var currChart = allVisualizedChartsPointers[currGasCanvasId];
+             currChart.destroy();
+             // getting the color for the graph to ricreate
+             var currColorApplication = "rgba(" + StoredGasColors[currGasNameIdRef].color + ", .45)";
+             // creating the new charts with the new set of retrieved points
+             // NB: the new selector for the canvas will be replaced to memory objects
+             renderVisualizationPointsOnGraph(
+                 currGasCanvasId
+                 , gasName
+                 , currGasNameIdRef
+                 , visualizedInterval
+                 , visualizedData);
+ 
+        }
+        });
 }
 ////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -269,10 +269,11 @@ def gas_data_load_new():
     objToVis = databaseServer.checkGasDashboardVisualization()
     finalResult = {}
     for currSub in objToVis:
+        vis_typeNum = int(currSub.vis_type)
         currElementVis = processdatasensors.getPointsToVisualizeForSubstance(
             currSub.gas_ref, 
             currSub.session_ref, 
-            currSub.vis_type, 
+            vis_typeNum, 
             currSub.vis_granularity)
         finalResult[currSub.gas_name + "_" + str(currSub.session_ref)] = {
             'status' : 'ok_' + currSub.gas_name, 
@@ -293,17 +294,31 @@ def gas_data_load_specific_substance():
     gasInputs = request.get_json()
     gasId = gasInputs["gasId"]
     sessionId = gasInputs["sessionId"]
-    vis_type = -1
+    vis_type = gasInputs["vis_type"]
+    vis_typeNum = int(vis_type)
     vis_granularity = gasInputs["vis_granularity"]
+    # retrieving the object of specifications for the visualized dashboard 
+    objToVis = databaseServer.checkGasDashboardVisualization(gasId, sessionId)
+    currGasObjVis = objToVis[0]
     # changing the current visualization to remember for the dashboard 
-    processdatasensors.updateDashboardVisualization(gasId, sessionId, vis_granularity)
+    processdatasensors.updateDashboardVisualization(gasId, sessionId, vis_granularity, vis_typeNum)
     # calling the function for retrieving the current points base on selection 
     currElementVis = processdatasensors.getPointsToVisualizeForSubstance(
             gasId, 
             sessionId, 
-            vis_type, 
+            vis_typeNum, 
             vis_granularity)
-    finalResultJSON = json.dumps(currElementVis)
+    # creation of the final object to give to the FE 
+    finalResult = {}
+    finalResult[currGasObjVis.gas_name + "_" + str(currGasObjVis.session_ref)] = {
+            'status' : 'ok_' + currGasObjVis.gas_name, 
+            'gasData': currElementVis, 
+            'gasName': currGasObjVis.gas_name, 
+            'gasId': currGasObjVis.gas_ref,
+            'vis_type': vis_typeNum,
+            'vis_granularity': currGasObjVis.vis_granularity
+            }
+    finalResultJSON = json.dumps(finalResult)
     return finalResultJSON
     
 

@@ -835,22 +835,24 @@ def insertCurrGasGraphVisualDefinition(graphVisualizationObj):
         con.close()
 
 # updating for a new visualization of the context of a visualized dashboard 
-def updateCurrGasVisualDefinition(sessionId, gasId, vis_granularity): 
+def updateCurrGasVisualDefinition(sessionId, gasId, vis_granularity, vis_type): 
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
         cur = con.cursor()
         update_visualdefinition_sqlite = """
-        update dashboard_visualized set vis_granularity = ?
+        update dashboard_visualized set vis_granularity = ?, vis_type = ?
         where session_ref = ?
         and gas_ref = ?
 """
-        cur.execute(update_visualdefinition_sqlite, (vis_granularity, sessionId, gasId))
+        cur.execute(update_visualdefinition_sqlite, (vis_granularity, vis_type, sessionId, gasId))
         con.commit()
         con.close()
 
-# getting all the objects with an active visualization to give back to the FE in a set of points  
-def checkGasDashboardVisualization():
+# getting all the objects with an active visualization to give back to the FE in a set of points 
+# if the gasId and the sessionId are valued, then the visualization refers to the selected substance 
+def checkGasDashboardVisualization(gasId = None, sessionId = None):
+    returnedData = []
     with Lock():
         global DatabaseLocation
         con = sqlite3.connect(DatabaseLocation)
@@ -878,19 +880,35 @@ def checkGasDashboardVisualization():
 		and optsession.filter_context = 'Sessions'
         and optsession.selected = 1))
 		and (optsession.selected = 1 and optgas.selected = 1 and optsensors.selected = 1)"""
-        cur = con.execute(sqlite_all_el_to_visualize_query)
-        dashboardObjVis = cur.fetchall()
-        returnedData = []
-        if(dashboardObjVis != None):
-            for dashboardRecord in dashboardObjVis:
-                currDataObj = dbmodels.DashboardCurrVisualzed()
-                currDataObj.id = int(dashboardRecord[0])
-                currDataObj.session_ref = int(dashboardRecord[1])
-                currDataObj.gas_ref = int(dashboardRecord[2])
-                currDataObj.vis_type = int(dashboardRecord[3])
-                currDataObj.vis_granularity = str(dashboardRecord[4])
-                currDataObj.gas_name = str(dashboardRecord[5])
-                returnedData.append(currDataObj)
+        
+        # if the gasId and the sessionId are valued, then the object is referred to a particular instance
+        if(gasId != None and sessionId != None):
+            sqlite_all_el_to_visualize_query += " and session_ref = ? and gas_ref = ?;"
+            cur = con.execute(sqlite_all_el_to_visualize_query, (sessionId, gasId))
+            dashboardObjVis = cur.fetchall()
+            if(dashboardObjVis != None):
+                for dashboardRecord in dashboardObjVis:
+                    currDataObj = dbmodels.DashboardCurrVisualzed()
+                    currDataObj.id = int(dashboardRecord[0])
+                    currDataObj.session_ref = int(dashboardRecord[1])
+                    currDataObj.gas_ref = int(dashboardRecord[2])
+                    currDataObj.vis_type = int(dashboardRecord[3])
+                    currDataObj.vis_granularity = str(dashboardRecord[4])
+                    currDataObj.gas_name = str(dashboardRecord[5])
+                    returnedData.append(currDataObj)
+        else: 
+            cur = con.execute(sqlite_all_el_to_visualize_query)
+            dashboardObjVis = cur.fetchall()
+            if(dashboardObjVis != None):
+                for dashboardRecord in dashboardObjVis:
+                    currDataObj = dbmodels.DashboardCurrVisualzed()
+                    currDataObj.id = int(dashboardRecord[0])
+                    currDataObj.session_ref = int(dashboardRecord[1])
+                    currDataObj.gas_ref = int(dashboardRecord[2])
+                    currDataObj.vis_type = int(dashboardRecord[3])
+                    currDataObj.vis_granularity = str(dashboardRecord[4])
+                    currDataObj.gas_name = str(dashboardRecord[5])
+                    returnedData.append(currDataObj)
         con.close()
     return returnedData
 
@@ -988,7 +1006,7 @@ def getAllPointsToVisualizeDiffGranularity(gasId, sessionId, vis_type, vis_granu
                 AND processed_sensors_data_vis.vis_granularity = ?
                 AND processed_sensors_data_vis.session_ref in (SELECT 
                 filter_value FROM options_data_filters WHERE filter_context='Sessions' AND selected = 1)
-                ORDER BY processed_sensors_data_vis.date DESC
+                ORDER BY processed_sensors_data_vis.date ASC
                 LIMIT ?
 """
         cur = con.execute(sel_data_query, (gasId, sessionId, vis_granularity, vis_type)) 

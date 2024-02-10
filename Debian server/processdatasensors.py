@@ -493,9 +493,9 @@ def insertDashboardFirstVisualized():
         graphVisObj.is_visualized = 1
         databaseServer.insertCurrGasGraphVisualDefinition(graphVisObj)
 # changing the current visualization modality for a specific gas 
-def updateDashboardVisualization(gasId, sessionId, newVisGranularity):
+def updateDashboardVisualization(gasId, sessionId, newVisGranularity, newVisType):
     # updating the current definition for the visualization of dashboard basing on new granularity 
-    databaseServer.updateCurrGasVisualDefinition(sessionId, gasId, newVisGranularity)
+    databaseServer.updateCurrGasVisualDefinition(sessionId, gasId, newVisGranularity, newVisType)
 
 # method to format the new points for the current view
 def formatElaboratedPointsForView(pointsSet):
