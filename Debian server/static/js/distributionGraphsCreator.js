@@ -33,7 +33,6 @@ function setNewIntervalGraph(invokerGasBlock) {
         data: gasObjJSON,
         success: function(data) 
         { 
-            console.log(data);
             // pointer to the current gas reference 
             var gasNameSessionId = gasName + "_" + sessionId;
             // getting the current elements di display
@@ -45,12 +44,11 @@ function setNewIntervalGraph(invokerGasBlock) {
             var vis_type = data[gasNameSessionId].vis_type;
             // creating the current ID for the canvas to select 
             var currGasNameIdRef = gasName + "_" + gasId;
-            
+            // getting the real dates for the visualized set 
+            var realDatesVisualization = data[gasNameSessionId].gasData.realdates;
             // emptying the content for the selected canvas
             var currChart = allVisualizedChartsPointers[currGasCanvasId];
             currChart.destroy();
-            // getting the color for the graph to ricreate
-            var currColorApplication = "rgba(" + StoredGasColors[currGasNameIdRef].color + ", .45)";
             // creating the new charts with the new set of retrieved points
             // NB: the new selector for the canvas will be replaced to memory objects
             renderVisualizationPointsOnGraph(
@@ -63,7 +61,7 @@ function setNewIntervalGraph(invokerGasBlock) {
             // recalculating the current possible selections of the points 
             // getting the new number of elements for the selection 
             var currDataLen = visualizedInterval.length;
-            
+            var visTypeCurrCaseSelector = getIdCurrentSelectorPoints(currGasCanvasId);
             // data less than 5 points: just hide the selector of points bar 
             if(currDataLen < 5) {
                 $("#" + visTypeCurrCaseSelector).hide();
@@ -76,9 +74,10 @@ function setNewIntervalGraph(invokerGasBlock) {
 
             // setting the selection for the interval 
             setNumOfPointsVisualizationSelection(currGasCanvasId, vis_type);
-
             // deciding if visualize or not the arrow movements 
             decideGasMovementBarVisualization(currGasCanvasId, visTypeCurrCaseNumValue, overallNumPoints);
+            // setting again the array of the current visualized real dates 
+            setMinMaxVisualizedDatesPointsForSubstance(currGasCanvasId, realDatesVisualization);
         }
         });
        
@@ -124,23 +123,23 @@ function setNewNumPointsGraph(invokerGasBlock) {
             var vis_type = data[gasNameSessionId].vis_type;
             // creating the current ID for the canvas to select 
             var currGasNameIdRef = gasName + "_" + gasId;
-
-             // emptying the content for the selected canvas
-             var currChart = allVisualizedChartsPointers[currGasCanvasId];
-             currChart.destroy();
-             // getting the color for the graph to ricreate
-             var currColorApplication = "rgba(" + StoredGasColors[currGasNameIdRef].color + ", .45)";
-             // creating the new charts with the new set of retrieved points
-             // NB: the new selector for the canvas will be replaced to memory objects
-             renderVisualizationPointsOnGraph(
-                 currGasCanvasId
-                 , gasName
-                 , currGasNameIdRef
-                 , visualizedInterval
-                 , visualizedData);
+            // getting the real dates for the visualized set 
+            var realDatesVisualization = data[gasNameSessionId].gasData.realdates;
+            // emptying the content for the selected canvas
+            var currChart = allVisualizedChartsPointers[currGasCanvasId];
+            currChart.destroy();
+            // creating the new charts with the new set of retrieved points
+            // NB: the new selector for the canvas will be replaced to memory objects
+            renderVisualizationPointsOnGraph(
+                currGasCanvasId
+                , gasName
+                , currGasNameIdRef
+                , visualizedInterval
+                , visualizedData);
             // deciding whether activate or not the arrow movement visualization 
             decideGasMovementBarVisualization(currGasCanvasId, vis_typeNum, overallNumPoints);
-
+            // setting again the array of the current visualized real dates 
+            setMinMaxVisualizedDatesPointsForSubstance(currGasCanvasId, realDatesVisualization);
         }
         });
 }
@@ -166,7 +165,8 @@ function moveBackward(arrObject) {
         data: gasObjRequestJSON,
         success: function(data) 
         { 
-            console.log(data);
+             // action taken with the movement backward
+             moveActionPostMovement(gasObjRequest, data, 'backward');
         }
         });
 }
@@ -185,9 +185,58 @@ function moveForward(arrObject) {
         data: gasObjRequestJSON,
         success: function(data) 
         { 
-            console.log(data);
+            // action taken with the movement forward
+            moveActionPostMovement(gasObjRequest, data, 'forward');
         }
         });
+}
+// move forward or backward post action 
+function moveActionPostMovement(gasObjRequest, newPointsData, moveDirection) {
+    // retrieving the necessary elements 
+    var gasName = gasObjRequest.gasName;
+    var gasId = gasObjRequest.gasId;
+    var sessionId = gasObjRequest.sessionId;
+    var moveStepPoints = gasObjRequest.pointsOfMovement;
+    var gasNameSessionId = getGasNameSessionId(gasId, gasName, sessionId);
+    var newPointValues = newPointsData.data;
+    var newPointLabels = newPointsData.labels;
+    var realDates = newPointsData.realdates;
+    // no more points to show 
+    if(newPointLabels.length == 0) {
+        return;
+    }
+    // retrieving the curr graph reference 
+    var currGraphReference = allVisualizedChartsPointers[gasNameSessionId];
+    // updating the elements for the current graph 
+    // action on curve if the movement is forward
+    var lastPointerIndexLabels = currGraphReference.data.labels.length - 1;
+    // getting the array of visualized dates 
+    var newArrayVisualizedDates = extremesVisualizationMonitor[gasNameSessionId].currDates;
+    if(moveDirection == 'forward') {
+        currGraphReference.data.labels = currGraphReference.data.labels.slice(moveStepPoints);
+        currGraphReference.data.datasets[0].data = currGraphReference.data.datasets[0].data.slice(moveStepPoints);
+        currGraphReference.data.labels = currGraphReference.data.labels.concat(newPointLabels);
+        currGraphReference.data.datasets[0].data = currGraphReference.data.datasets[0].data.concat(newPointValues);
+        currGraphReference.update();
+        // updating the array for the real values of the dates
+        newArrayVisualizedDates = newArrayVisualizedDates.slice(moveStepPoints);
+        newArrayVisualizedDates = newArrayVisualizedDates.concat(realDates);
+    }
+    // action on curve if the movement is backward
+    else {
+        currGraphReference.data.labels = currGraphReference.data.labels.slice(0, lastPointerIndexLabels);
+        console.log(currGraphReference.data.labels);
+        currGraphReference.data.datasets[0].data = currGraphReference.data.datasets[0].data.slice(0, lastPointerIndexLabels);
+        currGraphReference.data.labels = newPointLabels.concat(currGraphReference.data.labels);
+        console.log(currGraphReference.data.labels);
+        currGraphReference.data.datasets[0].data = newPointValues.concat(currGraphReference.data.datasets[0].data);
+        currGraphReference.update();
+        // updating the array for teh real values of the dates 
+        newArrayVisualizedDates = newArrayVisualizedDates.slice(0, lastPointerIndexLabels);
+        newArrayVisualizedDates = realDates.concat(newArrayVisualizedDates);
+    }
+    // updating the object with the new extreme values
+    setMinMaxVisualizedDatesPointsForSubstance(gasNameSessionId, newArrayVisualizedDates);
 }
 // common function for the arrow movements: retrieving the desired points to enqueue depending on the verse
 function getDesiredPointsFromArrowSelector(arrObject, isMovingForward) {
@@ -209,7 +258,8 @@ function getDesiredPointsFromArrowSelector(arrObject, isMovingForward) {
     // getting the extremes for the object depending on the sense of movement 
     if(isMovingForward) {
         // getting the max extreme for the current visualization 
-        var currMaxVisualizedDate = extremesVisualizationMonitor[gasNameSessionId].maxVisDate;
+        var extremsVisMonitorLastPos = extremesVisualizationMonitor[gasNameSessionId].currDates.length -1;
+        var currMaxVisualizedDate = extremesVisualizationMonitor[gasNameSessionId].currDates[extremsVisMonitorLastPos];
         // getting the willing new point to insert in the graph 
         var moveForwardIdContentValue = getMoveForwardValueId(gasNameSessionId);
         var arrowMovementPointsVal = document.getElementById(moveForwardIdContentValue).value;
@@ -221,7 +271,7 @@ function getDesiredPointsFromArrowSelector(arrObject, isMovingForward) {
     }
     else {
         // getting the min extreme for the current visualization 
-        var currMinVisualizedDate = extremesVisualizationMonitor[gasNameSessionId].minVisDate;
+        var currMinVisualizedDate = extremesVisualizationMonitor[gasNameSessionId].currDates[0];
         // getting the willing new point to insert in the graph 
         var moveBackwardIdContentValue = getMoveBackwardValueId(gasNameSessionId);
         var arrowMovementPointsVal = document.getElementById(moveBackwardIdContentValue).value;
@@ -251,11 +301,10 @@ function getVisGranularityCurrSubstance(gasNameSessionId) {
     return visGranularityCurrCaseValue
 } 
 // setting the dates for the min and max points of visualization and for making a new eventual selection on arrows
-function setMinMaxVisualizedDatesPointsForSubstance(gasNameSessionId, minVisualizedDate, maxVisualizedDate) {
+function setMinMaxVisualizedDatesPointsForSubstance(gasNameSessionId, visualizedDates) {
     // creation of the object for keeping track of the range of selection 
     var dateVisualizationObj = {
-        "minVisDate" : minVisualizedDate,
-        "maxVisDate" : maxVisualizedDate,
+        "currDates" : visualizedDates,
         "gasNameSessionId": gasNameSessionId
     };
     // memorizing the current object for the extremes of visualization 
@@ -429,8 +478,7 @@ function loadDashboardData() {
                 var visualizedData = allCanvasPoints[indCanvas].currSet.data;
                 // getting the visualized extremes for the current visualization 
                 var lastIndexDate = allCanvasPoints[indCanvas].currSet.realdates.length - 1;
-                var minVisualizedDate = allCanvasPoints[indCanvas].currSet.realdates[0];
-                var maxVisualizedDate = allCanvasPoints[indCanvas].currSet.realdates[lastIndexDate];
+                var realDatesRef = allCanvasPoints[indCanvas].currSet.realdates;
                 
                 // rendering for the current gas canvas 
                 renderVisualizationPointsOnGraph(
@@ -448,7 +496,7 @@ function loadDashboardData() {
                 // set the first visualization for the number of points displayed bar 
                 setNumOfPointsVisualizationSelection(canvasId, currVisualizedType);
                 // setting the extremes of the inverval for the current substance visualization 
-                setMinMaxVisualizedDatesPointsForSubstance(canvasId, minVisualizedDate, maxVisualizedDate);
+                setMinMaxVisualizedDatesPointsForSubstance(canvasId, realDatesRef);
             }
         },
         error: function(err) {

@@ -1086,6 +1086,7 @@ def getAllPointsToVisualizeDiffGranularityRangeInterval(
         else:
             sel_data_query += " ORDER BY processed_sensors_data_vis.date DESC"
         sel_data_query += " LIMIT ?"
+        print(extremeDate)
         cur = con.execute(sel_data_query, (gasId, sessionId, vis_granularity, extremeDate, num_points)) 
         dataRecords = cur.fetchall()
         return dataRecords

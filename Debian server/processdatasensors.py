@@ -688,6 +688,7 @@ def getPointsToVisualizeForSubstance(
         pointsSetToAdd = databaseServer.getAllPointsToVisualizeDiffGranularityRangeInterval(
                 gasId
                 , sessionId
+                , vis_granularity
                 , movement
                 , num_add_point
                 , datetimeUp
