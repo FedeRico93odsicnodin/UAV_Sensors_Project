@@ -5,7 +5,6 @@
  * population will be made 
  */
 // loading phase flag: some activities are not active 
-isLoadingPhase = true
 // getting the initial data 
 function getInitialData(callBackLoad, errLoad) {
     $.ajax({
@@ -35,9 +34,8 @@ function initAllDataAndFilters(data) {
     // setting initial data 
     sessionStorage.setItem("filterOptions", data)
     // initial set of all filters
-    initAllFilters(filterCallbackMainLoad)
+    initAllFilters(reloadAllData(data))
     // initial load completed 
-    isLoadingPhase = false
     
 }
 

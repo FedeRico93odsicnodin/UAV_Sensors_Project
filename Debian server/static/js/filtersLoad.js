@@ -268,24 +268,7 @@ function initGasesFilters(showView, callBackFilters) {
                 var colorPickerCurrGas = '#colorPicker_' + gasIdentifier;
                 $(colorPickerCurrGas).colpick({
                     color: gasColor,
-                    onSubmit: function() {
-                        var newColor = this.fields[0].value;
-                        var newColorSel = "#" + newColor;
-                        // getting the rgb definition to be stored 
-                        var colorR = this.fields[1].value;
-                        var colorG = this.fields[2].value;
-                        var colorB = this.fields[3].value;
-                        var complexiveRGB = colorR + "," + colorG + "," + colorB;
-                        // console.log(newColorSel);
-                        // changing the color of the displayed visualization 
-                        var gasNameId = getGasIdentifierFromColorPicker(this.el.id);
-                        var colorShowerGas = 'colorShower_' + gasNameId;
-                        document.getElementById(colorShowerGas).style.backgroundColor = newColorSel;
-                        // memorizing the new configuration for an eventual save 
-                        var gasId = getGasIdFromGasNameId(gasNameId);
-                        GasColors[gasNameId] = { "Id": gasId, "color": complexiveRGB };
-                        
-                    }
+                    onSubmit:  onSubmitNewColorFilter
             });
                 OverallGases.push(gasesObj[ind])
             }
@@ -311,6 +294,27 @@ function initGasesFilters(showView, callBackFilters) {
             console.log('an error occur retrieving gases info:\n' + err)
         }
     })
+}
+
+function onSubmitNewColorFilter() {
+    var newColor = this.fields[0].value;
+    var newColorSel = "#" + newColor;
+    // getting the rgb definition to be stored 
+    var colorR = this.fields[1].value;
+    var colorG = this.fields[2].value;
+    var colorB = this.fields[3].value;
+    var complexiveRGB = colorR + "," + colorG + "," + colorB;
+    // console.log(newColorSel);
+    // changing the color of the displayed visualization 
+    var gasNameId = getGasIdentifierFromColorPicker(this.el.id);
+    var colorShowerGas = 'colorShower_' + gasNameId;
+    document.getElementById(colorShowerGas).style.backgroundColor = newColorSel;
+    // memorizing the new configuration for an eventual save 
+    var gasId = getGasIdFromGasNameId(gasNameId);
+    GasColors[gasNameId] = { "Id": gasId, "color": complexiveRGB };
+    var selPrevElement = this.selector.prevObject[0].id;
+    $('#' + selPrevElement).hide();
+    
 }
 // cleaning the session name for creating the id 
 function initIdSessionFromName(sessionName) {

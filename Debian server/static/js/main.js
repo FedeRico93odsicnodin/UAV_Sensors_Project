@@ -103,7 +103,6 @@
         }
         // getting the filters overall values 
         var newJSONFilters = setNewSessionStorageFilters()
-        isLoadingPhase = false
         saveFiltersConfig(newJSONFilters, 
             function(data) {
                 alert('Filters are successfully saved')
@@ -120,17 +119,18 @@
     $(document).ready(function() {
 
         setTimeout(function() {
-            $("#ui-datepicker-div").hide();
             reloadData_v2();
         }, 500);
-        
+        setTimeout(function() {
+            $("#ui-datepicker-div").hide();
+        }, 1000);
         // at the beginning i'm visualizing data 
         isFilterContext = false
         // loading phase
-        isLoadingPhase = true
         backToDashboardContext()
         getInitialData(
-            initAllDataAndFilters,
+            //initAllDataAndFilters,
+            reloadAllData,
             function(err) {
                 console.log('error verified in loading initial data')
             }
