@@ -68,7 +68,7 @@ function setNewIntervalGraph(invokerGasBlock) {
                 return;
             }
             var selectorPointsHtml = document.getElementById(visTypeCurrCaseSelector);
-            var replacePointsSelectionHtml = getCurrentSelectorTimePointsHtml(currDataLen);
+            var replacePointsSelectionHtml = getCurrentSelectorTimePointsHtml(overallNumPoints);
             selectorPointsHtml.innerHTML = replacePointsSelectionHtml;
             $("#" + visTypeCurrCaseSelector).show();
 
